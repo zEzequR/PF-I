@@ -10,16 +10,16 @@
 >>* El usuario debe permitir al administrador crear nuevas cuentas con usuario y contraseña para nuevos empleados
 >>* El sistema debe mostrar un resumen del pedido antes de confirmar la compra.
 >>* El sistema debe permitir buscar productos por nombre, categoría o precio.
+>>* El sistema debe mostrar la sección correspondiente una vez que el usuario/administrador inicio sesión.
+>>* El sistema debe calcular las comisión por cada empleado por cada venta efectuada.
 >>* El sistema debe generar un informe mensual de ventas para los administradores.
+>>* El sistema debe mostrar la asistencia de todos los empleados a través de una tabla.
 >>* El sistema debe registrar la fecha y hora de cada transacción realizada.
 
 
 ># ***No funcional:***
 >>* El sistema debe dividirse en 2 secciones(venta, gestión).
->>* El sistema debe mostrar la asistencia de todos los empleados a través de una tabla.
->>* El sistema debe calcular las comisión por cada empleado por cada venta efectuada.
 >>* El sistema debe ser compatible con dispositivos móviles en caso de fallas de internet.
->>* El sistema debe mostrar la sección correspondiente una vez que el usuario/administrador inicio sesión.
 >>* El sistema debe tener un tiempo de respuesta rápido.
 >>* El sistema debe conectarse a una base de datos estable.
 
