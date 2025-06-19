@@ -32,7 +32,7 @@
 
 ># ***Cálculos:***
 >>* El total del sueldo se calcula con los días de asistencia más la comisión y las horas extras
->>* La comisión se calculará por el 1% del total de las ventas mensuales
+>>* La comisión del empleado se calculará por el 1% del total de las ventas mensuales
 >>* El valor del producto se calcula en base al precio de lista más el porcentaje de ganancias (70%)
 >>* El total de la caja del día se calcula sumando todas las ventas facturadas.
 >>* Si el cliente desea abonar con tarjeta en más de 3 cuotas, se le agregará un recargo del 20% por cada cuota adicional
@@ -41,5 +41,5 @@
 ># ***Inferencias:***
 >>* Si el empleado llega a vender 60 productos vendidos al mes, entonces comenzará a acumular comisiones
 >>* Si el empleado tiene más de 4 inasistencias entonces se le sacara su comisión del mes
->>* Si el cliente es frecuente entonces accedera a beneficios exclusivos
+>>* Si el cliente es frecuente (comprar una vez a la semana durante 3 meses) entonces accedera a beneficios exclusivos
 
