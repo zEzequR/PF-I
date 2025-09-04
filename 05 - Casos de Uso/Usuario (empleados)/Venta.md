@@ -3,7 +3,6 @@
 **Actores secundarios:** Base de datos, Cliente, Ticketera y Posnet.
 
 # Precondiciones: 
-- El sistema debe estar conectado a la base de datos.
 - El empleado/administrador debe haber iniciado sesión en el sistema.
 - La ticketera debe estar conectada al sistema.
 

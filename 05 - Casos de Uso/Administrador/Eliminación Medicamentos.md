@@ -4,7 +4,6 @@
 **Actores secundarios:** Base de datos
 
 # Precondiciones: 
-- El sistema debe estar conectado a la base de datos.
 - El administrador debe haber iniciado sesión en el sistema.
 - El medicamento debe existir en el sistema previamente.
 

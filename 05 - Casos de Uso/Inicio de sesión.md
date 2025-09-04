@@ -2,14 +2,13 @@
 
 > **Actores primarios:** Administrador, empleado
 > **Actores secundarios:** Base de datos
->**Precondiciones:** El sistema debe estar conectado a la red 
+>**Precondiciones:** -
 
 
 # Camino básico:
 
-- El usuario ingresa al sistema.
-- El usuario ingresa sus credenciales.
-- El sistema verifica los datos ingresados.
+- El usuario ingresa sus credenciales (Usuario y contraseña).
+- El sistema verifica las credenciales ingresadas.
 - El sistema concede acceso y muestra la pantalla principal.
 
 # Camino alternativo:

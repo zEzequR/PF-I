@@ -5,7 +5,7 @@
 
 # Precondiciones:
 - El administrador debe haber iniciado sesión en el sistema.
-- El administrador debe contar con los datos necesarios del nuevo empleado.
+- El administrador debe contar con los datos necesarios del nuevo empleado (Nombre de usuario, Contraseña y Tipo de usuario(administrador | empleado)).
 
 # Camino básico:
 
