@@ -59,9 +59,7 @@ class Receta {
     numReceta (opt) : VARCHAR
     fechaPrescripcion : DATE
     matriculaMedico : VARCHAR
-    usada : BOOLEAN
-    fechaUso (opt) : DATETIME
-    idVentaUso (opt) : INT
+    fechaLimite (opt) : DATETIME
 }
 
 class Venta {
