@@ -1,0 +1,173 @@
+@startuml DiagramaDeClases
+' --------------------
+' Enumeraciones (forma multilinea segura)
+' --------------------
+enum TipoUsuario {
+  Administrador
+  Empleado
+}
+enum TipoVenta {
+  Particular
+  ObraSocial
+}
+enum TipoPago {
+  Efectivo
+  Debito
+  Credito
+  Transferencia
+  BilleteraVirtual
+}
+enum EstadoAsistencia {
+  Presente
+  Ausente
+  Tarde
+  Licencia
+}
+
+' --------------------
+' Clases (atributos representativos)
+' --------------------
+class Usuario {
+  - nombreUsuario : String
+  - contrasena : String
+  - tipo : TipoUsuario
+  - montoTotalVendido : Decimal
+  + iniciarSesion(nombreUsuario, contrasena) : bool
+  + cerrarSesion() : void
+}
+
+class Empleado {
+  - idEmpleado : int
+  - nombre : String
+  - apellido : String
+  - sueldo : Decimal
+  - montoTotalVendido : Decimal
+  + registrarAsistencia(a : Asistencia) : void
+  + registrarVenta(v : Venta) : void
+}
+
+class Cliente {
+  - idCliente : int
+  - nombre : String
+  - apellido : String
+  - dni : String
+  - esFrecuente : Boolean
+  - email : String
+  - telefono : String
+  - saldoCuentaCorriente : Decimal
+  + actualizarDatosCliente(idCliente, nombre, apellido, dni, email, telefono) : void
+  + agregarClienteFrecuente(dni) : void
+  + buscarCliente(nombre : String) : List<Cliente>
+  + agreagrCliente(nombre, apellido, dni, email, telefono) : void
+  + eliminarCliente(idCliente) : void
+  + listarClientesFrecuentes(esFrecuente) : List<Cliente>
+
+}
+
+class ObraSocial {
+  - idObraSocial : int
+  - nombre : String
+  - cuit : String
+  - direccion : String
+  - telefono : String
+}
+
+class Receta {
+  - idReceta : int
+  - fechaPrescripcion : Date
+  - matriculaMedico : String
+  - usada : Boolean
+}
+
+class Producto {
+  - idProducto : int
+  - nombre : String
+  - precio : Decimal
+  - stock : int
+  + cargarProducto(nombre, precio, stock) : void
+  + actualizarProducto(idProducto, nombre, precio, stock) : void
+  + eliminarProducto(idProducto) : void
+  + buscarProducto(nombre : String) : List<Producto>
+}
+
+class DetalleVenta {
+  - idDetalle : int
+  - cantidad : int
+  - precioUnitario : Decimal
+  - subtotal : Decimal
+  + calcularSubtotal() : Decimal
+}
+
+class Venta {
+  - idVenta : int
+  - tipo : TipoVenta
+  - fechaHora : DateTime
+  - montoTotal : Decimal
+  - tipoPago : TipoPago
+  - cuotas : int
+  + calcularTotal() : Decimal
+  + agregarDetalle(d : DetalleVenta) : void
+}
+
+class Ticket {
+  - idTicket : int
+  - nombreFarmacia : String
+  - direccion : String
+  - telefono : String
+  - fechaHoraImpresion : DateTime
+  + imprimir() : void
+}
+
+class Asistencia {
+  - idAsistencia : int
+  - fecha : Date
+  - estado : EstadoAsistencia
+  - horaEntrada : Time
+  - horaSalida : Time
+  + registrarAsistencia() : void
+  + registrarSalida() : void
+  + filtrarPorFecha(fecha : Date) : List<Asistencia>
+  + filtrarPorEmpleado(empleadoId : int) : List<Asistencia>
+  + filtrarPorEstado(estado : EstadoAsistencia) : List<Asistencia>
+}
+
+' --------------------
+' Relaciones y multiplicidades (solo multiplicidades)
+' --------------------
+
+' Usuario mantiene referencia (agregación) a Empleado
+Usuario "1" o-- "0..1" Empleado
+
+' Empleado registra asistencias (composición)
+Empleado "1" *-- "0..x" Asistencia
+
+' Empleado realiza ventas
+Empleado "1" -- "0..X" Venta
+
+' Venta contiene DetalleVenta (composición fuerte: 1 venta tiene al menos 1 detalle)
+Venta "1" *-- "1..X" DetalleVenta
+
+' DetalleVenta referencia a Producto (asociación)
+DetalleVenta "1" --> "1...X" Producto
+
+' Venta puede asociarse opcionalmente a un Cliente
+Venta "0..*" -- "0..1" Cliente
+
+' Cliente tiene Recetas (composición: recetas dentro del historial del cliente)
+Cliente "1" *-- "0..X" Receta
+
+' Receta puede cubrir cero o muchos DetalleVenta (asociación)
+Receta "1" -- "0..X" DetalleVenta
+DetalleVenta "0..1" -- "1" Receta
+
+' ObraSocial puede relacionarse con Receta (si se factura a obra social)
+ObraSocial "0..1" -- "0..X" Receta
+
+' Cliente puede estar asociado a una o más Obras Sociales
+Cliente "0..1" -- "0..X" ObraSocial
+
+' Venta genera opcionalmente un Ticket (composición ligera)
+Venta "1" *-- "0..1" Ticket
+
+
+@enduml
