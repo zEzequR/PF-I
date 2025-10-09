@@ -8,12 +8,14 @@
 **Estado** = [presente | ausente | tarde | licencia]
 **Ventas** = [tipoVta] + DatosCliente + fechaVta + montoTotal + [tipoPago] + (cuotas)
 **Tipo Venta** = [ particular | obraSocial]
-**Obra Social** = @numAfiliado + nomObraSocial + fechaPrescripción + fechaVenta + matriculaMed + 1{productosRecetados}x
+**Obra Social** = @numAfiliado + nomObraSocial + fechaVenta + matriculaMed + 1{productosRecetados}x
 **TipoPago** = [efectivo | débito | crédito | transferencia | billetera virtual]
 **Datos Cliente**= nombreCliente + apellidoCliente + (email) + númTel + DNI + (DetallesPedidos) + (SaldoCtaCorriente)
-**ticket** = DatosFarmacia + fechaHora + DatosCliente + detallesPedido
+**ticket** = DatosFarmacia + fechaHora + DatosCliente + (DetallesPedidos) + detallesVenta
 **DatosFarmacia** = nombreFarmacia + Direccion + teléfono
 **Detalles Pedido** = 1{nombreMed + precio}x + montoFinal
+**Receta** = + fechaPrescripción + matriculaMed
+**Detalle Venta** = + montoFinal + nombreMed + Precio 
 
 | Nombre              | Descripcion                                    | Tipo     | Longitud | Dominio                                                                       |
 | ------------------- | ---------------------------------------------- | -------- | -------- | ----------------------------------------------------------------------------- |                                                              |
@@ -53,4 +55,4 @@
 | precio              | precio del/los medicamento/s                   | float    | 100      | 0-9                                                                           |
 | montoFinal          | monto de venta de/los medicamento/s            | float    | 100      | 0-9                                                                           |
 | @codBarra           | Identificador unico de medicamentos            | int      | 50       | 0-9                                                                           |
-                                                                        
+| detallesVenta        | detalles de la venta realizada                |  str  |    100      |                                 
