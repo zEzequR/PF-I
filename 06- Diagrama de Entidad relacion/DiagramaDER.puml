@@ -1,0 +1,142 @@
+@startchen DER
+left to right direction
+' ---------- ENTIDADES (solo nombre) ----------
+entity Usuario {
+    nombreUsuario
+    contraseña
+    montoTotalVendido
+    tipoUsuario
+}
+entity Empleado {
+    nombre
+    apellido
+    sueldo
+    montoTotalVendido
+
+}
+entity Cliente {
+    nombreCliente
+    email
+    númTel
+    DNI
+    SaldoCtaCorriente
+}
+entity ObraSocial {
+    numAfiliad
+    nomObraSocia
+    fechaVenta
+    matriculaMed
+    productosRecetados
+}
+entity Venta {
+    tipoVta
+    DatosCliente
+    fechaVta
+    montoTota
+    tipoPago
+    cuotas
+entity DetalleVenta {
+    nombreMed
+    precio
+    montoFinal
+}
+entity Medicamento {
+    codBarra
+    nombreMed
+    descripción
+    laboratorio
+    precioMedUnitario
+    stock
+}
+entity Asistencia {
+    fecha
+    horaEntrada
+    horaSalida
+    estado
+}
+entity Ticket {
+    DatosFarmacia
+    fechaHora
+    DatosCliente
+}
+
+entity Receta {
+    fechaPrescripción
+    matriculaMedico
+
+}
+
+entity DetallePedido {
+    nombreMed
+    precio
+    montoFinal
+
+}
+
+' ---------- RELACIONES ----------
+
+relationship Genera {
+}
+relationship Afiliado {
+}
+relationship Prescribe{
+}
+relationship Contiene{
+}
+relationship Caracteriza{
+}
+relationship Tiene {
+}
+relationship Gestiona {
+}
+relationship Incluye {
+}
+relationship Contiene {
+}
+relationship Asociado {
+}
+relationship Corresponde {
+}
+
+' ---------- CONEXIONES (multiplicidades Chen puro) ----------
+
+
+Usuario -1- Caracteriza
+Caracteriza -1- Empleado
+
+Empleado -1- Tiene
+Tiene -1- Asistencia
+
+Empleado -1- Gestiona
+Gestiona -N- Venta
+
+Venta -N- Incluye
+Incluye -1- DetalleVenta
+
+DetalleVenta -1- Contiene
+Contiene -N- Medicamento
+
+Receta -1- Prescribe
+Prescribe -1- ObraSocial
+
+Receta -1- Contiene
+Contiene -N- Medicamento
+
+Medicamento -N- Contiene
+Contiene -1- DetallePedido
+
+
+Cliente -1- Afiliado
+Afiliado -1- ObraSocial
+
+Receta -N- Corresponde
+Corresponde -1- Cliente
+
+DetalleVenta -1- Genera
+Genera -1- Ticket
+
+DetallePedido -N- Asociado
+Asociado -1- Ticket
+
+
+@endchen
