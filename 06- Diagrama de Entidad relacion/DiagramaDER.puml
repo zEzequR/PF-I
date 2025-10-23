@@ -1,12 +1,7 @@
-@startchen DER
+﻿@startchen DER
 left to right direction
 ' ---------- ENTIDADES (solo nombre) ----------
-entity Usuario {
-    __idUsuario__
-    nombreUsuario
-    contraseña
-    tipoUsuario
-}
+
 entity Empleado {
     __idEmpleado__
     nombreEmpleado
@@ -109,9 +104,6 @@ relationship Pertenece {
 }
 
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
-
-Usuario -1- Pertenece
-Pertenece -1- Empleado
 
 Empleado -1- Gestiona
 Gestiona -N- Venta
