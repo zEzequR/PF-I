@@ -1,4 +1,4 @@
-﻿@startchen DER
+﻿﻿@startchen DER
 left to right direction
 ' ---------- ENTIDADES (solo nombre) ----------
 
@@ -28,7 +28,7 @@ entity Venta {
     tipoVta
     DatosCliente
     fechaVta
-    montoTota
+    montoTotal
     tipoPago
     cuotas
 entity DetalleVenta {
@@ -100,9 +100,6 @@ relationship Asociado {
 }
 relationship Corresponde {
 }
-relationship Pertenece {
-}
-
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
 
 Empleado -1- Gestiona
