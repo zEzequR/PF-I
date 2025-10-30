@@ -1,4 +1,4 @@
-﻿﻿@startchen DER
+﻿@startchen DER
 left to right direction
 ' ---------- ENTIDADES (solo nombre) ----------
 
@@ -6,10 +6,17 @@ entity Empleado {
     __idEmpleado__
     nombreEmpleado
     sueldo
-
 }
+
+
+entity Usuario {
+    __tipoUsuario__
+    nombreUsuario
+    contraseña
+}
+
 entity Cliente {
-    __idCliente__
+    __numAfiliado__
     nombreCliente
     email
     númTel
@@ -17,10 +24,7 @@ entity Cliente {
     SaldoCtaCorriente
 }
 entity ObraSocial {
-    __numAfiliado__
-    nomObraSocia
-    fechaVenta
-    matriculaMed
+    __NombreObraSocial__
     productosRecetados
 }
 entity Venta {
@@ -30,6 +34,7 @@ entity Venta {
     fechaVta
     montoTotal
     tipoPago
+    fechaVenta
     cuotas
 entity DetalleVenta {
     __idDetalleVenta__
@@ -46,8 +51,7 @@ entity Medicamento {
     stock
 }
 entity Asistencia {
-    __idAsistencia__
-    fecha
+    __fecha__
     horaEntrada
     horaSalida
     estado
@@ -59,11 +63,20 @@ entity Ticket {
     DatosCliente
 }
 
+entity Medico {
+    __matriculaMed__
+    nombreMedico
+}
+
+entity Descuento {
+    porcentaje
+}
+
+
 entity Receta {
     __nroReceta__
     fechaPrescripción
     matriculaMedico
-
 }
 
 entity DetallePedido {
@@ -71,7 +84,6 @@ entity DetallePedido {
     nombreMed
     precio
     montoFinal
-
 }
 
 ' ---------- RELACIONES ----------
@@ -98,24 +110,42 @@ relationship Lista {
 }
 relationship Asociado {
 }
+relationship Vinculado {
+}
+relationship Determina {
+}
 relationship Corresponde {
+}
+relationship Aplica {
+}
+relationship Representa {
+}
+relationship Cuenta {
+}
+relationship Modifica {
 }
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
 
-Empleado -1- Gestiona
+Empleado -1- Representa
+Representa -1- Usuario
+
+Usuario -1- Gestiona
 Gestiona -N- Venta
 
 Cliente -1- Asociado
 Asociado -N- Venta
 
-Empleado -1- Tiene
-Tiene -1- Asistencia
+Usuario -1- Tiene
+Tiene -N- Asistencia
 
-Venta -N- Incluye
-Incluye -1- DetalleVenta
+Venta -1- Incluye
+Incluye -N- DetalleVenta
 
 DetalleVenta -1- Detalla
 Detalla -N- Medicamento
+
+Descuento -1- Modifica
+Modifica -N- Venta
 
 DetallePedido -1- Lista
 Lista -N- Medicamento
@@ -126,10 +156,22 @@ Genera -1- Ticket
 DetalleVenta -1- Caracteriza
 Caracteriza -1- Ticket
 
-Receta -1- Prescribe
-Prescribe -1- ObraSocial
+Medico -1- Prescribe
+Prescribe -N- Receta
 
-Receta -1- Contiene
+Medico -N- Vinculado
+Vinculado -N- ObraSocial
+
+ObraSocial -1- Determina
+Determina -1- Descuento
+
+Cliente -1- Cuenta
+Cuenta -1- Descuento
+
+Descuento -1- Aplica
+Aplica -N- Receta
+
+Receta -N- Contiene
 Contiene -N- Medicamento
 
 Cliente -1- Afiliado
