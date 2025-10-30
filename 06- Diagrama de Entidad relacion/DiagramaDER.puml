@@ -3,15 +3,13 @@ left to right direction
 ' ---------- ENTIDADES (solo nombre) ----------
 
 entity Empleado {
-    __idEmpleado__
-    nombreEmpleado
-    sueldo
+    __nombreEmpleado__
 }
 
 
 entity Usuario {
-    __tipoUsuario__
-    nombreUsuario
+    tipoUsuario
+    nombreUsuario__
     contraseña
 }
 
@@ -37,7 +35,7 @@ entity Venta {
     fechaVenta
     cuotas
 entity DetalleVenta {
-    __idDetalleVenta__
+    __nroTicket__
     nombreMed
     precio
     montoFinal
@@ -80,8 +78,9 @@ entity Receta {
 }
 
 entity DetallePedido {
-    __idDetallePedido__
+    __numPedido__
     nombreMed
+    nombre
     precio
     montoFinal
 }
@@ -116,11 +115,9 @@ relationship Determina {
 }
 relationship Corresponde {
 }
-relationship Aplica {
+relationship Asociada {
 }
 relationship Representa {
-}
-relationship Cuenta {
 }
 relationship Modifica {
 }
@@ -159,17 +156,17 @@ Caracteriza -1- Ticket
 Medico -1- Prescribe
 Prescribe -N- Receta
 
+Receta -1- Asociada
+Asociada -1- Venta
+
 Medico -N- Vinculado
 Vinculado -N- ObraSocial
 
 ObraSocial -1- Determina
 Determina -1- Descuento
 
-Cliente -1- Cuenta
-Cuenta -1- Descuento
-
-Descuento -1- Aplica
-Aplica -N- Receta
+Receta -1- Representa
+Representa -1- Venta
 
 Receta -N- Contiene
 Contiene -N- Medicamento
