@@ -1,0 +1,219 @@
+@startuml DER
+left to right direction
+
+class TipoActor {
+    - nombre
+    - email
+    - CUIT/CUIL
+    - númTel
+    - dirección
+    - categoria
+
+    + CargarActor(nombre, email, númTel, dirección, categoria)
+    + ModificarActor(CUIT/CUIL, nombre, email, númTel, dirección, categoria)
+    + EliminarActor(CUIT/CUIL)
+}
+
+class Persona {
+    - DNI
+}
+class Establecimiento{
+}
+
+class DatosFarmacia{
+
+}
+
+class DatosLaboratorio{
+    
+}
+
+class Pago{
+    - cuotas
+    - montoTotal
+    - Descuento
+}
+class Tarjeta{
+}
+class Efectivo{
+}
+class Transferencia{
+}
+
+class Empleado {
+    
+}
+
+class Usuario {
+    - nombreUsuario
+    - contraseña
+}
+class TipoUsuario{
+}
+class Administrador{
+}
+class Farmaceutico{
+}
+
+class Cliente {
+    - numAfiliado
+    - SaldoCtaCorriente
+}
+class ObraSocial {
+    - NombreObraSocial
+    - productosRecetados
+}
+class Venta {
+    - fechaVta
+    - fechaVenta
+    + AgregarProducto(DetalleVenta)
+    + RegistrarVenta(DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
+    + BuscarVenta(nroVta)
+    + ModificarVenta(nroVta, DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
+    + EliminarVenta(nroVta)
+    + ElegirTipoVenta(tipoVta)
+    + CalcularMontoTotal(DetalleVta, Descuento)
+    + ObtenerReceta(nroReceta, numAfiliado)
+}
+class TipoVenta{
+    
+}
+class ConReceta{
+
+}
+class SinReceta{
+
+}
+
+class DetalleVenta {
+    - precio
+}
+class Medicamento {
+    - codBarra
+    - descripción
+    - precioMedUnitario
+    - stock
+    + ConsultarStock(codBarra)
+    + VenderMedicamento(codBarra, cantidad)
+    + ActualizarPrecio(codBarra, nuevoPrecio)
+    + ActualizarStock(codBarra, cantidadVendida)
+    + DisminuirStock(int cantidad);
+    + AumentarStock(int cantidad);
+}
+class Asistencia {
+    - fecha
+    - horaEntrada
+    - horaSalida
+    + RegistrarAsistencia(Empleado, horaEntrada, horaSalida, estado)
+    + ObtenerHistorialAsistencia(desde, hasta);
+}
+class estado {
+}
+class Licencia{
+
+}
+class Ausente{
+
+}
+class Presente{
+
+}
+
+class Ticket {
+    - nroTicket
+    - fechaHora
+    + GenerarTicket(DatosFarmacia, DatosCliente, fechaHora)
+}
+
+class Medico {
+    - matriculaMed
+}
+
+class Descuento {
+    - porcentaje
+}
+
+
+class Receta {
+    - nroReceta
+    - fechaPrescripción
+    - matriculaMedico
+}
+
+class DetallePedido {
+    - numPedido
+    - nombreMed
+    - montoFinal
+    - precio
+}
+
+
+TipoVenta -- ConReceta
+TipoVenta -- SinReceta
+
+Pago -- Tarjeta
+Pago -- Efectivo
+Pago -- Transferencia
+
+estado -- Licencia
+estado -- Ausente
+estado -- Presente
+
+TipoUsuario -- Administrador
+TipoUsuario -- Farmaceutico
+
+TipoActor -- Persona
+TipoActor -- Establecimiento
+
+' SUPERCLASES
+Persona --> Empleado
+
+Persona --> Cliente
+
+Empleado --> Usuario
+
+Persona --> Medico
+
+Establecimiento --> DatosLaboratorio
+
+Establecimiento --> DatosFarmacia
+
+' DEPENDENCIAS
+
+DatosFarmacia --> Ticket
+
+DatosLaboratorio --> DetallePedido
+
+Venta ..> TipoVenta
+
+' AGREGACIONES
+
+Cliente o-- ObraSocial
+
+Descuento o-- Venta
+
+Receta o-- ObraSocial
+
+Venta o-- Ticket
+
+Empleado o-- Asistencia
+
+' COMPOSICIONES
+
+Receta *-- Medico
+
+ObraSocial *-- Descuento
+
+Venta *-- DetalleVenta
+
+Cliente *-- Venta
+
+Medicamento *-- DetalleVenta
+
+Venta *-- Pago
+
+Asistencia *-- estado
+
+Usuario *-- TipoUsuario
+
+@enduml

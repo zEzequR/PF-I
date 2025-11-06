@@ -9,16 +9,16 @@ entity Empleado {
 
 entity Usuario {
     tipoUsuario
-    nombreUsuario__
+    __nombreUsuario__
     contraseña
 }
 
 entity Cliente {
-    __numAfiliado__
+    numAfiliado
     nombreCliente
     email
     númTel
-    DNI
+    __DNI__
     SaldoCtaCorriente
 }
 entity ObraSocial {
@@ -109,8 +109,6 @@ relationship Lista {
 }
 relationship Asociado {
 }
-relationship Vinculado {
-}
 relationship Determina {
 }
 relationship Corresponde {
@@ -120,6 +118,8 @@ relationship Asociada {
 relationship Representa {
 }
 relationship Modifica {
+}
+relationship Vinculado {
 }
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
 
@@ -159,14 +159,11 @@ Prescribe -N- Receta
 Receta -1- Asociada
 Asociada -1- Venta
 
-Medico -N- Vinculado
-Vinculado -N- ObraSocial
-
 ObraSocial -1- Determina
 Determina -1- Descuento
 
-Receta -1- Representa
-Representa -1- Venta
+Receta -X- Vinculado
+Vinculado -1- Venta
 
 Receta -N- Contiene
 Contiene -N- Medicamento
