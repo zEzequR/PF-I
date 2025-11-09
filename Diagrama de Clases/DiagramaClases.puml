@@ -12,6 +12,7 @@ class TipoActor {
     + CargarActor(nombre, email, númTel, dirección, categoria)
     + ModificarActor(CUIT/CUIL, nombre, email, númTel, dirección, categoria)
     + EliminarActor(CUIT/CUIL)
+    + BuscarActor(nombre, email, numTél, CUIT/CUIL)
 }
 
 class Persona {
@@ -33,11 +34,12 @@ class Pago{
     - montoTotal
     - Descuento
 }
-class Tarjeta{
-}
-class Efectivo{
-}
-class Transferencia{
+
+enum TipoPago{
+    Efectivo
+    Transferencia
+    Tarjeta
+    Billetera Virtual
 }
 
 class Empleado {
@@ -47,54 +49,68 @@ class Empleado {
 class Usuario {
     - nombreUsuario
     - contraseña
+    - IniciarSesión(nombreUsuario, contraseña)
 }
-class TipoUsuario{
-}
-class Administrador{
-}
-class Farmaceutico{
+
+enum TipoUsuario{
+    Administrador
+    Farmacéutico
 }
 
 class Cliente {
-    - numAfiliado
     - SaldoCtaCorriente
+    + AñadirSaldo(cantidad)
+    + restarSaldo(cantidad)
 }
 class ObraSocial {
     - NombreObraSocial
-    - productosRecetados
 }
+
+class Cobertura {
+    - numAfiliado
+    - Descuento
+}
+
 class Venta {
     - fechaVta
     - fechaVenta
-    + AgregarProducto(DetalleVenta)
     + RegistrarVenta(DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
     + BuscarVenta(nroVta)
     + ModificarVenta(nroVta, DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
     + EliminarVenta(nroVta)
     + ElegirTipoVenta(tipoVta)
     + CalcularMontoTotal(DetalleVta, Descuento)
-    + ObtenerReceta(nroReceta, numAfiliado)
 }
-class TipoVenta{
-    
-}
-class ConReceta{
 
+class TipoDescuento{
+    - motivo
+    - porcentaje
+    - fechainicio
+    - fechaFinal
+    - estado
+    + AgregarPromoción(motivo, porcentaje, fechainicio, fechaFinal, estado)
+    - EliminarPromoción(motivo)
+    - ModificarPromoción(motivo, porcentaje, fechainicio, fechaFinal, estado)
 }
-class SinReceta{
 
+enum TipoVenta{
+    conReceta
+    sinReceta
 }
 
 class DetalleVenta {
     - precio
+    + AgregarProducto(Medicamento)
+    + EliminarProducto(Medicamento)
+    + aplicarDescuento(TipoDescuento)
+    + calcularSubtotal()
 }
 class Medicamento {
     - codBarra
     - descripción
     - precioMedUnitario
     - stock
-    + ConsultarStock(codBarra)
-    + VenderMedicamento(codBarra, cantidad)
+    + ConsultarStock(codBarra, descripción)
     + ActualizarPrecio(codBarra, nuevoPrecio)
     + ActualizarStock(codBarra, cantidadVendida)
     + DisminuirStock(int cantidad);
@@ -107,16 +123,11 @@ class Asistencia {
     + RegistrarAsistencia(Empleado, horaEntrada, horaSalida, estado)
     + ObtenerHistorialAsistencia(desde, hasta);
 }
-class estado {
-}
-class Licencia{
 
-}
-class Ausente{
-
-}
-class Presente{
-
+enum estado {
+    Licencia
+    Ausente
+    Presente
 }
 
 class Ticket {
@@ -129,43 +140,61 @@ class Medico {
     - matriculaMed
 }
 
-class Descuento {
-    - porcentaje
-}
-
-
 class Receta {
     - nroReceta
     - fechaPrescripción
     - matriculaMedico
+    + ObtenerReceta(nroReceta, numAfiliado)
 }
+
+class DetalleReceta{
+    - fechaPrescripción
+    - matriculaMedico
+    - productosRecetados
+}
+
 
 class DetallePedido {
     - numPedido
     - nombreMed
     - montoFinal
     - precio
+    + GenerarDetalle(numPedido, nombreMed, montoFinal, precio)
 }
 
+Usuario -- TipoUsuario
 
-TipoVenta -- ConReceta
-TipoVenta -- SinReceta
-
-Pago -- Tarjeta
-Pago -- Efectivo
-Pago -- Transferencia
-
-estado -- Licencia
-estado -- Ausente
-estado -- Presente
-
-TipoUsuario -- Administrador
-TipoUsuario -- Farmaceutico
+Asistencia -- estado
 
 TipoActor -- Persona
 TipoActor -- Establecimiento
 
+Pago -- TipoPago
+
+Cliente -- Cobertura
+
+ObraSocial -- Cobertura
+
+Cliente -- ObraSocial
+
+Receta -- ObraSocial
+
+Venta -- Ticket
+
+Empleado -- Asistencia
+
+TipoDescuento -- Cobertura
+
+Venta -- Receta
+
+Receta -- Medico
+
+Medicamento -- DetalleVenta
+
+DetalleReceta -- Medicamento
+
 ' SUPERCLASES
+
 Persona --> Empleado
 
 Persona --> Cliente
@@ -178,42 +207,23 @@ Establecimiento --> DatosLaboratorio
 
 Establecimiento --> DatosFarmacia
 
-' DEPENDENCIAS
-
 DatosFarmacia --> Ticket
 
 DatosLaboratorio --> DetallePedido
 
 Venta ..> TipoVenta
 
-' AGREGACIONES
-
-Cliente o-- ObraSocial
-
-Descuento o-- Venta
-
-Receta o-- ObraSocial
-
-Venta o-- Ticket
-
-Empleado o-- Asistencia
-
 ' COMPOSICIONES
 
-Receta *-- Medico
-
-ObraSocial *-- Descuento
+Receta *-- DetalleReceta
 
 Venta *-- DetalleVenta
 
 Cliente *-- Venta
 
-Medicamento *-- DetalleVenta
-
 Venta *-- Pago
 
-Asistencia *-- estado
+Venta *-- TipoDescuento
 
-Usuario *-- TipoUsuario
 
 @enduml

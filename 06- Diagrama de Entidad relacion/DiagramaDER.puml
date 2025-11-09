@@ -14,16 +14,15 @@ entity Usuario {
 }
 
 entity Cliente {
-    numAfiliado
     nombreCliente
     email
     númTel
     __DNI__
     SaldoCtaCorriente
+    tipoCliente
 }
 entity ObraSocial {
     __NombreObraSocial__
-    productosRecetados
 }
 entity Venta {
     __nroVta__
@@ -34,8 +33,9 @@ entity Venta {
     tipoPago
     fechaVenta
     cuotas
+}
 entity DetalleVenta {
-    __nroTicket__
+    __nroDetalleVenta__
     nombreMed
     precio
     montoFinal
@@ -66,18 +66,23 @@ entity Medico {
     nombreMedico
 }
 
-entity Descuento {
-    porcentaje
+entity Cobertura {
+    __numAfiliado__
+    Descuento
 }
 
 
 entity Receta {
     __nroReceta__
-    fechaPrescripción
-    matriculaMedico
 }
 
-entity DetallePedido {
+entity DetalleReceta{
+    fechaPrescripción
+    matriculaMedico
+    __productosRecetados__
+}
+
+entity DetallePedidoCompraMed {
     __numPedido__
     nombreMed
     nombre
@@ -85,8 +90,19 @@ entity DetallePedido {
     montoFinal
 }
 
+entity TipoDescuento{
+    __motivo__
+    porcentaje
+    fechainicio
+    fechaFinal
+    estado
+}
 ' ---------- RELACIONES ----------
 
+relationship Obtiene {
+}
+relationship Aplica {
+}
 relationship Genera {
 }
 relationship Afiliado {
@@ -95,7 +111,7 @@ relationship Prescribe{
 }
 relationship Contiene{
 }
-relationship Caracteriza{
+relationship Relacionado{
 }
 relationship Tiene {
 }
@@ -109,7 +125,7 @@ relationship Lista {
 }
 relationship Asociado {
 }
-relationship Determina {
+relationship Brinda {
 }
 relationship Corresponde {
 }
@@ -121,7 +137,23 @@ relationship Modifica {
 }
 relationship Vinculado {
 }
+relationship Cubre {
+}
+relationship Engloba{
+}
+relationship Abarca{
+}
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
+
+
+TipoDescuento -N- Obtiene
+Obtiene -N- Cliente
+
+TipoDescuento -1- Aplica
+Aplica -N- Venta
+
+Cobertura -1- Cubre
+Cubre -1- Cliente
 
 Empleado -1- Representa
 Representa -1- Usuario
@@ -141,26 +173,32 @@ Incluye -N- DetalleVenta
 DetalleVenta -1- Detalla
 Detalla -N- Medicamento
 
-Descuento -1- Modifica
+Cobertura -1- Modifica
 Modifica -N- Venta
 
-DetallePedido -1- Lista
+DetallePedidoCompraMed -1- Lista
 Lista -N- Medicamento
 
 Venta -1- Genera
 Genera -1- Ticket
 
-DetalleVenta -1- Caracteriza
-Caracteriza -1- Ticket
-
 Medico -1- Prescribe
 Prescribe -N- Receta
+
+Medico -1- Relacionado
+Relacionado -N- Venta
+
+Receta -1- Abarca
+Abarca -1- DetalleReceta
+
+DetalleReceta -1- Engloba
+Engloba -X- Medicamento
 
 Receta -1- Asociada
 Asociada -1- Venta
 
-ObraSocial -1- Determina
-Determina -1- Descuento
+ObraSocial -1- Brinda
+Brinda -1- Cobertura
 
 Receta -X- Vinculado
 Vinculado -1- Venta
