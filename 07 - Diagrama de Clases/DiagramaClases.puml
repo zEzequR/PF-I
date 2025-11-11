@@ -1,4 +1,4 @@
-@startuml DER
+﻿@startuml DER
 left to right direction
 
 class TipoActor {
@@ -142,8 +142,6 @@ class Medico {
 
 class Receta {
     - nroReceta
-    - fechaPrescripción
-    - matriculaMedico
     + ObtenerReceta(nroReceta, numAfiliado)
 }
 
@@ -174,8 +172,6 @@ Pago -- TipoPago
 Cliente -- Cobertura
 
 ObraSocial -- Cobertura
-
-Cliente -- ObraSocial
 
 Receta -- ObraSocial
 
