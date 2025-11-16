@@ -13,7 +13,6 @@
 - Fecha
 - Hora de entrada y salida
 - Estado(presente | ausente | tarde | licencia)
-- El sistema confirma que la asistencia fue registrada correctamente.
 
 # Camino alternativo:
 

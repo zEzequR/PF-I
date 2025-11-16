@@ -32,5 +32,5 @@
 
 # Escenario de fracaso:
 
-> El empleado no se puede registrar por error de conexión, nombre de usuario duplicado
+> El empleado no se puede registrar por error de conexión
 

@@ -5,7 +5,7 @@
 
 # Precondiciones: 
 - El administrador debe haber iniciado sesión en el sistema.
-- El administrador debe contar con los datos necesarios del nuevo cliente (Nombre de cliente, Apellido de cliente, Mail, Numero de telefono y DNI).
+- El administrador debe contar con los datos necesarios del nuevo cliente (Nombre de cliente, Mail, Número de telefono y DNI).
 - El cliente debe cumplir los requisitos para abrir cuenta corriente (mínimo 1 compra semanal en los últimos 3 meses y no tener deudas mayores a 15 días).
 
 # Camino básico:
@@ -13,7 +13,6 @@
 2)Selecciona la opción “Registrar cliente frecuente”.
 3)El administrador ingresa la información requerida: 
 - Nombre de cliente
-- Apellido de cliente
 - Mail
 - Numero de telefono
 - DNI

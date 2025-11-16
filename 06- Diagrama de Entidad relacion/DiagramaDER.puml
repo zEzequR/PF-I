@@ -6,7 +6,6 @@ entity Empleado {
     __nombreEmpleado__
 }
 
-
 entity Usuario {
     tipoUsuario
     __nombreUsuario__
@@ -20,40 +19,52 @@ entity Cliente {
     __DNI__
     SaldoCtaCorriente
     tipoCliente
+    montoAcumulado
 }
+
 entity ObraSocial {
     __NombreObraSocial__
 }
+
 entity Venta {
     __nroVta__
     tipoVta
-    DatosCliente
     fechaVta
     montoTotal
     tipoPago
-    fechaVenta
     cuotas
 }
+
 entity DetalleVenta {
     __nroDetalleVenta__
-    nombreMed
     precio
     montoFinal
 }
+
+entity Drogueria{
+    __nombre__
+    direccion
+    email
+    númTel
+    formatoEnvío
+}
+
 entity Medicamento {
     __codBarra__
     nombreMed
     descripción
-    laboratorio
+    drogueria
     precioMedUnitario
     stock
 }
+
 entity Asistencia {
     __fecha__
     horaEntrada
     horaSalida
     estado
 }
+
 entity Ticket {
     __nroTicket__
     DatosFarmacia
@@ -71,7 +82,6 @@ entity Cobertura {
     Descuento
 }
 
-
 entity Receta {
     __nroReceta__
 }
@@ -82,7 +92,7 @@ entity DetalleReceta{
     __productosRecetados__
 }
 
-entity DetallePedidoCompraMed {
+entity DetallePedido {
     __numPedido__
     nombreMed
     nombre
@@ -137,11 +147,13 @@ relationship Modifica {
 }
 relationship Vinculado {
 }
-relationship Cubre {
-}
 relationship Engloba{
 }
 relationship Abarca{
+}
+relationship Crea{
+}
+relationship Es_enviado{
 }
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
 
@@ -151,9 +163,6 @@ Obtiene -N- Cliente
 
 TipoDescuento -1- Aplica
 Aplica -N- Venta
-
-Cobertura -1- Cubre
-Cubre -1- Cliente
 
 Empleado -1- Representa
 Representa -1- Usuario
@@ -170,14 +179,17 @@ Tiene -N- Asistencia
 Venta -1- Incluye
 Incluye -N- DetalleVenta
 
-DetalleVenta -1- Detalla
-Detalla -N- Medicamento
+Medicamento -1- Detalla
+Detalla -N- DetalleVenta
 
 Cobertura -1- Modifica
 Modifica -N- Venta
 
-DetallePedidoCompraMed -1- Lista
-Lista -N- Medicamento
+Cliente -1- Afiliado
+Afiliado -N- Cobertura
+
+Medicamento -1- Lista
+Lista -N- DetallePedido
 
 Venta -1- Genera
 Genera -1- Ticket
@@ -189,27 +201,30 @@ Medico -1- Relacionado
 Relacionado -N- Venta
 
 Receta -1- Abarca
-Abarca -1- DetalleReceta
+Abarca -N- DetalleReceta
 
-DetalleReceta -1- Engloba
-Engloba -X- Medicamento
+Medicamento -1- Engloba
+Engloba -N- DetalleReceta
 
 Receta -1- Asociada
 Asociada -1- Venta
 
 ObraSocial -1- Brinda
-Brinda -1- Cobertura
+Brinda -N- Cobertura
 
-Receta -X- Vinculado
+Receta -N- Vinculado
 Vinculado -1- Venta
 
 Receta -N- Contiene
 Contiene -N- Medicamento
 
-Cliente -1- Afiliado
-Afiliado -1- ObraSocial
-
 Receta -N- Corresponde
 Corresponde -1- Cliente
+
+Usuario -1- Crea
+Crea -N- DetallePedido
+
+DetallePedido -N- Es_enviado
+Es_enviado -1- Drogueria
 
 @endchen
