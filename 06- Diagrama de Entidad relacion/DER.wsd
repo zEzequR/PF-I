@@ -1,4 +1,4 @@
-﻿@startchen DER
+@startchen DER
 left to right direction
 ' ---------- ENTIDADES (solo nombre) ----------
 
@@ -135,8 +135,6 @@ relationship Prescribe{
 }
 relationship Contiene{
 }
-relationship Relacionado{
-}
 relationship Tiene {
 }
 relationship Gestiona {
@@ -212,9 +210,6 @@ Genera -1- Ticket
 
 Medico -1- Prescribe
 Prescribe -N- Receta
-
-Medico -1- Relacionado
-Relacionado -N- Venta
 
 Receta -1- Abarca
 Abarca -N- DetalleReceta
