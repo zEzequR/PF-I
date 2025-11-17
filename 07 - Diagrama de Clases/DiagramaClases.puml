@@ -1,225 +1,391 @@
-﻿@startuml DER
+@startuml CLASES
 left to right direction
+skinparam classAttributeIconSize 0
 
-class TipoActor {
+' ----------------- PERSONAS -----------------
+class Persona {
     - nombre
     - email
-    - CUIT/CUIL
-    - númTel
-    - dirección
-    - categoria
+    - numTel
+    - direccion
 
-    + CargarActor(nombre, email, númTel, dirección, categoria)
-    + ModificarActor(CUIT/CUIL, nombre, email, númTel, dirección, categoria)
-    + EliminarActor(CUIT/CUIL)
-    + BuscarActor(nombre, email, numTél, CUIT/CUIL)
+    + setPersona(dni, nombre, email, numTel, direccion)
+    + getPersona(dni)
+    + actualizarContacto(dni, email, numTel, direccion)
 }
 
-class Persona {
+class PersonaFisica {
     - DNI
 }
-class Establecimiento{
+class PersonaJuridica {
+    - CUIT
 }
 
-class DatosFarmacia{
+Persona <|-- PersonaFisica
+Persona <|-- PersonaJuridica
 
-}
-
-class DatosLaboratorio{
-    
-}
-
-class Pago{
-    - cuotas
-    - montoTotal
-    - Descuento
-}
-
-enum TipoPago{
-    Efectivo
-    Transferencia
-    Tarjeta
-    Billetera Virtual
-}
-
-class Empleado {
-    
-}
-
+' ----------------- USUARIO / EMPLEADO -----------------
 class Usuario {
     - nombreUsuario
     - contraseña
-    - IniciarSesión(nombreUsuario, contraseña)
+
+    + setUsuario(nombreUsuario, contraseña)
+    + getUsuario(nombreUsuario)
 }
 
-enum TipoUsuario{
+class Empleado {
+    - legajo
+}
+
+Empleado -- Usuario
+
+enum TipoUsuario {
     Administrador
-    Farmacéutico
+    Farmaceutico
 }
+Usuario -- TipoUsuario
 
-class Cliente {
-    - SaldoCtaCorriente
-    + AñadirSaldo(cantidad)
-    + restarSaldo(cantidad)
-}
-class ObraSocial {
-    - NombreObraSocial
-}
-
-class Cobertura {
-    - numAfiliado
-    - Descuento
-}
-
-class Venta {
-    - fechaVta
-    - fechaVenta
-    + RegistrarVenta(DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
-    + BuscarVenta(nroVta)
-    + ModificarVenta(nroVta, DatosCliente, tipoVta, tipoPago, montoTotal, cuotas)
-    + EliminarVenta(nroVta)
-    + ElegirTipoVenta(tipoVta)
-    + CalcularMontoTotal(DetalleVta, Descuento)
-}
-
-class TipoDescuento{
-    - motivo
-    - porcentaje
-    - fechainicio
-    - fechaFinal
-    - estado
-    + AgregarPromoción(motivo, porcentaje, fechainicio, fechaFinal, estado)
-    - EliminarPromoción(motivo)
-    - ModificarPromoción(motivo, porcentaje, fechainicio, fechaFinal, estado)
-}
-
-enum TipoVenta{
-    conReceta
-    sinReceta
-}
-
-class DetalleVenta {
-    - precio
-    + AgregarProducto(Medicamento)
-    + EliminarProducto(Medicamento)
-    + aplicarDescuento(TipoDescuento)
-    + calcularSubtotal()
-}
-class Medicamento {
-    - codBarra
-    - descripción
-    - precioMedUnitario
-    - stock
-    + ConsultarStock(codBarra, descripción)
-    + ActualizarPrecio(codBarra, nuevoPrecio)
-    + ActualizarStock(codBarra, cantidadVendida)
-    + DisminuirStock(int cantidad);
-    + AumentarStock(int cantidad);
-}
+' ----------------- ASISTENCIA -----------------
 class Asistencia {
     - fecha
     - horaEntrada
     - horaSalida
-    + RegistrarAsistencia(Empleado, horaEntrada, horaSalida, estado)
-    + ObtenerHistorialAsistencia(desde, hasta);
-}
+    - estado
 
-enum estado {
+    + registrarAsistencia(nombreUsuario, fecha, horaEntrada, horaSalida, estado)
+}
+enum EstadoAsistencia {
     Licencia
     Ausente
     Presente
+    Tarde
 }
+Asistencia -- EstadoAsistencia
+Empleado -- Asistencia
+
+' ----------------- CLIENTE -----------------
+class Cliente {
+    - DNI
+    - nombre
+    - SaldoCtaCorriente
+    - tipoCliente
+    - montoAcumulado
+    - email
+    - numTel
+
+    + getCliente(dni)
+    + setCliente(dni, nombre, email, numTel, tipoCliente)
+    + acumularGasto(dni, monto)
+    + registrarPagoCuentaCorriente(dni, monto)
+    + esFrecuente(dni)
+    + mostrarClientes()
+}
+PersonaFisica <|-- Cliente
+PersonaFisica <|-- Medico
+PersonaFisica <|-- Empleado
+
+' ----------------- MEDICO / RECETA -----------------
+class Medico {
+    - matriculaMed
+    - nombreMedico
+
+    + getMedico(matricula)
+}
+class Receta {
+    - nroReceta
+    - fechaPrescripcion
+    - fechaValidez
+    - tipoReceta
+    - obraSocialNombre
+
+    + obtenerReceta(nroReceta)
+    + validarReceta(nroReceta)
+    + obtenerDetalleReceta(nroReceta)
+}
+class DetalleReceta {
+    - fechaPrescripcion
+    - productosRecetados
+}
+Medico -- Receta
+Receta *-- DetalleReceta
+Cliente -- Receta
+
+' ----------------- OBRA SOCIAL / COBERTURA -----------------
+class ObraSocial {
+    - nombreObraSocial
+    - contacto
+
+    + getObraSocial(nombre)
+}
+class Cobertura {
+    - numAfiliado
+    - descuentoPorcentaje
+}
+Cliente -- Cobertura
+Cobertura -- ObraSocial
+
+' ----------------- MEDICAMENTO / DROGUERIA -----------------
+class Medicamento {
+    - codigoBarra
+    - nombre
+    - precioUnitario
+    - requiereReceta
+    - controlado
+    - cadenaFrio
+    - stock
+    - stockMinimo
+    - drogueriaNombre
+
+    + consultarStock()
+    + disminuirStock(cantidad)
+    + aumentarStock(cantidad)
+    + estaPorDebajoStockMinimo()
+    + MostrarMedicamentos()
+}
+class Drogueria {
+    - nombre
+    - email
+    - telefono
+    - canalPreferido
+
+    + actualizarContacto(nombre, email, telefono, canalPreferido)
+}
+PersonaJuridica <|-- Drogueria
+Drogueria -- Medicamento
+
+' ----------------- VENTAS / DETALLE / PAGO / TICKET -----------------
+enum TipoVenta {
+    conReceta
+    sinReceta
+}
+
+enum EstadoVenta {
+    Pendiente
+    Pagado
+    Cancelado
+}
+
+class Venta {
+    - nroVta
+    - fechaVenta
+    - tipoVta
+    - total
+    - clienteDNI
+    - nombreUsuario
+    - estadoVenta
+
+    + agregarDetalle(codigoBarra, cantidad)
+    + eliminarDetallePorCodigo(codigoBarra)
+    + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
+    + calcularTotal()
+    + aplicarDescuento(tipoDescuentoId)
+    + validarRecetas()
+    + confirmarPago(numTransacción)
+    + marcarEstado(estadoVenta)
+    + cancelar()
+    + finalizar(tipoPago, nroCuotas)
+}
+Venta ..> TipoVenta
+Venta -- EstadoVenta
+
+class DetalleVenta {
+    - nroDetalle
+    - codigoBarra
+    - cantidad
+    - precioUnitario
+    - subtotal
+
+    + calcularSubtotal(cantidad, precioUnitario)
+    + actualizarCantidad(nuevaCantidad)
+}
+Venta *-- DetalleVenta
+DetalleVenta -- Medicamento
+
+class Pago {
+    - numTransacción
+    - tipoPago
+    - monto
+    - cuotas
+
+
+    + crearPago(nroVta, tipoPago, monto, cuotas)
+    + asignarNumTransaccion(numTransacción)
+    + procesarRespuestaPasarela(estadoPago, numTransacción)
+    + marcarEstadoPago(numTransacción, estado)
+}
+Venta -- Pago
+
+enum estadoPago {
+    aprobado
+    rechazado
+}
+Pago -- estadoPago
 
 class Ticket {
     - nroTicket
     - fechaHora
-    + GenerarTicket(DatosFarmacia, DatosCliente, fechaHora)
+    - pdfPath
+
+    + generarTicket(nroVta)
 }
 
-class Medico {
-    - matriculaMed
+enum Estado{
+    error
+    creado
+    enviado
 }
-
-class Receta {
-    - nroReceta
-    + ObtenerReceta(nroReceta, numAfiliado)
-}
-
-class DetalleReceta{
-    - fechaPrescripción
-    - matriculaMedico
-    - productosRecetados
-}
-
-
-class DetallePedido {
-    - numPedido
-    - nombreMed
-    - montoFinal
-    - precio
-    + GenerarDetalle(numPedido, nombreMed, montoFinal, precio)
-}
-
-Usuario -- TipoUsuario
-
-Asistencia -- estado
-
-TipoActor -- Persona
-TipoActor -- Establecimiento
-
-Pago -- TipoPago
-
-Cliente -- Cobertura
-
-ObraSocial -- Cobertura
-
-Receta -- ObraSocial
-
+Ticket -- Estado
 Venta -- Ticket
 
-Empleado -- Asistencia
+' ----------------- TIPO DESCUENTO -----------------
+class TipoDescuento {
+    - motivo
+    - porcentaje
+    - fechaInicio
+    - fechaFin
+    - activo
 
-TipoDescuento -- Cobertura
+    + esAplicable(nroVta)
+}
+TipoDescuento -- Venta
+TipoDescuento -- Cliente
 
-Venta -- Receta
+' ----------------- PEDIDOS / DETALLEPEDIDO -----------------
 
-Receta -- Medico
+class Pedido {
+    - numPedido
+    - proveedorNombre
+    - fechaPedido
 
-Medicamento -- DetalleVenta
+    + calcularTotal()
+    + agregarLinea(codigoBarra, cantidad)
+}
 
-DetalleReceta -- Medicamento
+enum EstadoPedido{
+    error
+    creado
+    enviado
+}
 
-' SUPERCLASES
+class DetallePedido {
+    - codigoBarra
+    - nombreMedicamento
+    - cantidad
+    - precioUnitario
+    - subtotal
 
-Persona --> Empleado
+    + calcularSubtotal(codigoBarra, cantidad, precioUnitario)
+}
+Pedido *-- DetallePedido
+Pedido -- Drogueria
+Pedido -- EstadoPedido
 
-Persona --> Cliente
+' ----------------- CONTROLADORES / SERVICIOS -----------------
+interface NegocioControlador {
+    + iniciarSesion(nombreUsuario, contraseña)
+    + cerrarSesion()
+    + crearUsuario(nombreUsuario, contraseña, tipoUsuario)
+    + modificarUsuario(nombreUsuario, campos)
+    + buscarUsuarios(filtros)
 
-Empleado --> Usuario
+    + crearCliente(dni, nombre, email, numTel, tipoCliente)
+    + modificarCliente(dni, camposContacto)
+    + buscarClientes(filtros)
+    + abrirCuentaCorriente(dni)
+    + registrarPagoCuentaCorriente(dni, monto)
 
-Persona --> Medico
+    + crearMedicamento(codigoBarra, nombre, precioUnitario, stock, stockMinimo, drogueriaNombre)
+    + modificarMedicamento(codigoBarra, campos)
+    + eliminarMedicamento(codigoBarra)
+    + buscarMedicamentos(filtros)
+    + ajustarStock(codigoBarra, cantidad)
 
-Establecimiento --> DatosLaboratorio
+    + crearDrogueria(nombre, email, telefono, canalPreferido)
+    + modificarDrogueria(nombre, campos)
+    + eliminarDrogueria(nombre)
+    + buscarDroguerias(filtros)
 
-Establecimiento --> DatosFarmacia
+    + crearVenta(clienteDNI, tipoVta)
+    + agregarLineaVenta(nroVta, codigoBarra, cantidad)
+    + editarLineaVenta(nroVta, codigoBarra, nuevaCantidad)
+    + eliminarLineaVenta(nroVta, codigoBarra)
+    + cancelarVenta(nroVta)
+    + aplicarDescuentoVenta(nroVta, motivo)
+    + finalizarVenta(nroVta, tipoPago, nroCuotas)
+    + buscarVentas(filtros)
 
-DatosFarmacia --> Ticket
+    + procesarPago(nroVta, tipoPago)
+    + procesarRespuestaPago(nroVta, estadoPago, numTransacción)
+    + registrarTransaccion(nroVta, numTransacción, estadoPago)
+    + actualizarEstadoVenta(nroVta, estadoVenta)
+    + reintentarEnvioComprobante(nroVta)
+}
 
-DatosLaboratorio --> DetallePedido
+interface ServicioPedidos {
+    + generarPedidoAutomatico()
+    + crearPedidoManual(proveedorNombre, listaItems)
+    + generarDetallePedido(numPedido, codigoBarra, cantidad)
+    + generarPDFPedido(numPedido)
+    + seleccionarCanalEnvioProveedor(proveedorNombre)
+    + enviarPedido(numPedido, proveedorNombre)
+    + enviarViaWhatsApp(numPedido, telefono)
+    + enviarViaEmail(numPedido, email)
+    + registrarEnvioPedido(numPedido, proveedorNombre, canal, estado)
+    + ObtenerEstadoPedido(numPedido)
+    + ReintentarDetallePedido(numPedido)
 
-Venta ..> TipoVenta
+    + generarPDFTicket(nroVta)
+    + enviarComprobante(nroVta, clienteDNI)
+    + enviarViaWhatsAppComprobante(nroVta, telefono)
+    + enviarViaEmailComprobante(nroVta, email)
+    + guardarTicketLocal(nroVta)
+    + registrarEnvioComprobante(nroVta, canal, estado)
+    + ObtenerEstadoTicket(nroTicket)
+    + ReintentarTicket(nroTicket)
+}
 
-' COMPOSICIONES
+interface ServicioObrasSociales {
+    + validarAfiliacion(obraSocialNombre, numAfiliado)
+    + verificarRecetaElectronica(nroReceta)
+    + registrarRecetaEnVenta(nroReceta, nroVta)
+    + aplicarCoberturaVenta(nroVta, obraSocialNombre, numAfiliado)
+}
 
-Receta *-- DetalleReceta
+interface ServicioPagos {
+    + crearPago(nroVta, tipoPago, monto, cuotas)
+    + iniciarTransaccion(nroVta, numTransacción)
+    + procesarRespuesta(numTransacción, estadoPago)
+    + confirmarPago(nroVta, numTransacción)
+    + obtenerEstadoPago(numTransacción)
+    + retryTransaccion(numTransacción)
+    + registrarTransaccion(nroVta, numTransacción, estadoPago)
+    + validarMediosAceptados(nroVta, tipoPago, monto)
+}
 
-Venta *-- DetalleVenta
 
-Cliente *-- Venta
+' ----------------- ASOCIACIONES -----------------
+NegocioControlador -- Venta
+NegocioControlador -- Medicamento
+NegocioControlador -- Cliente
+NegocioControlador -- Usuario
+NegocioControlador -- Drogueria
+NegocioControlador ..> ServicioPedidos
+NegocioControlador ..> ServicioObrasSociales
+NegocioControlador ..> ServicioPagos
 
-Venta *-- Pago
 
-Venta *-- TipoDescuento
+ServicioPagos -- Pago
 
+ServicioPedidos -- Drogueria
+ServicioPedidos -- Pedido
+ServicioPedidos -- DetallePedido
+ServicioPedidos -- Ticket
+ServicioPedidos -- Venta
+
+ServicioObrasSociales -- ObraSocial
+ServicioObrasSociales -- Cobertura
+ServicioObrasSociales -- Receta
+ServicioObrasSociales -- Venta
+ServicioObrasSociales -- Cliente
 
 @enduml

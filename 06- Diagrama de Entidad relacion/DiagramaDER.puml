@@ -33,12 +33,22 @@ entity Venta {
     montoTotal
     tipoPago
     cuotas
+    estadoVenta
 }
 
 entity DetalleVenta {
     __nroDetalleVenta__
     precio
     montoFinal
+}
+
+entity Pago {
+    __numTransaccion__
+    tipoPago
+    monto
+    cuotas
+    fechaPago
+    estadoPago
 }
 
 entity Drogueria{
@@ -70,6 +80,8 @@ entity Ticket {
     DatosFarmacia
     fechaHora
     DatosCliente
+    EstadoTicket
+    pdfPath
 }
 
 entity Medico {
@@ -98,6 +110,8 @@ entity DetallePedido {
     nombre
     precio
     montoFinal
+    estadoPedido
+    pathPdf
 }
 
 entity TipoDescuento{
@@ -154,6 +168,8 @@ relationship Abarca{
 relationship Crea{
 }
 relationship Es_enviado{
+}
+relationship Se_Concreta{
 }
 ' ---------- CONEXIONES (multiplicidades Chen puro) ----------
 
@@ -214,6 +230,9 @@ Brinda -N- Cobertura
 
 Receta -N- Vinculado
 Vinculado -1- Venta
+
+Venta -1- Se_Concreta
+Se_Concreta -N- Pago
 
 Receta -N- Contiene
 Contiene -N- Medicamento
