@@ -1,0 +1,52 @@
+@startuml
+title DSD - Carga de Clientes Frecuentes
+
+actor Administrador
+control ControladorNegocio
+entity ClienteFrecuente
+entity Sistema
+
+== Inicio ==
+
+Administrador -> ControladorNegocio: accederModuloGestionClientes()
+
+ControladorNegocio -> Sistema: mostrarOpciones()
+activate Sistema
+Sistema --> ControladorNegocio: opciones
+deactivate Sistema
+
+ControladorNegocio -> Administrador: mostrarOpciones()
+
+Administrador -> ControladorNegocio: seleccionarRegistrarClienteFrecuente()
+
+Administrador -> ControladorNegocio: ingresarDatos(Nombre, Mail, Telefono, DNI, DetallesPedido, Saldo)
+Administrador -> ControladorNegocio: confirmarDatos()
+
+
+ControladorNegocio -> Sistema: validarDuplicados(DNI, Telefono)
+activate Sistema
+Sistema --> ControladorNegocio: duplicado
+deactivate Sistema
+
+alt DNI o Teléfono duplicado
+    ControladorNegocio -> Administrador: mensaje("Cliente ya registrado")
+
+else Sin duplicados
+
+    ControladorNegocio -> ClienteFrecuente: IngresaCliente(Nombre, Mail, Telefono, DNI, DetallesPedido, Saldo)
+    activate ClienteFrecuente
+    ClienteFrecuente --> ControladorNegocio: cliente
+    deactivate ClienteFrecuente
+
+    ControladorNegocio -> Sistema: registrarClienteFrecuente(cliente)
+    activate Sistema
+    Sistema --> ControladorNegocio: registroExitoso
+    deactivate Sistema
+
+    ControladorNegocio -> Administrador: mensaje("Cliente frecuente registrado correctamente")
+end
+
+
+@enduml
+
+

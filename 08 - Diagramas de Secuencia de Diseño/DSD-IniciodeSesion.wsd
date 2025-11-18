@@ -1,0 +1,43 @@
+@startuml
+title DSD - Inicio de Sesión 
+
+actor Persona
+control ControladorNegocio
+entity Usuario
+entity Sistema
+
+== Inicio ==
+
+Persona -> ControladorNegocio: iniciarSesion(usuarioIngresado, contraseñaIngresada)
+
+alt Campos vacíos
+    ControladorNegocio -> Persona: mensaje("Debe completar todos los campos")
+
+else Datos completos
+
+    ControladorNegocio -> Usuario: getUsuario(usuarioIngresado, contraseñaIngresada)
+    activate Usuario
+    Usuario --> ControladorNegocio: usuario
+    deactivate Usuario
+
+    ControladorNegocio -> Sistema: verificarCredenciales(usuario)
+    activate Sistema
+    Sistema --> ControladorNegocio: credencialesValidas
+    deactivate Sistema
+
+    alt Credenciales incorrectas
+        ControladorNegocio -> Persona: mensaje("Credenciales incorrectas")
+
+    else Credenciales correctas
+        ControladorNegocio -> Sistema: concederAcceso(usuario)
+        activate Sistema
+        Sistema --> ControladorNegocio: accesoPermitido
+        deactivate Sistema
+
+        ControladorNegocio -> Persona: mostrarPantallaPrincipal()
+    end
+
+    deactivate ControladorNegocio
+end
+
+@enduml
