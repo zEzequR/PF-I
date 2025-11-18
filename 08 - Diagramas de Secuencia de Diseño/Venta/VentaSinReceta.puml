@@ -1,0 +1,97 @@
+@startuml Venta_sin_Receta
+' Venta sin receta (secuencia)
+actor Empleado
+
+control NegocioControlador
+participant Venta
+entity Cliente
+entity Medicamento
+participant TipoDescuento
+
+== Crear venta ==
+Empleado -> NegocioControlador : crearVenta(clienteDNI, tipoVta)
+activate NegocioControlador
+NegocioControlador -> Cliente : getCliente(clienteDNI)
+activate Cliente
+Cliente --> NegocioControlador : <<Object: Cliente>>
+deactivate Cliente
+
+alt cliente provisto y deuda >= 80000
+    NegocioControlador --> Empleado : <Mostrar Mensaje: "Cliente con deuda >= $80.000 - No se permite venta">
+    NegocioControlador -> Venta : setEstado(Cancelado)
+    NegocioControlador --> Empleado : <Mostrar Mensaje: "Venta cancelada">
+    deactivate NegocioControlador
+    return
+end
+
+NegocioControlador -> Venta : new Venta(clienteDNI, tipoVta=sinReceta)
+activate Venta
+Venta --> NegocioControlador : <<Object: Venta(nroVta)>>
+NegocioControlador --> Empleado : <Mostrar Mensaje: "Venta creada (nroVta)">
+deactivate Venta
+deactivate NegocioControlador
+
+== Listado de medicamentos disponibles ==
+Empleado -> NegocioControlador : filtrarMedicamentos(filtros)
+activate NegocioControlador
+NegocioControlador -> Medicamento : obtenerDisponibles(filtros)
+Medicamento --> NegocioControlador : List<Medicamento>
+NegocioControlador --> Empleado : List<Medicamento>
+deactivate NegocioControlador
+
+== Gestión de líneas ==
+loop gestionar líneas
+    alt agregar línea
+        Empleado -> NegocioControlador : agregarLinea(nroVta, codBarra, cantidad)
+        activate NegocioControlador
+        NegocioControlador -> Medicamento : obtenerMedicamento(codBarra)
+        Medicamento --> NegocioControlador : Medicamento
+        NegocioControlador -> NegocioControlador : validarSinReceta(Medicamento.controlado, Medicamento.requiereReceta)
+        alt requiereReceta/controlado
+            NegocioControlador --> Empleado : "No permitido sin receta"
+        else
+            NegocioControlador -> Venta : agregarDetalle(Medicamento,cantidad)
+            Venta --> NegocioControlador : detalleAgregado
+            NegocioControlador --> Empleado : "Línea agregada"
+        end
+        deactivate NegocioControlador
+    else editar/eliminar
+        Empleado -> NegocioControlador : editar/eliminar línea (nroVta, codBarra, cantidad)
+        activate NegocioControlador
+        NegocioControlador -> Venta : modificar/eliminarDetalle(codBarra, cantidad)
+        Venta --> NegocioControlador : ok
+        NegocioControlador --> Empleado : "Detalle actualizado"
+        deactivate NegocioControlador
+    end
+end
+
+
+== Resumen: totales y descuentos ==
+Empleado -> NegocioControlador : solicitarResumen(nroVta)
+activate NegocioControlador
+NegocioControlador -> Venta : calcularTotalBruto()
+activate Venta
+Venta --> NegocioControlador : <<decimal: montoBruto>>
+Venta -> Venta : getDetalles()
+Venta --> NegocioControlador : <<List<DetalleVenta>>>
+deactivate Venta
+
+NegocioControlador -> TipoDescuento : esAplicable(nroVta, clienteDNI)
+activate TipoDescuento
+TipoDescuento --> NegocioControlador : <<Object: TipoDescuentoInfo(motivo, porcentaje, vigencia)>>
+deactivate TipoDescuento
+
+NegocioControlador -> Venta : aplicarDescuento(motivo)
+activate Venta
+Venta --> NegocioControlador : <<Object: Descuento>>
+deactivate Venta
+
+NegocioControlador -> Venta : calcularTotalFinal()
+activate Venta
+Venta --> NegocioControlador : <<decimal: totalFinal>>
+deactivate Venta
+
+== Fin proceso ==
+NegocioControlador --> Empleado : finalizarVenta()
+
+@enduml
