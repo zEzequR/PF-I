@@ -1,0 +1,52 @@
+@startuml
+title DSD - Registro de Cliente
+
+actor Empleado
+control ControladorNegocio
+entity Cliente
+entity Sistema
+
+== Inicio ==
+
+Empleado -> ControladorNegocio: accederModuloClientes()
+
+Empleado -> ControladorNegocio: ingresarDatosCliente(dni, nombre, email, telefono)
+
+ControladorNegocio -> Sistema: validarFormatos(email, telefono)
+activate Sistema
+Sistema --> ControladorNegocio: formatos
+deactivate Sistema
+
+alt Formato inválido
+    ControladorNegocio -> Empleado: mensaje("Formato inválido. Corrija los datos")
+else Formato correcto
+
+    ControladorNegocio -> Sistema: verificarDuplicado(dni, telefono)
+    activate Sistema
+    Sistema --> ControladorNegocio: existe
+    deactivate Sistema
+
+    alt Cliente ya registrado
+        ControladorNegocio -> Empleado: mensaje("Cliente ya registrado")
+
+    else Cliente nuevo
+
+        ControladorNegocio -> Cliente: crearCliente(dni, nombre, email, telefono)
+        activate Cliente
+        Cliente --> ControladorNegocio: cliente
+        deactivate Cliente
+
+        ControladorNegocio -> Sistema: guardarCliente(cliente)
+        activate Sistema
+        Sistema --> ControladorNegocio: guardado
+        deactivate Sistema
+
+        alt Error de conexión
+            ControladorNegocio -> Empleado: mensaje("Error. Intente nuevamente más tarde")
+        else Registro exitoso
+            ControladorNegocio -> Empleado: mensaje("Cliente registrado correctamente")
+        end
+    end
+end
+
+@enduml
