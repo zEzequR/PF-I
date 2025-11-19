@@ -14,7 +14,6 @@
 3)El administrador ingresa la información requerida: 
 - Nombre de usuario
 - Contraseña
-- Monto total vendido
 - Tipo de usuario(administrador | empleado) 
 >4)El administrador confirma los datos.
 5)El sistema agrega el nuevo empleado a la base de datos.
