@@ -35,9 +35,15 @@ class Usuario {
 
 class Empleado {
     - legajo
+    - sueldoBase
+    - horasExtras
+
+    + calcularSueldo()
+    + aplicarDescuentoEmpleado()
 }
 
 Empleado -- Usuario
+Empleado -- Asistencia
 
 enum TipoUsuario {
     Administrador
@@ -80,10 +86,9 @@ class Cliente {
     + esFrecuente(dni)
     + mostrarClientes()
 }
-PersonaFisica <|-- Cliente
-PersonaFisica <|-- Medico
-PersonaFisica <|-- Empleado
-
+Cliente *-- PersonaFisica
+Empleado *-- PersonaFisica
+Medico *-- PersonaFisica
 ' ----------------- MEDICO / RECETA -----------------
 class Medico {
     - matriculaMed
@@ -161,7 +166,7 @@ enum TipoVenta {
 
 enum EstadoVenta {
     Pendiente
-    Pagado
+    Concretado
     Cancelado
 }
 
@@ -348,7 +353,7 @@ interface ServicioObrasSociales {
     + validarAfiliacion(obraSocialNombre, numAfiliado)
     + verificarRecetaElectronica(nroReceta)
     + registrarRecetaEnVenta(nroReceta, nroVta)
-    + aplicarCoberturaVenta(nroVta, obraSocialNombre, numAfiliado)
+    + aplicarCoberturaVenta(nroVta, obraSocialNombre, nroReceta numAfiliado)
 }
 
 interface ServicioPagos {
