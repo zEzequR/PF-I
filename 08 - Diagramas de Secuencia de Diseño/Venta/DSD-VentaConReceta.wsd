@@ -19,8 +19,7 @@ Cliente --> NegocioControlador : Cliente
 NegocioControlador -> NegocioControlador : validarElegibilidadVenta(Cliente)
 alt cliente frecuente con deuda >= 80000
     NegocioControlador --> Empleado : "Cliente con deuda >= 80.000. Venta bloqueada"
-    deactivate NegocioControlador
-    return
+
 else elegible
     NegocioControlador -> Venta : crearVenta(Cliente, tipoVta, nombreUsuario)
     activate Venta
