@@ -1,0 +1,120 @@
+@startuml Venta_con_Receta
+
+actor Empleado
+control NegocioControlador
+entity Cliente
+participant Venta
+entity Medicamento
+participant TipoDescuento
+control ServicioObrasSociales
+participant Pago
+participant Ticket
+
+== Inicio: creación y elegibilidad ==
+Empleado -> NegocioControlador : iniciarVenta(clienteId, tipoVta=conReceta, usuarioId)
+activate NegocioControlador
+NegocioControlador -> Cliente : obtenerCliente(DNI)
+Cliente --> NegocioControlador : Cliente
+
+NegocioControlador -> NegocioControlador : validarElegibilidadVenta(Cliente)
+alt cliente frecuente con deuda >= 80000
+    NegocioControlador --> Empleado : "Cliente con deuda >= 80.000. Venta bloqueada"
+    deactivate NegocioControlador
+    return
+else elegible
+    NegocioControlador -> Venta : crearVenta(Cliente, tipoVta, nombreUsuario)
+    activate Venta
+    Venta --> NegocioControlador : nroVta
+    NegocioControlador --> Empleado : "Venta creada (nroVta)"
+    deactivate Venta
+end
+deactivate NegocioControlador
+
+== Validación de afiliación y receta (solo con receta) ==
+Empleado -> NegocioControlador : validarAfiliacion(obraSocialId, numAfiliado)
+activate NegocioControlador
+NegocioControlador -> ServicioObrasSociales : validarAfiliacion(obraSocialId, numAfiliado)
+ServicioObrasSociales --> NegocioControlador : afiliacionValida (bool)
+
+alt afiliacionValida = false
+    NegocioControlador --> Empleado : "Afiliación inválida. Venta cancelada"
+    NegocioControlador -> Venta : marcarEstado(Cancelado)
+    deactivate NegocioControlador
+    return
+else afiliacion válida
+    Empleado -> NegocioControlador : verificarReceta(nroReceta)
+    NegocioControlador -> ServicioObrasSociales : verificarRecetaElectronica(nroReceta)
+    ServicioObrasSociales --> NegocioControlador : recetaValida(bool), fechaPrescripcion, fechaValidez
+    NegocioControlador -> NegocioControlador : validarVigenciaReceta(<=15 días)
+    alt receta inválida o vencida
+        NegocioControlador --> Empleado : "Receta inválida/vencida. Venta cancelada"
+        NegocioControlador -> Venta : marcarEstado(Cancelado)
+        deactivate NegocioControlador
+        return
+    else receta válida
+        NegocioControlador --> Empleado : "Receta válida"
+        NegocioControlador -> Venta : asociarReceta(nroReceta, obraSocialId, numAfiliado)
+    end
+end
+deactivate NegocioControlador
+
+== Navegar y agregar medicamentos (solo con stock) ==
+Empleado -> NegocioControlador : filtrarMedicamentos(filtros)
+activate NegocioControlador
+NegocioControlador -> Medicamento : obtenerDisponibles(filtros)
+Medicamento --> NegocioControlador : List<Medicamento>
+NegocioControlador --> Empleado : List<Medicamento>
+deactivate NegocioControlador
+
+loop gestionar líneas
+    alt agregar línea
+        Empleado -> NegocioControlador : agregarLinea(nroVta, codBarra, cantidad)
+        activate NegocioControlador
+        NegocioControlador -> Medicamento : obtenerMedicamento(codBarra)
+        Medicamento --> NegocioControlador : Medicamento
+        NegocioControlador -> NegocioControlador : validarControladoYReceta(Medicamento, Venta)
+        alt requiereReceta/controlado sin receta asociada
+            NegocioControlador --> Empleado : "Medicamento controlado requiere receta válida"
+        else ok
+            NegocioControlador -> Venta : agregarDetalle(Medicamento, cantidad)
+            Venta --> NegocioControlador : detalleAgregado (bool)
+            NegocioControlador --> Empleado : "Línea agregada"
+        end
+        deactivate NegocioControlador
+    else editar línea
+        Empleado -> NegocioControlador : editarLinea(nroVta, codBarra, nuevaCantidad)
+        activate NegocioControlador
+        NegocioControlador -> Venta : modificarCantidadDetalle(codBarra, nuevaCantidad)
+        Venta --> NegocioControlador : detalleModificado (bool)
+        NegocioControlador --> Empleado : "Línea modificada"
+        deactivate NegocioControlador
+    else eliminar línea
+        Empleado -> NegocioControlador : eliminarLinea(nroVta, codBarra)
+        activate NegocioControlador
+        NegocioControlador -> Venta : eliminarDetallePorCodigo(codBarra)
+        Venta --> NegocioControlador : detalleEliminado (bool)
+        NegocioControlador --> Empleado : "Línea eliminada"
+        deactivate NegocioControlador
+    end
+end
+
+== Resumen y cálculo de totales ==
+Empleado -> NegocioControlador : solicitarResumen(nroVta)
+activate NegocioControlador
+NegocioControlador -> Venta : calcularTotalBruto()
+Venta --> NegocioControlador : montoBruto, detalles
+
+NegocioControlador -> ServicioObrasSociales : aplicarCoberturaReceta(nroVta, nroReceta)
+ServicioObrasSociales --> NegocioControlador : montoConCobertura, itemsCubiertos
+
+NegocioControlador -> TipoDescuento : obtenerDescuentoAplicable(Cliente)
+TipoDescuento --> NegocioControlador : descuento (porcentaje/motivo)
+
+NegocioControlador -> NegocioControlador : calcularTotalFinal(montoBruto, cobertura, descuento, medioPago)
+NegocioControlador --> Empleado : ResumenVenta(totalFinal, detalles, cobertura, descuento)
+deactivate NegocioControlador
+
+== Fin proceso ==
+NegocioControlador --> Empleado : finalizarVenta()
+
+@enduml

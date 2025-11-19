@@ -44,4 +44,4 @@ NC --> UI : mostrarMensaje("Medicamento registrado con éxito")
 
 UI --> Administrador : mostrarMedicamentoNuevo()
 
-@endum
+@enduml

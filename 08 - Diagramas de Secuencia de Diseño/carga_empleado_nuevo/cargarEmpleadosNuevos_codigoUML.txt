@@ -65,3 +65,4 @@ NC --> UI : mostrarMensaje("Empleado registrado con éxito")
 UI --> Administrador : mostrarEmpleadoNuevo()
 
 @enduml
+
