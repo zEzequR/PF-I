@@ -1,0 +1,50 @@
+@startuml
+title DSD - Eliminación de Medicamentos
+
+actor Administrador
+control ControladorNegocio
+entity Medicamento
+entity Sistema
+
+== Inicio ==
+
+Administrador -> ControladorNegocio: accederModuloMedicamentos()
+
+ControladorNegocio -> Medicamento: obtenerMedicamentos(filtro)
+activate Medicamento
+Medicamento --> ControladorNegocio: listaMedicamentos
+deactivate Medicamento
+
+alt Error al obtener medicamentos
+    ControladorNegocio -> Administrador: mensaje("No se pudieron obtener los medicamentos")
+else Lista obtenida
+    ControladorNegocio -> Sistema: mostrarLista(listaMedicamentos)
+    Sistema -> Administrador: mostrar(listaMedicamentos)
+
+    Administrador -> ControladorNegocio: seleccionarMedicamento(nombreMedicamento)
+
+    Administrador -> ControladorNegocio: confirmarEliminacion()
+
+    ControladorNegocio -> Sistema: verificarAsociaciones(nombreMedicamento)
+    activate Sistema
+    Sistema --> ControladorNegocio: asociado
+    deactivate Sistema
+
+    alt Medicamento asociado a ventas/pedidos
+        ControladorNegocio -> Administrador: mensaje("No se puede eliminar: asociado a ventas o pedidos")
+    else Sin asociaciones
+
+        ControladorNegocio -> Medicamento: eliminar(nombreMedicamento)
+        activate Medicamento
+        Medicamento --> ControladorNegocio: resultadoEliminacion
+        deactivate Medicamento
+
+        alt Error de conexión
+            ControladorNegocio -> Administrador: mensaje("Error al eliminar. Intente nuevamente más tarde")
+        else Eliminación exitosa
+            ControladorNegocio -> Administrador: mensaje("Medicamento eliminado correctamente")
+        end
+    end
+end
+
+@enduml
