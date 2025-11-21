@@ -13,7 +13,7 @@
 4)El sistema actualiza el proveedor en la base de datos.
 
 # Camino alternativo:
-3.a) Si algún campo del laboratorio a modificar ya está asociado a otro, el sistema muestra: "Campo ya registrado” y no guarda los datos.
+3.a) Si algún campo de la drogueria a modificar ya está asociado a otro, el sistema muestra: "Campo ya registrado” y no guarda los datos.
 4.a) Si hay un error de conexión con la base de datos, el sistema muestra el mensaje: “Error al modificar al proveedor. Intente nuevamente más tarde”.
 
 # Escenario de éxito:
