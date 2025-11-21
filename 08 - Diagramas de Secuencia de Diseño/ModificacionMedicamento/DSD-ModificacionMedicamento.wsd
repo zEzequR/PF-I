@@ -1,0 +1,50 @@
+@startuml
+title DSD - Modificación de Medicamentos
+
+actor Administrador
+control ControladorNegocio
+entity Medicamento
+entity Sistema
+
+== Inicio ==
+
+Administrador -> ControladorNegocio: accederModuloMedicamentos()
+
+ControladorNegocio -> Medicamento: obtenerMedicamentos(filtro)
+activate Medicamento
+Medicamento --> ControladorNegocio: listaMedicamentos
+deactivate Medicamento
+
+alt Error al obtener medicamentos
+    ControladorNegocio -> Administrador: mensaje("No se pudieron obtener los medicamentos")
+else Lista obtenida
+    ControladorNegocio -> Sistema: mostrarLista(listaMedicamentos)
+    Sistema -> Administrador: mostrar(listaMedicamentos)
+
+    Administrador -> ControladorNegocio: seleccionarMedicamento(codigodeBarra, nombreMedicamento)
+
+    Administrador -> ControladorNegocio: modificarDatos(nombre, descripcion, laboratorio, precio, stock)
+
+    ControladorNegocio -> Sistema: validarCampos(nombre, descripcion, laboratorio, precio, stock)
+    activate Sistema
+    Sistema --> ControladorNegocio: validos
+    deactivate Sistema
+
+    alt Código de barras modificado
+        ControladorNegocio -> Administrador: mensaje("No se puede modificar el código de barras")
+    else Código válido
+
+        ControladorNegocio -> Medicamento: actualizarMedicamento(nuevosDatos)
+        activate Medicamento
+        Medicamento --> ControladorNegocio: resultadoActualizacion
+        deactivate Medicamento
+
+        alt Error de conexión
+            ControladorNegocio -> Administrador: mensaje("Error al modificar. Intente nuevamente más tarde")
+        else Modificación exitosa
+            ControladorNegocio -> Administrador: mensaje("Medicamento modificado correctamente")
+        end
+    end
+end
+
+@enduml

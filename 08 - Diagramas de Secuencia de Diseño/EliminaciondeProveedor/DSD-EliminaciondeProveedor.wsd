@@ -1,0 +1,47 @@
+@startuml
+title DSD - Eliminación de Proveedor
+
+actor Administrador
+control ControladorNegocio
+entity Proveedor
+entity Sistema
+
+== Inicio ==
+
+Administrador -> ControladorNegocio: accederModuloProveedores()
+
+ControladorNegocio -> Proveedor: obtenerProveedores(filtro)
+activate Proveedor
+Proveedor --> ControladorNegocio: listaProveedores
+deactivate Proveedor
+
+ControladorNegocio -> Sistema: mostrarLista(listaProveedores)
+Sistema -> Administrador: mostrar(listaProveedores)
+
+Administrador -> ControladorNegocio: seleccionarProveedor(nombreProveedor)
+
+Administrador -> ControladorNegocio: confirmarEliminacion()
+
+ControladorNegocio -> Sistema: verificarProductosAsociados(nombreProveedor)
+activate Sistema
+Sistema --> ControladorNegocio: asociado
+deactivate Sistema
+
+alt Proveedor tiene productos asociados
+    ControladorNegocio -> Administrador: mensaje("No se puede eliminar: existen productos asociados")
+else Sin productos asociados
+
+    ControladorNegocio -> Proveedor: eliminarProveedor(nombreProveedor)
+    activate Proveedor
+    Proveedor --> ControladorNegocio: resultado
+    deactivate Proveedor
+
+    alt Error de conexión
+        ControladorNegocio -> Administrador: mensaje("Error al eliminar. Intente nuevamente más tarde")
+    else Eliminación exitosa
+        ControladorNegocio -> Administrador: mensaje("Proveedor eliminado correctamente")
+    end
+end
+
+@enduml
+

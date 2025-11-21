@@ -1,0 +1,37 @@
+@startuml
+title DSD - Modificación de Proveedor
+
+actor Administrador
+control ControladorNegocio
+entity Proveedor
+entity Sistema
+
+== Inicio ==
+
+Administrador -> ControladorNegocio: accederModuloProveedores()
+
+Administrador -> ControladorNegocio: modificarDatosProveedor(nombre, email, telefono, formatoEnvio)
+
+ControladorNegocio -> Sistema: validarCampos(nombre, email, telefono, formatoEnvio)
+activate Sistema
+Sistema --> ControladorNegocio: camposValidos
+deactivate Sistema
+
+alt Campo duplicado
+    ControladorNegocio -> Administrador: mensaje("Campo ya registrado")
+else Campos correctos
+
+    ControladorNegocio -> Proveedor: actualizarProveedor(nuevosDatos)
+    activate Proveedor
+    Proveedor --> ControladorNegocio: resultadoActualizacion
+    deactivate Proveedor
+
+    alt Error de conexión
+        ControladorNegocio -> Administrador: mensaje("Error al modificar al proveedor. Intente nuevamente más tarde")
+    else Modificación exitosa
+        ControladorNegocio -> Administrador: mensaje("Proveedor modificado correctamente")
+    end
+end
+
+@enduml
+
