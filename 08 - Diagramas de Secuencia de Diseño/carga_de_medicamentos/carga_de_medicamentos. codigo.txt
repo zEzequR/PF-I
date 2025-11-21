@@ -1,47 +1,34 @@
 @startuml
 actor Administrador
-participant "UI Medicamentos" as UI
-participant "NegocioControlador" as NC
-participant Medicamento as M
-database BaseDatos
+participant NegocioControlador as Controlador
+participant Medicamento
 
-== Acceso al módulo ==
-Administrador -> UI : abrirModuloGestionMedicamentos()
-
-== Iniciar alta ==
-Administrador -> UI : seleccionarAgregarMedicamento()
-UI -> Administrador : mostrarFormulario()
-
-== Ingreso de datos ==
-Administrador -> UI : ingresarDatos(codBarra, nombre, descripcion, laboratorio, precioUnitario, stock)
+== Inicia el caso de uso ==
+Administrador -> Controlador : cargarNuevoMedicamento(codBarra,\n nombre, descripcion,\n laboratorio, precioUnit, stock)
 
 == Validación de datos ==
-UI -> NC : crearMedicamento(codBarra, nombre, precioUnitario, stock, laboratorio)
-NC -> M : validarDatos()
+Controlador -> Medicamento : validarDatos(codBarra,\n nombre, precioUnit, stock)
 
-alt Datos incompletos o inválidos
-    M --> NC : errorValidacion
-    NC --> UI : mostrarMensaje("Datos incompletos o con formato incorrecto")
+alt Datos inválidos
+    Medicamento --> Controlador : errorValidacion
+    Controlador --> Administrador : notificarError("Datos inválidos")
     return
 end
 
-== Preparar guardado ==
-NC -> M : setMedicamento(datos)
+== Creación del objeto ==
+Controlador -> Medicamento : setMedicamento(codBarra,\n nombre, descripcion,\n laboratorio, precioUnit, stock)
 
-== Guardar medicamento ==
-M -> BaseDatos : INSERT INTO Medicamento(...)
-alt Error de conexión o fallo BD
-    BaseDatos --> M : error
-    M --> NC : errorBD
-    NC --> UI : "Error al guardar. Intente nuevamente más tarde"
+== Registro del medicamento ==
+Controlador -> Medicamento : registrar()
+
+alt Error al registrar
+    Medicamento --> Controlador : errorRegistro
+    Controlador --> Administrador : notificarError("Error al registrar medicamento")
     return
 end
-
-BaseDatos --> M : OK
 
 == Confirmación ==
-NC --> UI : mostrarMensaje("Medicamento registrado con éxito")
-
-UI --> Administrador : mostrarMedicamentoNuevo()
+Medicamento --> Controlador : registroExitoso
+Controlador --> Administrador : confirmar("Medicamento creado con éxito")
 
 @enduml

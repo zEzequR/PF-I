@@ -1,68 +1,50 @@
 @startuml
 actor Administrador
-participant "UI Empleados" as UI
-participant "NegocioControlador" as NC
-participant Usuario as U
-participant Empleado as E
-database BaseDatos
+participant NegocioControlador as Controlador
+participant Usuario
+participant Empleado
 
-== Acceso al módulo ==
-Administrador -> UI : abrirModuloGestionEmpleados()
+== Inicio ==
+Administrador -> Controlador : cargarNuevoEmpleado(nombreUsuario,\n contraseña, tipoUsuario)
 
-== Iniciar alta ==
-Administrador -> UI : seleccionarAgregarEmpleado()
-UI -> Administrador : mostrarFormulario()
+== Validación de datos ==
+Controlador -> Usuario : validarDatos(nombreUsuario, contraseña, tipoUsuario)
 
-== Ingreso de datos ==
-Administrador -> UI : ingresarDatos(nombreUsuario, contraseña, tipoUsuario)
-
-== Validación ==
-UI -> NC : crearUsuario(nombreUsuario, contraseña, tipoUsuario)
-NC -> U : validarDatos()
-
-alt Datos inválidos o incompletos
-    U --> NC : errorValidacion
-    NC --> UI : mostrarMensaje("Datos obligatorios faltantes o inválidos")
+alt Datos inválidos
+    Usuario --> Controlador : errorValidacion
+    Controlador --> Administrador : notificarError("Datos inválidos")
     return
 end
 
-== Verificar duplicado ==
-NC -> U : getUsuario(nombreUsuario)
-U -> BaseDatos : SELECT * FROM Usuario WHERE nombreUsuario = ?
-BaseDatos --> U : usuarioExiste / noExiste
+== Verificar usuario existente ==
+Controlador -> Usuario : existeUsuario(nombreUsuario)
 
-alt Usuario ya registrado
-    U --> NC : usuarioDuplicado
-    NC --> UI : mostrarMensaje("Empleado ya registrado")
+alt Usuario ya existente
+    Usuario --> Controlador : usuarioDuplicado
+    Controlador --> Administrador : notificarError("Empleado ya registrado")
     return
 end
 
-== Crear Usuario ==
-NC -> U : setUsuario(nombreUsuario, contraseña)
-U -> BaseDatos : INSERT INTO Usuario(...)
-alt Error BD en usuario
-    BaseDatos --> U : error
-    U --> NC : errorBD
-    NC --> UI : "Error al agregar nuevo empleado. Intente nuevamente más tarde"
-    return
-end
-BaseDatos --> U : OK
+== Crear usuario ==
+Controlador -> Usuario : crear(nombreUsuario, contraseña, tipoUsuario)
 
-== Crear Empleado ==
-NC -> E : setEmpleado(nombreUsuario, montoVendido, tipoUsuario)
-E -> BaseDatos : INSERT INTO Empleado(...)
-alt Error BD al crear empleado
-    BaseDatos --> E : error
-    E --> NC : errorBD
-    NC --> UI : "Error al agregar nuevo empleado. Intente nuevamente más tarde"
+alt Error al crear usuario
+    Usuario --> Controlador : errorCreacion
+    Controlador --> Administrador : notificarError("Error al registrar usuario")
     return
 end
-BaseDatos --> E : OK
+
+== Crear empleado ==
+Controlador -> Empleado : crearEmpleado(nombreUsuario, tipoUsuario)
+
+alt Error al crear empleado
+    Empleado --> Controlador : errorCreacion
+    Controlador --> Administrador : notificarError("Error al registrar empleado")
+    return
+end
 
 == Confirmación ==
-NC --> UI : mostrarMensaje("Empleado registrado con éxito")
-
-UI --> Administrador : mostrarEmpleadoNuevo()
+Empleado --> Controlador : empleadoRegistrado
+Controlador --> Administrador : confirmar("Empleado creado con éxito")
 
 @enduml
-
