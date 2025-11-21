@@ -1,0 +1,53 @@
+@startuml Carga_Medicamentos
+
+actor Administrador
+control NegocioControlador
+participant Medicamento
+
+== Entrada de datos ==
+Administrador -> NegocioControlador : crearMedicamento(codigoBarra, nombre, precioUnitario, stock, stockMinimo, drogueriaNombre, descripción, laboratorio)
+activate NegocioControlador
+
+== Validaciones de negocio y formato ==
+NegocioControlador -> NegocioControlador : validarCamposObligatorios()\n- codigoBarra, nombre, precioUnitario, stock\n- precioUnitario>0, stock>=0\n- descripción no vacía, laboratorio no vacío
+alt validación falla
+  NegocioControlador --> Administrador : "Error: campos obligatorios incompletos o formato incorrecto"
+  deactivate NegocioControlador
+  return
+end
+
+== Verificar duplicados y referencias ==
+NegocioControlador -> Medicamento : buscarPorCodigoBarra(codigoBarra)
+activate Medicamento
+alt ya existe
+  Medicamento --> NegocioControlador : encontrado
+  NegocioControlador --> Administrador : "Error: código de barra ya registrado"
+  deactivate Medicamento
+  deactivate NegocioControlador
+  return
+else no existe
+  Medicamento --> NegocioControlador : noEncontrado
+end
+deactivate Medicamento
+
+== Persistencia del medicamento ==
+NegocioControlador -> Medicamento : setMedicamento(codigoBarra, nombre, descripción, laboratorio, precioUnitario, stock, stockMinimo, drogueriaNombre)
+activate Medicamento
+Medicamento --> NegocioControlador : object : Medicamento
+deactivate Medicamento
+
+== Post-proceso: alertas y confirmación ==
+NegocioControlador -> Medicamento : estaPorDebajoStockMinimo(codigoBarra)
+activate Medicamento
+Medicamento --> NegocioControlador : bool alerta
+deactivate Medicamento
+
+alt alerta = true
+  NegocioControlador --> Administrador : "Advertencia: stock <= mínimo. Alerta registrada"
+end
+
+NegocioControlador --> Administrador : "Medicamento creado correctamente"
+
+deactivate NegocioControlador
+
+@enduml
