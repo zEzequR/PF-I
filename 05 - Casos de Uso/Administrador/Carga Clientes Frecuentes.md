@@ -6,7 +6,7 @@
 # Precondiciones: 
 - El administrador debe haber iniciado sesión en el sistema.
 - El administrador debe contar con los datos necesarios del nuevo cliente (Nombre de cliente, Mail, Número de telefono y DNI).
-- El cliente debe cumplir los requisitos para abrir cuenta corriente (mínimo 1 compra semanal en los últimos 3 meses y no tener deudas mayores a 15 días).
+- El cliente debe cumplir los requisitos para abrir cuenta corriente ($400.000 gastados en la farmacia).
 
 # Camino básico:
 > 1)El usuario accede al módulo de gestión de clientes.
@@ -16,7 +16,6 @@
 - Mail
 - Numero de telefono
 - DNI
-- Detalles de pedidos
 - Saldo en cuenta
 > 4)El administrador confirma los datos.
 5)El sistema registra el saldo a pagar del cliente frecuente.
