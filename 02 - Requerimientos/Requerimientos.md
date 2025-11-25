@@ -9,7 +9,6 @@
 >>* El sistema debe permitir buscar productos por nombre, categoría o precio.
 >>* El sistema debe generar automáticamente alertas para productos cuyo stock sea menor o igual al mínimo configurado por el administrador.
 >>* El sistema debe soportar: Efectivo, Tarjeta de débito/crédito, Transferencia bancaria y Billeteras virtuales
->>* El sistema debe permitir abrir cuentas corrientes para los clientes para registrar sus cargos (ventas) a la cuenta y/o pagos parciales o totales contra la cuenta.
 >>* El sistema debe impedir nuevas ventas a crédito si el cliente excede el límite de crédito asignado.
 >>* El sistema debe permitir cargar, validar y asociar recetas digitales o en papel a la venta de medicamentos controlados.
 >>* El sistema debe registrar todos los clientes en todos los tipos de venta en la medida de lo posible (privacidad y consentimiento del cliente).
