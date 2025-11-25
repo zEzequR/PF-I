@@ -21,7 +21,7 @@
 >>* El empleado solo puede ver el pedido.
 >>* Clientes que hayan comprado por obra social no pueden abonar con tarjeta crédito (más de un pago).
 >>* Por políticas internas de la farmacia, no se aceptan pagos con tarjeta por montos superiores a 100.000.
->>* Los clientes que no superen por lo menos 1 compra semanal durante los últimos 3 meses, no se les podrá abrir una cuenta corriente en el sistema.
+>>* Los clientes que no sean frecuentes, no se les podrá abrir una cuenta corriente en el sistema.
 >>* No se venderán productos psicotrópicos a menos que se cuente con una receta.
 >>* Los productos con cadena de frío, deben retirarse en el local.
 >>* Los productos que hayan quedado pendientes, únicamente se retirarán con el comprobante.
