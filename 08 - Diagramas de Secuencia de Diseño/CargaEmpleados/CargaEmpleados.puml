@@ -1,0 +1,48 @@
+@startuml Carga_Empleados
+
+actor Administrador
+control NegocioControlador
+participant Usuario
+participant Empleado
+
+== Entrada y validaciones iniciales ==
+Administrador -> NegocioControlador : crearUsuario(nombreUsuario, contraseña, tipoUsuario)
+activate NegocioControlador
+NegocioControlador -> NegocioControlador : validarCamposObligatorios()\n- nombreUsuario no vacío\n- contraseña con requisitos mínimos\n- tipoUsuario ∈ {Administrador, Farmaceutico}
+alt validación falla
+  NegocioControlador --> Administrador : "Error: datos obligatorios faltantes o formato inválido"
+  deactivate NegocioControlador
+  return
+end
+
+== Verificación de unicidad ==
+NegocioControlador -> Usuario : getUsuario(nombreUsuario)
+activate Usuario
+alt existe usuario
+  Usuario --> NegocioControlador : encontrado
+  NegocioControlador --> Administrador : "Empleado ya registrado (usuario duplicado)"
+  deactivate Usuario
+  deactivate NegocioControlador
+  return
+else no existe
+  Usuario --> NegocioControlador : noEncontrado
+end
+deactivate Usuario
+
+== Creación de usuario y vínculo con empleado ==
+NegocioControlador -> Usuario : setUsuario(nombreUsuario, contraseña)
+activate Usuario
+Usuario --> NegocioControlador : creado
+deactivate Usuario
+
+NegocioControlador -> Empleado : crearEmpleado(legajo, sueldoBase, horasExtras, tipoUsuario)
+activate Empleado
+Empleado --> NegocioControlador : Legajo
+deactivate Empleado
+
+NegocioControlador -> Empleado : vincularUsuario(legajo, nombreUsuario)
+activate Empleado
+Empleado --> NegocioControlador : vinculadoOK
+deactivate Empleado
+
+@enduml

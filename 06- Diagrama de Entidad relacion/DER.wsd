@@ -107,7 +107,7 @@ entity DetalleReceta{
 entity DetallePedido {
     __numPedido__
     nombreMed
-    nombre
+    drogueria
     precio
     montoFinal
     estadoPedido
