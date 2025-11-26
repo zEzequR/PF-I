@@ -20,13 +20,13 @@
 >>* El sistema debe generar un informe mensual de ventas para los administradores.
 >>* El sistema debe permitir la creación y gestión de una cuenta corriente para clientes frecuentes.
 >>* El sistema debe registrar la fecha y hora de cada transacción realizada.
+>>* El sistema debe poder distinguir entre la cuenta de un usuario y un administrador.
 
 
 ># ***No funcional:***
 >>* El sistema debe realizar backups automáticos de la base de datos cada el periodo que el administrador desee.
 >>* El sistema debe tener un tiempo de respuesta en menos de 2 segundos.
 >>* La base de datos debe ser estable con una disponibilidad del 99%.
->>* El sistema debe poder distinguir entre la cuenta de un usuario y un administrador.
 
 ># ***Dominio:***
 >>* Los medicamentos controlados sólo pueden venderse con receta médica válida (15 días máximo desde su preescripción).
