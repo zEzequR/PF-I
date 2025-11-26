@@ -31,7 +31,6 @@
 >>* Si es el primer día del mes, generar un informe de las ventas del mes anterior.
 
 ># ***Cálculos:***
->>* El total del sueldo se calcula con los días de asistencia más las horas extras.
 >>* El valor del producto se calcula en base al precio de lista más el porcentaje de ganancias (70%).
 >>* El total de la caja del día se calcula sumando todas las ventas facturadas.
 >>* Si el cliente desea abonar con tarjeta en más de 3 cuotas, se le agregará un recargo del 20% por cada cuota adicional.
