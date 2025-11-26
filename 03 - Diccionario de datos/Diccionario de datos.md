@@ -11,7 +11,7 @@
 **Obra Social** = nombreObrasocial
 **Pago** = numTransaccion + [tipoPago] + monto + (cuotas) + fechaPago + estadoPago
 **ticket** = DatosFarmacia + fechaHora + DatosCliente + nroTicket + EstadoTicket + pdfPath
-**Detalles Pedido** = 1{nombreMed + precio}x + montoFinal + numPedido + estadoPedido + pathPdf + drogueria
+**Detalles Pedido** = 1{nombreMed}x + numPedido + estadoPedido + pathPdf + drogueria
 **Receta** = nroReceta
 **Detalle Venta** = montoFinal + nroDetalleVenta + precio
 **Tipo Descuento** = motivo + porcentaje + fechainicio + fechaFinal + estado
@@ -56,7 +56,7 @@
 | nroTicket            | número del ticket                                      | int      | 10       | 0-9                                                                               |
 | EstadoTicket         | estado del ticket                                      | str      | 20       | continuo                                                                          |
 | pdfPath              | ruta del archivo PDF                                   | str      | 200      | continuo                                                                          |
-| precio               | precio unitario (pedido/detalle venta)                 | float    | 100      | 0-9                                                                               |
+| precio               | precio unitario (detalle venta)                 | float    | 100      | 0-9                                                                               |
 | montoFinal           | monto final del detalle                                | float    | 100      | 0-9                                                                               |
 | numPedido            | número del pedido                                      | int      | 10       | 0-9                                                                               |
 | estadoPedido         | estado del pedido                                      | str      | 20       | continuo                                                                          |
