@@ -81,10 +81,8 @@ class Cliente {
 
     + getCliente(dni)
     + setCliente(dni, nombre, email, numTel, tipoCliente)
-    + acumularGasto(dni, monto)
     + registrarPagoCuentaCorriente(dni, monto)
     + esFrecuente(dni)
-    + mostrarClientes()
 }
 PersonaFisica <|-- Cliente
 PersonaFisica <|-- Empleado
@@ -102,10 +100,7 @@ class Receta {
     - fechaValidez
     - tipoReceta
     - obraSocialNombre
-
-    + obtenerReceta(nroReceta)
     + validarReceta(nroReceta)
-    + obtenerDetalleReceta(nroReceta)
 }
 class DetalleReceta {
     - fechaPrescripcion
@@ -145,7 +140,6 @@ class Medicamento {
     + disminuirStock(cantidad)
     + aumentarStock(cantidad)
     + estaPorDebajoStockMinimo()
-    + MostrarMedicamentos()
 }
 class Drogueria {
     - nombre
@@ -153,6 +147,8 @@ class Drogueria {
     - telefono
     - canalPreferido
 
+    + getDrogueria(nombre)
+    + setDrogueria(nombre, email, telefono, canalPreferido)
     + actualizarContacto(nombre, email, telefono, canalPreferido)
 }
 PersonaJuridica <|-- Drogueria
@@ -179,16 +175,13 @@ class Venta {
     - nombreUsuario
     - estadoVenta
 
+    + generarNroVta()
     + agregarDetalle(codigoBarra, cantidad)
     + eliminarDetallePorCodigo(codigoBarra)
     + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
     + calcularTotal()
-    + aplicarDescuento(tipoDescuentoId)
-    + validarRecetas()
-    + confirmarPago(numTransacción)
     + marcarEstado(estadoVenta)
-    + cancelar()
-    + finalizar(tipoPago, nroCuotas)
+    + cancelarVta()
 }
 Venta ..> TipoVenta
 Venta -- EstadoVenta
@@ -213,9 +206,7 @@ class Pago {
     - cuotas
 
 
-    + crearPago(nroVta, tipoPago, monto, cuotas)
     + asignarNumTransaccion(numTransacción)
-    + procesarRespuestaPasarela(estadoPago, numTransacción)
     + marcarEstadoPago(numTransacción, estado)
 }
 Venta -- Pago
@@ -232,6 +223,7 @@ class Ticket {
     - pdfPath
 
     + generarTicket(nroVta)
+    + getPath()
 }
 
 enum Estado{
@@ -262,10 +254,11 @@ class Pedido {
     - proveedorNombre
     - fechaPedido
 
-    +getNumPed()
-    +setNumPed()
-    +setFecha()
-    +setProveedor()
+    + generarNumPedido()
+    + getNumPed()
+    + setNumPed()
+    + setFecha()
+    + setProveedor()
 }
 
 enum EstadoPedido{
@@ -279,6 +272,7 @@ class DetallePedido {
     - nombreMedicamento
     - cantidad
 
+    + calcularSubtotal(cantidad, precioUnitario)
     + agregarLinea(codigoBarra, cantidad)
     + modificarLinea(codigoBarra, cantidad)
     + eliminarLinea(codigoBarra)
@@ -301,12 +295,14 @@ interface NegocioControlador {
     + buscarClientes(filtros)
     + abrirCuentaCorriente(dni)
     + registrarPagoCuentaCorriente(dni, monto)
+    + mostrarClientes()
 
     + crearMedicamento(codigoBarra, nombre, precioUnitario, stock, stockMinimo, drogueriaNombre)
     + modificarMedicamento(codigoBarra, campos)
     + eliminarMedicamento(codigoBarra)
     + buscarMedicamentos(filtros)
     + ajustarStock(codigoBarra, cantidad)
+    + MostrarMedicamentos()
 
     + crearDrogueria(nombre, email, telefono, canalPreferido)
     + modificarDrogueria(nombre, campos)
@@ -321,8 +317,11 @@ interface NegocioControlador {
     + aplicarDescuentoVenta(nroVta, motivo)
     + finalizarVenta(nroVta, tipoPago, nroCuotas)
     + buscarVentas(filtros)
+    + finalizar(tipoPago, nroCuotas)
 
+    + crearPago(nroVta, tipoPago, monto, cuotas)
     + procesarPago(nroVta, tipoPago)
+    + procesarRespuestaPosnet(estadoPago, numTransacción)
     + procesarRespuestaPago(nroVta, estadoPago, numTransacción)
     + registrarTransaccion(nroVta, numTransacción, estadoPago)
     + actualizarEstadoVenta(nroVta, estadoVenta)
