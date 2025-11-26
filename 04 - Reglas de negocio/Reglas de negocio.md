@@ -17,7 +17,6 @@
 
 ># ***Restricciones:***
 >>* No venderle a clientes frecuentes que deben ($80.000 o más).
->>* No imprimir ticket si el pago no se realizó.
 >>* El empleado solo puede ver el pedido.
 >>* Clientes que hayan comprado por obra social no pueden abonar con tarjeta crédito (más de un pago).
 >>* Por políticas internas de la farmacia, los clientes no podrán abonar con tarjeta de crédito (más de una cuota) en montos inferiores a $50.000.

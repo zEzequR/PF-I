@@ -6,7 +6,7 @@
 >>* El sistema debe imprimir un ticket cuando se realice una compra.
 >>* El sistema debe permitir al administrador crear nuevas cuentas con usuario y contraseña para nuevos empleados.
 >>* El sistema debe mostrar un resumen del pedido.
->>* El sistema debe permitir buscar productos por nombre, categoría o precio.
+>>* El sistema debe permitir buscar productos por diferentes filtros.
 >>* El sistema debe generar automáticamente alertas para productos cuyo stock sea menor o igual al mínimo configurado por el administrador.
 >>* El sistema debe soportar: Efectivo, Tarjeta de débito/crédito, Transferencia bancaria y Billeteras virtuales
 >>* El sistema debe impedir nuevas ventas a crédito si el cliente excede el límite de crédito asignado.
