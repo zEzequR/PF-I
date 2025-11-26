@@ -108,8 +108,6 @@ entity DetallePedido {
     __numPedido__
     nombreMed
     drogueria
-    precio
-    montoFinal
     estadoPedido
     pathPdf
 }
