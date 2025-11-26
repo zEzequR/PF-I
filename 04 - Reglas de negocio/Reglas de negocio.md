@@ -20,7 +20,7 @@
 >>* No imprimir ticket si el pago no se realizó.
 >>* El empleado solo puede ver el pedido.
 >>* Clientes que hayan comprado por obra social no pueden abonar con tarjeta crédito (más de un pago).
->>* Por políticas internas de la farmacia, no se aceptan pagos con tarjeta por montos superiores a 100.000.
+>>* Por políticas internas de la farmacia, los clientes no podrán abonar con tarjeta de crédito (más de una cuota) en montos inferiores a $50.000.
 >>* Los clientes que no sean frecuentes, no se les podrá abrir una cuenta corriente en el sistema.
 >>* No se venderán productos psicotrópicos a menos que se cuente con una receta.
 >>* Los productos con cadena de frío, deben retirarse en el local.

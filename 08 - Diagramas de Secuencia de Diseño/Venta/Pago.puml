@@ -27,7 +27,7 @@ NegocioControlador --> Empleado : mostrarTotalFinal(totalFinal)
 
 ' 5) Validar políticas de pago antes de iniciar transacción
 NegocioControlador -> NegocioControlador : validarMedioPagoReglas(medio, cuotas, totalFinal, Venta.tipoVta, Cliente)
-alt regla violada (ej. tarjeta y totalFinal > 100000)
+alt regla violada (ej. tarjeta, + 1 cuota y totalFinal < 50.000)
     NegocioControlador --> Empleado : "Medio no permitido por políticas"
     NegocioControlador -> Venta : marcarEstado(Cancelado)
     deactivate NegocioControlador

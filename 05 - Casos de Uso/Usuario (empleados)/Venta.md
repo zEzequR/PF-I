@@ -47,7 +47,7 @@
 
 - Productos recetados
 
-5.a.1) Dependiendo del tipo de pago se aplicarán descuentos (efectivo y promociones aplicables) o intereses al precio final según las reglas de recargo por cuotas; además, algunos métodos pueden quedar deshabilitados por políticas (ej. tarjetas > 100.000), y si es obra social no se permiten cuotas.
+5.a.1) Dependiendo del tipo de pago se aplicarán descuentos (efectivo y promociones aplicables) o intereses al precio final según las reglas de recargo por cuotas; además, algunos métodos pueden quedar deshabilitados por políticas (obra social no se permiten cuotas).
 
 5.a.1) Error en la base de datos (p. ej. fallo transaccional): la operación finaliza con error; se devuelve mensaje al empleado y no se persiste la venta. (Si el pago ya fue procesado, seguir procedimientos de conciliación/refund).
 5.a.2) Pago rechazado por saldo insuficiente o tarjeta denegada y la venta no se completa.

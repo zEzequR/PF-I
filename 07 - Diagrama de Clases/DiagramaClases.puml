@@ -86,9 +86,9 @@ class Cliente {
     + esFrecuente(dni)
     + mostrarClientes()
 }
-Cliente *-- PersonaFisica
-Empleado *-- PersonaFisica
-Medico *-- PersonaFisica
+PersonaFisica <|-- Cliente
+PersonaFisica <|-- Empleado
+PersonaFisica <|-- Medico
 ' ----------------- MEDICO / RECETA -----------------
 class Medico {
     - matriculaMed
@@ -262,8 +262,10 @@ class Pedido {
     - proveedorNombre
     - fechaPedido
 
-    + calcularTotal()
-    + agregarLinea(codigoBarra, cantidad)
+    +getNumPed()
+    +setNumPed()
+    +setFecha()
+    +setProveedor()
 }
 
 enum EstadoPedido{
@@ -276,11 +278,12 @@ class DetallePedido {
     - codigoBarra
     - nombreMedicamento
     - cantidad
-    - precioUnitario
-    - subtotal
 
-    + calcularSubtotal(codigoBarra, cantidad, precioUnitario)
+    + agregarLinea(codigoBarra, cantidad)
+    + modificarLinea(codigoBarra, cantidad)
+    + eliminarLinea(codigoBarra)
 }
+
 Pedido *-- DetallePedido
 Pedido -- Drogueria
 Pedido -- EstadoPedido
