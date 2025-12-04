@@ -1,48 +1,92 @@
-@startuml Carga_Empleados
+@startuml
+title Secuencia: Carga Empleados (Validación Correcta)
 
-actor Administrador
-control NegocioControlador
-participant Usuario
-participant Empleado
+hide footbox
 
-== Entrada y validaciones iniciales ==
-Administrador -> NegocioControlador : crearUsuario(nombreUsuario, contraseña, tipoUsuario)
-activate NegocioControlador
-NegocioControlador -> NegocioControlador : validarCamposObligatorios()\n- nombreUsuario no vacío\n- contraseña con requisitos mínimos\n- tipoUsuario ∈ {Administrador, Farmaceutico}
-alt validación falla
-  NegocioControlador --> Administrador : "Error: datos obligatorios faltantes o formato inválido"
-  deactivate NegocioControlador
-  return
-end
+actor "Administrador:Admin" as admin
+participant "Interfaz: NegCtrl" as NegCtrl
 
-== Verificación de unicidad ==
-NegocioControlador -> Usuario : getUsuario(nombreUsuario)
-activate Usuario
-alt existe usuario
-  Usuario --> NegocioControlador : encontrado
-  NegocioControlador --> Administrador : "Empleado ya registrado (usuario duplicado)"
-  deactivate Usuario
-  deactivate NegocioControlador
-  return
-else no existe
-  Usuario --> NegocioControlador : noEncontrado
-end
-deactivate Usuario
+participant "List<Usuario>: objListaUsuarios" as listaUser
+participant "Usuario: objUsuario" as user
+participant "Usuario: nuevoUsuario" as newUser
 
-== Creación de usuario y vínculo con empleado ==
-NegocioControlador -> Usuario : setUsuario(nombreUsuario, contraseña)
-activate Usuario
-Usuario --> NegocioControlador : creado
-deactivate Usuario
+participant "List<Empleado>: objListaEmpleados" as listaEmp
+participant "Empleado: objEmpleado" as emp
+participant "Empleado: nuevoEmpleado" as newEmp
 
-NegocioControlador -> Empleado : crearEmpleado(legajo, sueldoBase, horasExtras, tipoUsuario)
-activate Empleado
-Empleado --> NegocioControlador : Legajo
-deactivate Empleado
 
-NegocioControlador -> Empleado : vincularUsuario(legajo, nombreUsuario)
-activate Empleado
-Empleado --> NegocioControlador : vinculadoOK
-deactivate Empleado
+admin -> NegCtrl : registrarNuevoEmpleado(nombreUsuario: String, contrasenia: String, tipo: TipoUsuario, legajo: String, sueldo: Float)
+activate NegCtrl
 
+    alt datos incompletos o formato inválido
+        NegCtrl --> admin : <<NULL>>
+    else datos válidos
+    
+        NegCtrl -> listaUser : buscarUsuario(nombreUsuario: String)
+        activate listaUser
+        
+        loop [para cada u en objListaUsuarios]
+            listaUser -> user : getNombreUsuario()
+            activate user
+            user --> listaUser : << nombreActual : String >>
+            deactivate user
+            
+            alt nombreUsuario == nombreActual
+                listaUser --> NegCtrl : << objUsuarioEncontrado : Usuario >>
+            end
+        end
+        deactivate listaUser
+
+        NegCtrl -> listaEmp : buscarEmpleado(legajo: String)
+        activate listaEmp
+        
+        loop [para cada emp en objListaEmpleados]
+            listaEmp -> emp : getLegajo()
+            activate emp
+            emp --> listaEmp : << legajoActual : String >>
+            deactivate emp
+            
+            alt legajo == legajoActual
+                listaEmp --> NegCtrl : << objEmpleadoEncontrado : Empleado >>
+            end
+        end
+        deactivate listaEmp
+
+        alt (objUsuarioEncontrado != null) || (objEmpleadoEncontrado != null)
+            
+            NegCtrl --> admin : <<NULL>>
+            
+        else (ninguno existe)
+            
+            NegCtrl -> newUser ** : crearUsuario(nombreUsuario: String, contrasenia: String, tipo: TipoUsuario)
+            activate newUser
+            newUser --> NegCtrl : << nuevoUsuario : Usuario >>
+            deactivate newUser
+
+            NegCtrl -> newEmp ** : crearEmpleado(legajo: String, sueldo: Float)
+            activate newEmp
+            newEmp --> NegCtrl : << nuevoEmpleado : Empleado >>
+            deactivate newEmp
+
+            NegCtrl -> newEmp : setUsuario(nuevoUsuario: Usuario)
+            activate newEmp
+            newEmp --> NegCtrl : <<NULL>>
+            deactivate newEmp
+
+            NegCtrl -> listaUser : agregarUsuario(nuevoUsuario: Usuario)
+            activate listaUser
+            listaUser --> NegCtrl : << estado : Boolean >>
+            deactivate listaUser
+
+            NegCtrl -> listaEmp : agregarEmpleado(nuevoEmpleado: Empleado)
+            activate listaEmp
+            listaEmp --> NegCtrl : << estado : Boolean >>
+            deactivate listaEmp
+
+            NegCtrl --> admin : <<NULL>>
+        end
+        
+    end
+
+deactivate NegCtrl
 @enduml

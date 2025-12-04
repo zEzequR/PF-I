@@ -1,0 +1,60 @@
+@startuml
+title Registrar Proveedor (Droguería)
+
+hide footbox
+
+actor "Administrador:Admin" as admin
+participant "Interfaz: NegocioControlador" as NegCtrl
+participant "List<Drogueria>: ListaProveedores" as lista
+participant "Drogueria: objDrogueria" as drog
+participant "Drogueria: nuevaDrogueria" as nuevoProv
+
+
+admin -> NegCtrl : registrarProveedor(nombre: String, email: String, telefono: String, formatoEnvio: String)
+activate NegCtrl
+
+    alt formato de email o telefono invalido
+        NegCtrl --> admin : <<NULL>>
+    else formatos válidos
+    
+        NegCtrl -> lista : buscarDrogueria(nombre: String, email: String)
+        activate lista
+        
+        loop [para cada d en  ListaProveedores]
+            lista -> drog : getNombre()
+            activate drog
+            drog --> lista : << nombreActual : String >>
+            deactivate drog
+
+            lista -> drog : getEmail()
+            activate drog
+            drog --> lista : << emailActual : String >>
+            deactivate drog
+            
+            alt (nombre == nombreActual) || (email == emailActual)
+                lista --> NegCtrl : << objDrogueria : Drogueria >>
+            end
+        end
+        deactivate lista
+
+        alt objDrogueria encontrado
+            NegCtrl --> admin : <<NULL>>
+            
+        else objDrogueria no encontrado
+            NegCtrl -> nuevoProv ** : crearProveedor(nombre: String, email: String, telefono: String, formatoEnvio: String)
+            activate nuevoProv
+            nuevoProv --> NegCtrl : << nuevaDrogueria : Drogueria >>
+            deactivate nuevoProv
+
+            NegCtrl -> lista : agregarDrogueria(nuevaDrogueria: Drogueria)
+            activate lista
+            lista --> NegCtrl : << estado : Boolean >>
+            deactivate lista
+
+            NegCtrl --> admin : <<NULL>>
+        end
+        
+    end
+
+deactivate NegCtrl
+@enduml

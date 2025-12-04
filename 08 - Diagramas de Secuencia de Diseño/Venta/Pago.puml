@@ -1,169 +1,147 @@
-@startuml Pago
-actor Empleado
-control NegocioControlador
-participant Venta
-entity Cliente
-participant TipoDescuento
-control ServicioPagos
-entity Pago
-participant Posnet
-participant Ticket
-participant Ticketera
-control ServicioCorreos
+@startuml
+title Proceso de Pago: Validación, Cuenta Corriente, Estados y Reintentos
 
-== Empleado elige medio de pago ==
-Empleado -> NegocioControlador : elegirMedioPago(nroVta, medio, cuotas)
-activate NegocioControlador
+hide footbox
 
-' 1) Evaluar descuentos aplicables según medio y contexto
-NegocioControlador -> TipoDescuento : obtenerDescuentoAplicable(nroVta, clienteDNI, medio)
-activate TipoDescuento
-TipoDescuento --> NegocioControlador : descuentoInfo(porcentaje, motivo)
-deactivate TipoDescuento
+actor "Empleado" as emp
+participant "Interfaz: NegCtrl" as NegCtrl
+participant "Venta: objVenta" as venta
+participant "Cliente: objCliente" as cli
+participant "Pago: objPago" as pago
+participant "ServicioPagos: ExtSrv" as srvPagos
+participant "DetalleVenta: det" as det
+participant "Medicamento: med" as med
+participant "Ticketera" as printer
+participant "ServicioCorreos: ExtSrv" as mailer
 
-' 4) Calcular total final (incluye recargos por cuotas si aplica)
-NegocioControlador -> NegocioControlador : calcularTotalFinal(montoBruto, descuentos, recargosPorCuotas(medio, cuotas))
-NegocioControlador --> Empleado : mostrarTotalFinal(totalFinal)
+emp -> NegCtrl : iniciarPago()
+activate NegCtrl
 
-' 5) Validar políticas de pago antes de iniciar transacción
-NegocioControlador -> NegocioControlador : validarMedioPagoReglas(medio, cuotas, totalFinal, Venta.tipoVta, Cliente)
-alt regla violada (ej. tarjeta, + 1 cuota y totalFinal < 50.000)
-    NegocioControlador --> Empleado : "Medio no permitido por políticas"
-    NegocioControlador -> Venta : marcarEstado(Cancelado)
-    deactivate NegocioControlador
-    return
-else regla violada (obra social y cuotas > 1)
-    NegocioControlador --> Empleado : "Obra social no permite cuotas"
-    NegocioControlador -> Venta : marcarEstado(Cancelado)
-    deactivate NegocioControlador
-    return
-else regla violada (venta a crédito y cliente excede limite)
-    NegocioControlador --> Empleado : "Cliente excede límite de crédito - venta bloqueada"
-    NegocioControlador -> Venta : marcarEstado(Cancelado)
-    deactivate NegocioControlador
-    return
-end
+loop Mientras la venta esté PENDIENTE
+    
+    emp -> NegCtrl : ingresarMedioPago(medio, cuotas)
+    
+    ' Actualizar monto final según medio (Recargos/Descuentos)
+    NegCtrl -> venta : calcularMontoFinal(medio, cuotas)
+    activate venta
+    venta --> NegCtrl : << montoFinal >>
+    deactivate venta
 
-' 6) Crear registro de pago
-NegocioControlador -> ServicioPagos : crearPago(nroVta, medio, totalFinal, cuotas)
-activate ServicioPagos
-ServicioPagos -> Pago : crearPago(nroVta, medio, totalFinal, cuotas)
-activate Pago
-Pago --> ServicioPagos : Pago(numPago, fechaHoraCreacion)
-deactivate Pago
-ServicioPagos --> NegocioControlador : pagoCreado(numPago, fechaHoraCreacion)
-deactivate ServicioPagos
+    alt medio == "Cuenta Corriente"
+        
+        NegCtrl -> cli : esFrecuente()
+        activate cli
+        cli --> NegCtrl : << esFrecuente : Bool >>
+        deactivate cli
+        
+        NegCtrl -> cli : getSaldoDisponible()
+        activate cli
+        cli --> NegCtrl : << saldoDisponible : Float >>
+        deactivate cli
 
-NegocioControlador --> Empleado : "Iniciando transacción de pago..."
-
-== Iniciar transacción en posnet ==
-NegocioControlador -> ServicioPagos : iniciarTransaccion(numPago)
-activate ServicioPagos
-ServicioPagos -> Posnet : iniciarTransaccion(numPago, totalFinal, datosPago)
-activate Posnet
-Posnet --> ServicioPagos : respuestaInicial(iniciado|rechazado)
-deactivate Posnet
-
-alt respuestaInicial == rechazado
-    ServicioPagos --> NegocioControlador : transaccionNoIniciada(numPago)
-    NegocioControlador -> Venta : marcarEstado(Pendiente)
-    NegocioControlador --> Empleado : "Pago no iniciado - revisar datos"
-    deactivate ServicioPagos
-    deactivate NegocioControlador
-    return
-else iniciado
-    ServicioPagos --> NegocioControlador : transaccionIniciada(numPago)
-end
-deactivate ServicioPagos
-
-== Espera callback y manejo de resultado ==
-loop hasta aprobado o cancelado (callbacks)
-    Posnet -> ServicioPagos : callback_resultado(numPago, estadoPago, numTransaccion, fechaHora)
-    activate ServicioPagos
-    ServicioPagos -> Pago : procesarRespuestaPosnet(estadoPago, numTransaccion, fechaHora)
-    activate Pago
-    Pago --> ServicioPagos : estadoActualizado(estadoPago)
-    deactivate Pago
-
-    ServicioPagos -> NegocioControlador : procesarRespuestaPago(nroVta, estadoPago, numPago, numTransaccion, fechaHora)
-    activate NegocioControlador
-
-    alt estadoPago == aprobado
-        NegocioControlador -> Venta : confirmarPago(numTransaccion, fechaHora)
-        activate Venta
-        Venta -> Venta : marcarEstado(Concretado)
-        Venta --> NegocioControlador : ventaConfirmada
-        deactivate Venta
-
-        ' Actualizar stock por cada detalle
-        loop por cada DetalleVenta in Venta
-            NegocioControlador -> Venta : obtenerDetalle()
-            Venta --> NegocioControlador : detalle(codBarra, cantidad)
-            NegocioControlador -> Medicamento : disminuirStock(codBarra, cantidad)
-            activate Medicamento
-            Medicamento --> NegocioControlador : stockActualizado
-            deactivate Medicamento
+        alt esFrecuente AND saldoDisponible >= montoFinal
+             NegCtrl -> cli : actualizarSaldo(montoFinal)
+             activate cli
+             cli --> NegCtrl : <<NULL>>
+             deactivate cli
+             
+             NegCtrl -> venta : registrarPago(montoFinal, "Cta Cte")
+             activate venta
+                 venta -> pago ** : create(montoFinal, "Cta Cte")
+                 activate pago
+                 pago --> venta : << objPago >>
+                 deactivate pago
+             venta --> NegCtrl : <<NULL>>
+             deactivate venta
+             
+        else Error: No es frecuente o Saldo insuficiente
+             NegCtrl --> emp : <<Error: Cliente no apto o sin cupo>>
+             NegCtrl -> NegCtrl : pagoExitoso = false
         end
 
-        ' Registrar transacción y movimientos de cuenta corriente si corresponde
-        NegocioControlador -> ServicioPagos : registrarTransaccion(nroVta, numPago, aprobado, numTransaccion, fechaHora)
-        NegocioControlador -> Cliente : registrarPagoCuentaCorriente(clienteDNI, montoAcumulado)
+    else Medio Externo (Tarjeta/QR/Billetera Virtual)
+        
+        NegCtrl -> venta : validarReglasPago(medio, cuotas)
+        activate venta
+        venta --> NegCtrl : << esValido : Bool >>
+        deactivate venta
 
-        ' Generar ticket e intentar imprimir
-        NegocioControlador -> Ticket : generarTicket(nroVta)
-        activate Ticket
-        Ticket -> Ticketera : imprimir(nroVta, pdf/objTicket)
-        activate Ticketera
-        Ticketera --> Ticket : resultadoImpresion(ok|error)
-        deactivate Ticketera
-        Ticket --> NegocioControlador : resultadoImpresion, pdfPath
-        deactivate Ticket
+        alt esValido == true
+            NegCtrl -> srvPagos : iniciarTransaccion(montoFinal, medio, cuotas)
+            activate srvPagos
+            srvPagos --> NegCtrl : << estadoTransaccion : String >>
+            deactivate srvPagos
 
-        alt resultadoImpresion == ok
-            NegocioControlador --> Empleado : "Pago aprobado. Ticket impreso."
-        else resultadoImpresion == error
-            NegocioControlador -> Cliente : obtenerContacto(clienteDNI)
-            Cliente --> NegocioControlador : contacto(email, telefono)
-            alt contacto disponible
-                NegocioControlador -> ServicioCorreos : enviarComprobante(nroVta, contacto)
-                activate ServicioCorreos
-                ServicioCorreos --> NegocioControlador : envioOk|falloEnvio
-                deactivate ServicioCorreos
-                alt envioOk
-                    NegocioControlador --> Empleado : "Pago aprobado. Ticket enviado por email/WhatsApp."
-                else
-                    NegocioControlador --> Empleado : "Pago aprobado. Envío falló -> registrar incidencia."
-                end
-            else Sin contacto
-                NegocioControlador --> Empleado : "Pago aprobado. Impresión y envío fallaron"
+            alt estadoTransaccion == "APROBADA"
+                
+                NegCtrl -> venta : registrarPago(montoFinal, medio)
+                activate venta
+                    venta -> pago ** : create(montoFinal, medio)
+                    activate pago
+                    
+                    pago --> venta : << objPago >>
+                    deactivate pago
+                venta --> NegCtrl : <<NULL>>
+                deactivate venta
+            
+            else RECHAZADA
+                 NegCtrl --> emp : <<Error: Transacción Rechazada>>
             end
-        end
-
-        NegocioControlador --> Empleado : "Venta finalizada con éxito"
-        deactivate NegocioControlador
-        break
-    else estadoPago == rechazado
-        NegocioControlador -> Venta : marcarEstado(Pendiente)
-        NegocioControlador --> Empleado : "Pago rechazado. ¿Reintentar o cancelar?"
-        deactivate NegocioControlador
-
-        alt Reintentar Transacción
-            Empleado -> ServicioPagos : retryTransaccion(numPago)
-            ServicioPagos -> Posnet : iniciarTransaccion(numPago, totalFinal, datosPago)
-            Posnet --> ServicioPagos : respuestaInicial(iniciado|rechazado)
-            ' vuelve al loop y espera callback
-        else Cancelar la transacción
-            Empleado -> ServicioPagos : cancelarTransaccion(numPago)
-            ServicioPagos -> NegocioControlador : procesarRespuestaPago(nroVta, rechazado, numPago)
-            NegocioControlador -> Venta : marcarEstado(Cancelado)
-            NegocioControlador --> Empleado : "Venta cancelada por operador"
-            deactivate ServicioPagos
-            deactivate NegocioControlador
-            return
+        else Reglas Violadas
+             NegCtrl --> emp : <<Error: Medio no permitido por reglas>>
         end
     end
+
+    alt pagoExitoso == true
+        
+        NegCtrl -> venta : setEstado("CONFIRMADA")
+        activate venta
+        venta --> NegCtrl : <<NULL>>
+        deactivate venta
+
+        NegCtrl -> venta : actualizarStock()
+        activate venta
+             loop para cada detalle
+                 venta -> det : descontarStock()
+                 activate det
+                 det -> med : actualizarStock(cantidad)
+                 activate med
+                 med --> det : <<NULL>>
+                 deactivate med
+                 det --> venta : <<NULL>>
+                 deactivate det
+             end
+        venta --> NegCtrl : <<NULL>>
+        deactivate venta
+
+        NegCtrl -> printer : imprimirTicket(objVenta)
+        activate printer
+        printer --> NegCtrl : << exito : Boolean >>
+        deactivate printer
+        
+        opt exito == false
+            NegCtrl -> mailer : enviarTicket(objVenta, cli.getEmail())
+            activate mailer
+            deactivate mailer
+        end
+
+        NegCtrl --> emp : <<Venta Finalizada>>
+
+    else pagoExitoso == false
+        
+        opt Cancelar Operación (Salir del bucle)
+            emp -> NegCtrl : cancelarVenta()
+            
+            NegCtrl -> venta : setEstado("CANCELADA")
+            activate venta
+            venta --> NegCtrl : <<NULL>>
+            deactivate venta
+            
+            NegCtrl --> emp : <<Venta Cancelada>>
+        end
+    end
+
 end
 
+deactivate NegCtrl
 @enduml
-
-

@@ -1,0 +1,69 @@
+@startuml
+title Inicio de Sesión
+
+hide footbox
+
+actor "Usuario:User" as user
+participant "Interfaz: NegCtrl" as NegCtrl
+participant "List<Usuario>: objListaUsuarios" as lista
+participant "Usuario: objUsuario" as objUser
+
+user -> NegCtrl : iniciarSesion(nombreUsuario: String, contraseña: String)
+activate NegCtrl
+
+    ' CORREGIDO: Espacios normales aquí
+    alt nombreUsuario es vacío O contraseña es vacía
+        NegCtrl --> user : <<NULL>>
+
+        
+    else datos completos
+    
+        NegCtrl -> lista : buscarUsuario(nombreUsuario: String)
+        activate lista
+        
+        loop [para cada u en objListaUsuarios]
+            lista -> objUser : getNombreUsuario()
+            activate objUser
+            objUser --> lista : << nombreActual : String >>
+            deactivate objUser
+            
+            alt nombreUsuario == nombreActual
+                lista --> NegCtrl : << objUsuarioEncontrado : Usuario >>
+                
+            end
+        end
+        deactivate lista
+        
+        alt objUsuarioEncontrado == null
+            NegCtrl --> user : <<NULL>>
+
+            
+        else objUsuarioEncontrado != null
+            
+            NegCtrl -> objUser : getContraseña()
+            activate objUser
+            objUser --> NegCtrl : << contraAlmacenada : String >>
+            deactivate objUser
+            
+            alt contraseña == contraAlmacenada
+            
+                NegCtrl -> objUser : getTipoUsuario()
+                activate objUser
+                objUser --> NegCtrl : << rol : TipoUsuario >>
+                deactivate objUser
+                
+                NegCtrl --> user : <<NULL>>
+                note right of NegCtrl
+                Inicio de sesión exitoso
+                end note
+                
+            else contraseña incorrecta
+                NegCtrl --> user : <<NULL>>
+
+            end
+        end
+        
+    end
+
+deactivate NegCtrl
+@enduml

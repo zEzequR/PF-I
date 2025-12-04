@@ -1,0 +1,52 @@
+@startuml
+title Carga Clientes Frecuentes
+
+hide footbox
+
+actor "Admin:Administrador" as admin
+participant "Interfaz: NegocioControlador" as NegCtrl
+participant "List<Cliente>: ListaClientes" as lista
+participant "Cliente: objCliente" as cliente
+
+
+admin -> NegCtrl : registrarClienteFrecuente(dni: String, saldoInicial: Float)
+activate NegCtrl
+
+    NegCtrl -> lista : buscarCliente(dni: String)
+    activate lista
+    
+    loop [para cada c en ListaClientes]
+        lista -> cliente : getDNI()
+        activate cliente
+        cliente --> lista : << dniActual : String >>
+        deactivate cliente
+        
+        alt dni == dniActual
+            lista --> NegCtrl : << objCliente : Cliente >>
+        end
+    end
+    deactivate lista
+
+    alt objCliente encontrado
+    
+        NegCtrl -> cliente : setEsFrecuente(true)
+        activate cliente
+        ' CORRECCIÓN: Retorno NULL
+        cliente --> NegCtrl : <<NULL>>
+        deactivate cliente
+
+        NegCtrl -> cliente : setMontoAcumulado(saldoInicial: Float)
+        activate cliente
+
+        cliente --> NegCtrl : <<NULL>>
+        deactivate cliente
+
+
+        NegCtrl --> admin : <<NULL>>
+
+    else objCliente no encontrado
+        NegCtrl --> admin : <<NULL>>
+    end
+
+deactivate NegCtrl
+@enduml

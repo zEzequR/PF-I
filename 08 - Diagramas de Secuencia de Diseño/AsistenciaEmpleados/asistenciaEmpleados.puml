@@ -1,0 +1,60 @@
+@startuml
+title Asistencia Empleado
+
+hide footbox
+
+actor "Administrador: Admin" as admin
+participant "NegocioControlador: Interfaz" as NegCtrl
+participant "List<Empleado>: empleados" as listaEmpls
+participant "Empleado: objEmpl" as empl
+participant "Asistencia: nuevaAsistencia" as asis
+
+admin -> NegCtrl : solicitarListaEmpleados()
+activate NegCtrl
+
+    NegCtrl -> listaEmpls : getEmpleados()
+    activate listaEmpls
+    listaEmpls --> NegCtrl : << listaCompleta : List<Empleado> >>
+    deactivate listaEmpls
+
+NegCtrl --> admin : <<NULL>>
+deactivate NegCtrl
+
+admin -> NegCtrl : registrarAsistencia(dni: String, legajo: String, fecha: Date, hEntrada: Time, hSalida: Time, estado: EstadoAsistencia)
+activate NegCtrl
+
+    NegCtrl -> listaEmpls : buscarEmpleado(dni: String, legajo: String)
+    activate listaEmpls
+    
+    loop [para cada e en empleados]
+        listaEmpls -> empl : getDNI()
+        activate empl
+        empl --> listaEmpls : << dniActual : String >>
+        deactivate empl
+        
+        listaEmpls -> empl : getLegajo()
+        activate empl
+        empl --> listaEmpls : << legajoActual : String >>
+        deactivate empl
+        
+        alt (dni == dniActual) || (legajo == legajoActual)
+            listaEmpls --> NegCtrl : << objEmpl : Empleado >>
+        end
+    end
+    deactivate listaEmpls
+
+    NegCtrl -> asis ** : crearAsistencia(fecha: Date, hEntrada: Time, hSalida: Time, estado: EstadoAsistencia)
+    activate asis
+    asis --> NegCtrl : << nuevaAsistencia : Asistencia >>
+    deactivate asis
+
+    NegCtrl -> empl : agregarAsistencia(nuevaAsistencia: Asistencia)
+    activate empl
+
+    empl --> NegCtrl : << estado : Boolean >>
+    deactivate empl
+
+NegCtrl --> admin : <<NULL>>
+deactivate NegCtrl
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml
+title Carga Cliente
+
+hide footbox
+
+actor "Empleado:Vendedor" as user
+participant "NegocioControlador: Interfaz" as NegCtrl
+participant "List<Cliente>: clientes" as listaClientes
+participant "Cliente: objClient" as cliente
+participant "Cliente: nuevoCliente" as NewClient
+
+user -> NegCtrl : registrarCliente(dni: String, nombre: String, email: String, telefono: String)
+activate NegCtrl
+
+    alt formato email o telefono invalido
+        
+        NegCtrl --> user : <<NULL>>
+        
+    else datos válidos
+    
+        NegCtrl -> listaClientes : buscarCliente(dni: String)
+        activate listaClientes
+        
+        loop [para cada objClient en clientes]
+            listaClientes -> cliente : getDNI()
+            activate cliente
+            cliente --> listaClientes : << dniActual : String >>
+            deactivate cliente
+            
+            alt dni == dniActual
+                listaClientes --> NegCtrl : << objClient : Cliente >>
+            end
+        end
+        deactivate listaClientes
+
+        alt cliente encontrado
+            NegCtrl --> user : <<NULL>>
+            
+        else cliente no encontrado
+            NegCtrl -> NewClient ** : crearCliente(dni: String, nombre: String, email: String, telefono: String)
+            activate NewClient
+            NewClient --> NegCtrl : << nuevoCliente : Cliente >>
+            deactivate NewClient
+
+            NegCtrl -> listaClientes : agregarCliente(nuevoCliente: Cliente)
+            activate listaClientes
+            listaClientes --> NegCtrl : << estado : Boolean >>
+            deactivate listaClientes
+
+            NegCtrl --> user : <<NULL>>
+        end
+        
+    end
+
+deactivate NegCtrl
+@enduml

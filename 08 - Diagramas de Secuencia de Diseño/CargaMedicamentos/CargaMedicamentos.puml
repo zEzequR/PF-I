@@ -1,53 +1,56 @@
-@startuml Carga_Medicamentos
+@startuml
+title Carga de Medicamentos
 
-actor Administrador
-control NegocioControlador
-participant Medicamento
+hide footbox
 
-== Entrada de datos ==
-Administrador -> NegocioControlador : crearMedicamento(codigoBarra, nombre, precioUnitario, stock, stockMinimo, drogueriaNombre, descripción, laboratorio)
-activate NegocioControlador
+actor "Administrador:Admin" as admin
+participant "NegCtrl: Interfaz" as NegCtrl
 
-== Validaciones de negocio y formato ==
-NegocioControlador -> NegocioControlador : validarCamposObligatorios()\n- codigoBarra, nombre, precioUnitario, stock\n- precioUnitario>0, stock>=0\n- descripción no vacía, laboratorio no vacío
-alt validación falla
-  NegocioControlador --> Administrador : "Error: campos obligatorios incompletos o formato incorrecto"
-  deactivate NegocioControlador
-  return
-end
+participant "List<Medicamento>: objListaMedicamentos" as lista
+participant "Medicamento: objMedicamento" as med
+participant "Medicamento: nuevoMedicamento" as newMed
 
-== Verificar duplicados y referencias ==
-NegocioControlador -> Medicamento : buscarPorCodigoBarra(codigoBarra)
-activate Medicamento
-alt ya existe
-  Medicamento --> NegocioControlador : encontrado
-  NegocioControlador --> Administrador : "Error: código de barra ya registrado"
-  deactivate Medicamento
-  deactivate NegocioControlador
-  return
-else no existe
-  Medicamento --> NegocioControlador : noEncontrado
-end
-deactivate Medicamento
+admin -> NegCtrl : registrarMedicamento(codBarras: String, nombre: String, descripcion: String, laboratorio: String, precio: Float, stock: Int)
+activate NegCtrl
 
-== Persistencia del medicamento ==
-NegocioControlador -> Medicamento : setMedicamento(codigoBarra, nombre, descripción, laboratorio, precioUnitario, stock, stockMinimo, drogueriaNombre)
-activate Medicamento
-Medicamento --> NegocioControlador : object : Medicamento
-deactivate Medicamento
+    alt datos incompletos o formato incorrecto
+        NegCtrl --> admin : <<NULL>>
+    else datos válidos
+    
+        NegCtrl -> lista : buscarMedicamento(codBarras: String)
+        activate lista
+        
+        loop [para cada m en objListaMedicamentos]
+            lista -> med : getCodBarras()
+            activate med
+            med --> lista : << codigoActual : String >>
+            deactivate med
+            
+            alt codBarras == codigoActual
+                lista --> NegCtrl : << objMedicamentoEncontrado : Medicamento >>
+            end
+        end
+        deactivate lista
+        
+        alt objMedicamentoEncontrado != null
+            NegCtrl --> admin : <<NULL>>
+            
+        else objMedicamentoEncontrado == null
 
-== Post-proceso: alertas y confirmación ==
-NegocioControlador -> Medicamento : estaPorDebajoStockMinimo(codigoBarra)
-activate Medicamento
-Medicamento --> NegocioControlador : bool alerta
-deactivate Medicamento
+            NegCtrl -> newMed ** : create(codBarras: String, nombre: String, descripcion: String, laboratorio: String, precio: Float, stock: Int)
+            activate newMed
+            newMed --> NegCtrl : << nuevoMedicamento : Medicamento >>
+            deactivate newMed
 
-alt alerta = true
-  NegocioControlador --> Administrador : "Advertencia: stock <= mínimo. Alerta registrada"
-end
+            NegCtrl -> lista : agregarMedicamento(nuevoMedicamento: Medicamento)
+            activate lista
+            lista --> NegCtrl : << estado : Boolean >>
+            deactivate lista
 
-NegocioControlador --> Administrador : "Medicamento creado correctamente"
+            NegCtrl --> admin : <<NULL>>
+        end
+        
+    end
 
-deactivate NegocioControlador
-
+deactivate NegCtrl
 @enduml
