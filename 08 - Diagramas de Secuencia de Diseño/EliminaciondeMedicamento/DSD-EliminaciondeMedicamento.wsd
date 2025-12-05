@@ -1,50 +1,73 @@
 @startuml
-title DSD - Eliminación de Medicamentos
+title Eliminación de Medicamento (Lógica Correcta)
 
-actor Administrador
-control ControladorNegocio
-entity Medicamento
-entity Sistema
+hide footbox
 
-== Inicio ==
+actor "Administrador: Admin" as admin
+participant "NegocioControlador: Interfaz" as NegCtrl
+participant "List<Medicamento>: medicamentos" as listaMeds
+participant "Medicamento: objMed" as med
+participant "List<Venta>: ventas" as listaVentas
+participant "Venta: v" as venta
 
-Administrador -> ControladorNegocio: accederModuloMedicamentos()
+admin -> NegCtrl : eliminarMedicamento(codigoBarra: String)
+activate NegCtrl
 
-ControladorNegocio -> Medicamento: obtenerMedicamentos(filtro)
-activate Medicamento
-Medicamento --> ControladorNegocio: listaMedicamentos
-deactivate Medicamento
-
-alt Error al obtener medicamentos
-    ControladorNegocio -> Administrador: mensaje("No se pudieron obtener los medicamentos")
-else Lista obtenida
-    ControladorNegocio -> Sistema: mostrarLista(listaMedicamentos)
-    Sistema -> Administrador: mostrar(listaMedicamentos)
-
-    Administrador -> ControladorNegocio: seleccionarMedicamento(nombreMedicamento)
-
-    Administrador -> ControladorNegocio: confirmarEliminacion()
-
-    ControladorNegocio -> Sistema: verificarAsociaciones(nombreMedicamento)
-    activate Sistema
-    Sistema --> ControladorNegocio: asociado
-    deactivate Sistema
-
-    alt Medicamento asociado a ventas/pedidos
-        ControladorNegocio -> Administrador: mensaje("No se puede eliminar: asociado a ventas o pedidos")
-    else Sin asociaciones
-
-        ControladorNegocio -> Medicamento: eliminar(nombreMedicamento)
-        activate Medicamento
-        Medicamento --> ControladorNegocio: resultadoEliminacion
-        deactivate Medicamento
-
-        alt Error de conexión
-            ControladorNegocio -> Administrador: mensaje("Error al eliminar. Intente nuevamente más tarde")
-        else Eliminación exitosa
-            ControladorNegocio -> Administrador: mensaje("Medicamento eliminado correctamente")
+    NegCtrl -> listaMeds : buscarMedicamento(codigoBarra)
+    activate listaMeds
+    
+    loop [para cada m en medicamentos]
+        listaMeds -> med : getCodigoBarra()
+        activate med
+        med --> listaMeds : << codigoActual >>
+        deactivate med
+        
+        alt codigoBarra == codigoActual
+            listaMeds --> NegCtrl : << objMed : Medicamento >>
+            break
         end
     end
-end
+    
+    listaMeds --> NegCtrl : << NULL >>
+    deactivate listaMeds
 
+    alt objMed == NULL
+        NegCtrl --> admin : << Error: El medicamento no existe >>
+        
+    else medicamento encontrado (EL ELSE QUE FALTABA)
+        
+
+        NegCtrl -> listaVentas : verificarUsoEnVentas(objMed)
+        activate listaVentas
+        
+        loop [para cada v en ventas]
+            listaVentas -> venta : contieneMedicamento(objMed)
+            activate venta
+            venta --> listaVentas : << tieneElMedicamento : Boolean >>
+            deactivate venta
+            
+            alt (tieneElMedicamento == true) AND (venta.estado == PENDIENTE)
+                listaVentas --> NegCtrl : << CONFLICTO >>
+                break
+            end
+        end
+        
+        listaVentas --> NegCtrl : << OK >>
+        deactivate listaVentas
+        
+        alt Se recibió CONFLICTO
+            NegCtrl --> admin : << Error: Asociado a venta pendiente >>
+            
+        else Se recibió OK (Eliminación Exitosa)
+            NegCtrl -> listaMeds : quitarMedicamento(objMed)
+            activate listaMeds
+            listaMeds --> NegCtrl : << TRUE >>
+            deactivate listaMeds
+            
+            NegCtrl --> admin : << Éxito: Eliminado >>
+        end
+        
+    end ' Fin del ELSE gigante
+
+deactivate NegCtrl
 @enduml
