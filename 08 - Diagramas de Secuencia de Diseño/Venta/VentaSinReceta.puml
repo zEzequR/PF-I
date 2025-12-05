@@ -29,25 +29,29 @@ activate NegCtrl
         
         alt dniCliente == dniActual
             listaCli --> NegCtrl : << objClienteEncontrado : Cliente >>
-            break
         end
     end
     deactivate listaCli
 
-    NegCtrl -> venta ** : create()
+    NegCtrl -> venta ** : create(nroVta, fechaVta : DateTime, tipoVta : string, total : decimal, dniCliente : int, nombreUsuario : string, estadoVenta : string)
     activate venta
+    
+    NegCtrl -> venta : setNroVta(nro)
+    NegCtrl -> venta : setFechaVta(DateTime.Now())
+    NegCtrl -> venta : setTipoVta("SinReceta")
+    NegCtrl -> venta : setClienteDNI(dniCliente)
+    
     venta --> NegCtrl : << objVenta : Venta >>
     deactivate venta
 
     alt objClienteEncontrado != null
         
-        ' Verificación de deuda (Simplificada en diagrama)
-        NegCtrl -> cli : getDeuda()
+        NegCtrl -> cli : getMontoAcumulado()
         activate cli
-        cli --> NegCtrl : << deudaActual : Float >>
+        cli --> NegCtrl : << MontoAcumulado : Float >>
         deactivate cli
 
-        alt deudaActual < 80000
+        alt MontoAcumulado > -80000
             NegCtrl -> venta : setCliente(objClienteEncontrado)
             activate venta
             venta --> NegCtrl : <<NULL>>
@@ -62,26 +66,38 @@ activate NegCtrl
                 NegCtrl -> listaDesc : buscarDescuento("Cliente Frecuente")
                 activate listaDesc
                 
-                listaDesc -> descObj : getMotivo()
-                activate descObj
-                descObj --> listaDesc : << motivo : String >>
-                deactivate descObj
-
-                listaDesc -> descObj : getPorcentaje()
-                activate descObj
-                descObj --> listaDesc : << porcentaje : Float >>
-                deactivate descObj
-                
-                listaDesc --> NegCtrl : << descObj : TipoDescuento >>
+                loop para cada d en CatalogoDescuentos
+                    listaDesc -> descObj : getMotivo()
+                    activate descObj
+                    descObj --> listaDesc : << motivo : String >>
+                    deactivate descObj
+                    
+                    alt motivo == 'Cliente Frecuente' y activo == true
+                         listaDesc --> NegCtrl : << descObj : TipoDescuento >>
+                    end
+                end
                 deactivate listaDesc
-                
-                NegCtrl -> venta : aplicarDescuentoVenta(descObj)
-                activate venta
-                venta --> NegCtrl : <<NULL>>
-                deactivate venta
+
+                ' Aplicación del Descuento
+                alt descObj != null
+                    NegCtrl -> descObj : getPorcentaje()
+                    activate descObj
+                    descObj --> NegCtrl : << porcentaje : Float >>
+                    deactivate descObj
+    
+                    NegCtrl -> venta : aplicarDescuentoVenta(porcentaje)
+                    activate venta
+                    venta --> NegCtrl : <<NULL>>
+                    deactivate venta
+                end
             end
         else Deuda Excesiva
+             emp -> NegCtrl : cancelarVenta()
              note right of NegCtrl: Bloqueo por regla de negocio:\nDeuda > $80.000
+             NegCtrl -> venta : setEstado("Cancelado")
+             activate venta
+             venta --> NegCtrl : <<NULL>>
+             deactivate venta
         end
 
     else cliente no encontrado (Anónimo)
@@ -96,14 +112,27 @@ deactivate NegCtrl
 
 emp -> NegCtrl : filtrarMedicamentos(filtros)
 activate NegCtrl
-NegCtrl -> med : obtenerDisponibles(filtros)
-activate med
-med --> NegCtrl : List<Medicamento>
-deactivate med
+    NegCtrl -> listaMed : obtenerDisponibles(filtros)
+    activate listaMed
+    
+    loop para cada med en Medicamento
+        listaMed -> med : getMedicamento(filtros)
+        activate med
+        med --> listaMed : << coincide : booleano >>
+        deactivate med
+
+        alt coincide == true
+            med --> listaMed : <<object : Medicamento>>
+        end
+    end
+    
+    listaMed --> NegCtrl : << List<Medicamento> >>
+    deactivate listaMed
+
 NegCtrl --> emp : List<Medicamento>
 deactivate NegCtrl
 
-loop Mientras la venta esté abierta
+loop Mientras la venta no esté confirmada
     
     alt AGREGAR PRODUCTO
         emp -> NegCtrl : agregarProducto(codBarra, cantidad)
@@ -115,29 +144,36 @@ loop Mientras la venta esté abierta
         deactivate listaMed
 
         alt objMedEncontrado != null AND stock >= cantidad
-         alt requiereReceta/controlado
-            NegCtrl --> emp : "No permitido sin receta"
-        else
-             NegCtrl -> venta : agregarDetalle(codBarra, cantidad)
-             activate venta
              
-                venta -> det ** : create(objMedEncontrado, cantidad)
-                activate det
-                det --> venta : << nuevoDetalle >>
-                deactivate det
+             NegCtrl -> med : esVentaBajoReceta()
+             activate med
+             med --> NegCtrl : << requiereReceta : Boolean >>
+             deactivate med
 
-                det -> med : getPrecioVenta()
-                activate med
-                med --> det : << precio : Float >>
-                deactivate med
+             alt requiereReceta == true
+                NegCtrl --> emp : <<NULL>>
+             else
+                NegCtrl -> venta : agregarDetalle(codBarra, cantidad)
+                activate venta
                 
-                note right of venta
-                    SubTotal = Precio * cantidad
-                end note
-                
-             venta --> NegCtrl : <<NULL>>
-             deactivate venta
-             NegCtrl --> emp : <<List<Medicamento> : Medicamento>>
+                    venta -> det ** : create(objMedEncontrado, cantidad)
+                    activate det
+                    det --> venta : << nuevoDetalle >>
+                    deactivate det
+
+                    det -> med : getPrecioVenta()
+                    activate med
+                    med --> det : << precio : Float >>
+                    deactivate med
+
+                    note right of venta
+                        SubTotal = Precio * cantidad
+                    end note
+
+                venta --> NegCtrl : <<NULL>>
+                deactivate venta
+                NegCtrl --> emp : <<List<Medicamento> : Medicamento>>
+             end
         else Error Stock o No encontrado
              NegCtrl --> emp : <<NULL>>
         end
@@ -149,11 +185,12 @@ loop Mientras la venta esté abierta
         
         NegCtrl -> venta : modificarCantidadDetalle(codBarra, nuevaCantidad)
         activate venta
-            ' Delegación al detalle
             venta -> det : actualizarCantidad(nuevaCantidad)
             activate det
+            deactivate det
             det --> venta : <<NULL>>
             deactivate det
+            deactivate venta
             
         venta --> NegCtrl : <<NULL>>
         deactivate venta
@@ -166,9 +203,8 @@ loop Mientras la venta esté abierta
         
         NegCtrl -> venta : eliminarDetallePorCodigo(codBarra)
         activate venta
-            venta -> det : eliminarLínea()
-            
-        venta --> NegCtrl : <<NULL>>
+            venta -> det : borrarlínea(codProd)
+            venta --> NegCtrl : <<NULL>>
         deactivate venta
         NegCtrl --> emp : <<List<Medicamento> : Medicamento>>
         deactivate NegCtrl
@@ -179,11 +215,14 @@ loop Mientras la venta esté abierta
     end
 end
 
-activate NegCtrl
-NegCtrl -> venta : calcularTotal()
 activate venta
+NegCtrl -> venta : calcularTotal()
+venta --> NegCtrl : << total : Float >>
+deactivate venta
 
-venta --> NegCtrl : << totalAPagar : Float >>
+NegCtrl -> venta : setTotal(total)
+activate venta
+venta --> NegCtrl : <<NULL>>
 deactivate venta
 
 NegCtrl --> emp : <<NULL>>

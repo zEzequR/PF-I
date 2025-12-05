@@ -1,147 +1,163 @@
 @startuml
-title Proceso de Pago: Validación, Cuenta Corriente, Estados y Reintentos
+title Pago
 
 hide footbox
 
 actor "Empleado" as emp
-participant "Interfaz: NegCtrl" as NegCtrl
+participant "Interfaz: NegocioControlador" as NegCtrl
 participant "Venta: objVenta" as venta
 participant "Cliente: objCliente" as cli
 participant "Pago: objPago" as pago
-participant "ServicioPagos: ExtSrv" as srvPagos
+participant "Interfaz : ServicioPagos" as srvPagos
 participant "DetalleVenta: det" as det
 participant "Medicamento: med" as med
 participant "Ticketera" as printer
-participant "ServicioCorreos: ExtSrv" as mailer
+participant "Interfaz : ServicioCorreos" as mailer
 
-emp -> NegCtrl : iniciarPago()
+emp -> NegCtrl : iniciarCobro()
 activate NegCtrl
 
-loop Mientras la venta esté PENDIENTE
+loop Mientras estado venta == PENDIENTE
     
-    emp -> NegCtrl : ingresarMedioPago(medio, cuotas)
+    emp -> NegCtrl : seleccionarMedioPago(medio: String, cuotas: Int)
     
-    ' Actualizar monto final según medio (Recargos/Descuentos)
     NegCtrl -> venta : calcularMontoFinal(medio, cuotas)
     activate venta
-    venta --> NegCtrl : << montoFinal >>
+    
+        note right of venta
+            Aplica recargo (cuotas > 3)
+            o descuento (Efectivo + Frecuente)
+        end note
+    
+    venta --> NegCtrl : << montoFinal : Float >>
     deactivate venta
 
     alt medio == "Cuenta Corriente"
         
+        NegCtrl -> venta : getCliente()
+        activate venta
+        venta --> NegCtrl : << objCliente >>
+        deactivate venta
+        
         NegCtrl -> cli : esFrecuente()
         activate cli
-        cli --> NegCtrl : << esFrecuente : Bool >>
+        cli --> NegCtrl : << esFrecuente : Boolean >>
         deactivate cli
         
         NegCtrl -> cli : getSaldoDisponible()
         activate cli
-        cli --> NegCtrl : << saldoDisponible : Float >>
+        cli --> NegCtrl : << saldo : Float >>
         deactivate cli
 
-        alt esFrecuente AND saldoDisponible >= montoFinal
-             NegCtrl -> cli : actualizarSaldo(montoFinal)
-             activate cli
-             cli --> NegCtrl : <<NULL>>
-             deactivate cli
-             
-             NegCtrl -> venta : registrarPago(montoFinal, "Cta Cte")
-             activate venta
-                 venta -> pago ** : create(montoFinal, "Cta Cte")
-                 activate pago
-                 pago --> venta : << objPago >>
-                 deactivate pago
-             venta --> NegCtrl : <<NULL>>
-             deactivate venta
-             
-        else Error: No es frecuente o Saldo insuficiente
-             NegCtrl --> emp : <<Error: Cliente no apto o sin cupo>>
-             NegCtrl -> NegCtrl : pagoExitoso = false
+        alt esFrecuente AND saldo >= montoFinal
+            NegCtrl -> cli : actualizarSaldo(-montoFinal)
+            activate cli
+            cli --> NegCtrl : <<NULL>>
+            deactivate cli
+            
+            NegCtrl -> venta : registrarPago(montoFinal, "CtaCte")
+            activate venta
+                    venta -> pago ** : create(numTransaccion, tipoPago, montoFinal)
+                    activate pago
+                    pago --> venta : << objPago >>
+                    venta -> pago : setNumTransaccion(Pago.asignarNumTransaccion())
+                    venta -> pago : setEstado("APROBADO")
+                    venta -> pago : setMonto(montoFinal)
+            venta --> NegCtrl : <<NULL>>
+            deactivate venta
+            
+            NegCtrl -> venta : setEstado("CONFIRMADA")
+            activate venta
+            deactivate venta
+
+        else Rechazo Interno
+            NegCtrl --> emp : <<Error: Saldo Insuficiente / No Frecuente>>
         end
 
-    else Medio Externo (Tarjeta/QR/Billetera Virtual)
+    else Medio Externo (Tarjeta/Efectivo)
         
         NegCtrl -> venta : validarReglasPago(medio, cuotas)
         activate venta
-        venta --> NegCtrl : << esValido : Bool >>
+        venta --> NegCtrl : << esValido : Boolean >>
         deactivate venta
-
+        
         alt esValido == true
             NegCtrl -> srvPagos : iniciarTransaccion(montoFinal, medio, cuotas)
             activate srvPagos
-            srvPagos --> NegCtrl : << estadoTransaccion : String >>
+            srvPagos --> NegCtrl : << estado : String >>
             deactivate srvPagos
-
-            alt estadoTransaccion == "APROBADA"
-                
+            
+            alt estado == "APROBADO"
                 NegCtrl -> venta : registrarPago(montoFinal, medio)
                 activate venta
-                    venta -> pago ** : create(montoFinal, medio)
+                    venta -> pago ** : create(numTransaccion, tipoPago, montoFinal)
                     activate pago
-                    
                     pago --> venta : << objPago >>
+                    venta -> pago : setNumTransaccion(Pago.asignarNumTransaccion())
+                    venta -> pago : setEstado("APROBADO")
+                    venta -> pago : setMonto(montoFinal)
                     deactivate pago
                 venta --> NegCtrl : <<NULL>>
                 deactivate venta
-            
+                
+                NegCtrl -> venta : setEstado("CONFIRMADA")
+                activate venta
+                deactivate venta
             else RECHAZADA
-                 NegCtrl --> emp : <<Error: Transacción Rechazada>>
+                NegCtrl --> emp : <<Error: Pago Rechazado>>
             end
         else Reglas Violadas
-             NegCtrl --> emp : <<Error: Medio no permitido por reglas>>
+            NegCtrl --> emp : <<Error: Medio no permitido (Ej: OS en cuotas)>>
         end
     end
 
-    alt pagoExitoso == true
-        
-        NegCtrl -> venta : setEstado("CONFIRMADA")
-        activate venta
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
+    NegCtrl -> venta : getEstado()
+    activate venta
+    venta --> NegCtrl : << estadoVenta : String >>
+    deactivate venta
 
+    alt estadoVenta == "CONFIRMADA"
+        
         NegCtrl -> venta : actualizarStock()
         activate venta
-             loop para cada detalle
-                 venta -> det : descontarStock()
-                 activate det
-                 det -> med : actualizarStock(cantidad)
-                 activate med
-                 med --> det : <<NULL>>
-                 deactivate med
-                 det --> venta : <<NULL>>
-                 deactivate det
-             end
+            loop detalles
+                venta -> det : actualizarCantidadStock()
+                activate det
+                det -> med : actualizarStock(-cantidad)
+                activate med
+                med --> det : <<NULL>>
+                deactivate med
+                det --> venta : <<NULL>>
+                deactivate det
+            end
         venta --> NegCtrl : <<NULL>>
         deactivate venta
 
-        NegCtrl -> printer : imprimirTicket(objVenta)
+        NegCtrl -> printer : imprimirTicket(venta)
         activate printer
-        printer --> NegCtrl : << exito : Boolean >>
+        printer --> NegCtrl : << impreso : Boolean >>
         deactivate printer
         
-        opt exito == false
-            NegCtrl -> mailer : enviarTicket(objVenta, cli.getEmail())
+        opt impreso == false
+            NegCtrl -> cli : getEmail()
+            activate cli
+            cli --> NegCtrl : << email : String >>
+            deactivate cli
+            NegCtrl -> mailer : enviarTicket(venta, email)
             activate mailer
             deactivate mailer
         end
 
-        NegCtrl --> emp : <<Venta Finalizada>>
-
-    else pagoExitoso == false
+        NegCtrl --> emp : <<NULL>>
         
-        opt Cancelar Operación (Salir del bucle)
+    else Venta No Confirmada
+        opt Cancelar Operación
             emp -> NegCtrl : cancelarVenta()
-            
             NegCtrl -> venta : setEstado("CANCELADA")
-            activate venta
-            venta --> NegCtrl : <<NULL>>
-            deactivate venta
-            
-            NegCtrl --> emp : <<Venta Cancelada>>
         end
     end
-
 end
 
+NegCtrl --> emp : <<NULL>>
 deactivate NegCtrl
 @enduml

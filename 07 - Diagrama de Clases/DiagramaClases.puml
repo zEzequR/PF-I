@@ -16,9 +16,11 @@ class Persona {
 
 class PersonaFisica {
     - DNI
+    + getDNI()
 }
 class PersonaJuridica {
     - CUIT
+    + getCUIT()
 }
 
 Persona <|-- PersonaFisica
@@ -38,6 +40,7 @@ class Empleado {
     - sueldoBase
     - horasExtras
 
+    + getLejago()
     + calcularSueldo()
     + aplicarDescuentoEmpleado()
 }
@@ -282,6 +285,33 @@ Pedido *-- DetallePedido
 Pedido -- Drogueria
 Pedido -- EstadoPedido
 
+' ----------------- CATALOGOS -----------------
+Dataclass CatalogoClientes{
++ buscarCliente(DNI)
+}
+
+CatalogoClientes -- Cliente
+
+Dataclass CatalogoMedicamentos{
++ buscarMedicamento(filtros)
+}
+
+CatalogoMedicamentos -- Medicamento
+
+Dataclass CatalogoEmpleados{
++ buscarEmpleado(legajo)
++ buscarEmpleadoXnombreUsuario(nombreUsuario)
+}
+
+CatalogoEmpleados -- Empleado
+CatalogoEmpleados -- Usuario
+
+Dataclass CatalogoDescuentos{
++ buscarDescuentosDisponibles(motivo)
+}
+
+CatalogoDescuentos -- TipoDescuento
+
 ' ----------------- CONTROLADORES / SERVICIOS -----------------
 interface NegocioControlador {
     + iniciarSesion(nombreUsuario, contraseña)
@@ -376,6 +406,10 @@ NegocioControlador -- Medicamento
 NegocioControlador -- Cliente
 NegocioControlador -- Usuario
 NegocioControlador -- Drogueria
+NegocioControlador -- CatalogoClientes
+NegocioControlador -- CatalogoDescuentos
+NegocioControlador -- CatalogoEmpleados
+NegocioControlador -- CatalogoMedicamentos
 NegocioControlador ..> ServicioPedidos
 NegocioControlador ..> ServicioObrasSociales
 NegocioControlador ..> ServicioPagos
