@@ -10,11 +10,7 @@ participant "List<Medicamento>: objListaMedicamentos" as lista
 participant "Medicamento: objMedicamento" as med
 participant "Medicamento: nuevoMedicamento" as newMed
 
-<<<<<<< Updated upstream
-admin -> NegCtrl : registrarMedicamento(codBarras: String, nombre: String, descripcion: String, laboratorio: String, precio: Float, stock: Int)
-=======
 admin -> NegCtrl : registrarMedicamento(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
->>>>>>> Stashed changes
 activate NegCtrl
 
     alt datos incompletos o formato incorrecto
@@ -41,11 +37,7 @@ activate NegCtrl
             
         else objMedicamentoEncontrado == null
 
-<<<<<<< Updated upstream
-            NegCtrl -> newMed ** : create(codBarras: String, nombre: String, descripcion: String, laboratorio: String, precio: Float, stock: Int)
-=======
             NegCtrl -> newMed ** : create(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
->>>>>>> Stashed changes
             activate newMed
             newMed --> NegCtrl : << nuevoMedicamento : Medicamento >>
             deactivate newMed
