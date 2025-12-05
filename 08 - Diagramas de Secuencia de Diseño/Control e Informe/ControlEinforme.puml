@@ -1,165 +1,147 @@
-@startuml Control_e_Informe
+@startuml
+title Control e Informe: Reportes y Pedidos
 
-actor Administrador
-control NegocioControlador
-participant Venta
-participant Medicamento
-participant Pedido
-participant Drogueria
-control ServicioPedidos
+hide footbox
 
-== Selección del tipo de dato ==
-alt ver ventas por periodo (ej. mes)
-  Administrador -> NegocioControlador : buscarVentas(filtros: fechaDesde/fechaHasta)
-  activate NegocioControlador
-  NegocioControlador -> Venta : consultarVentas(filtros)
-  activate Venta
-    Venta --> NegocioControlador : List<Venta>
-    NegocioControlador --> Administrador : tablaVentas(List<Venta>) 
-  deactivate Venta
-  deactivate NegocioControlador
+actor "Administrador" as admin
+participant "NegocioControlador" as NegCtrl
+participant "List<Venta>: catalogoVentas" as listaVtas
+participant "Venta: v" as vta
+participant "List<Medicamento>: catalogoMeds" as listaMed
+participant "Medicamento: m" as med
+participant "List<Drogueria>: catalogoDrogs" as listaDrogs
+participant "Drogueria: d" as drog
+participant "ServicioExterno" as srv
 
-else ver stock de productos (<= stockMinimo)
-  Administrador -> NegocioControlador : buscarMedicamentos(filtros opcionales)
-  activate NegocioControlador
-  NegocioControlador -> Medicamento : obtenerMedicamentos()
-  activate Medicamento
-    Medicamento --> NegocioControlador : List<Medicamento>
-    NegocioControlador -> NegocioControlador : filtrar(stock <= stockMinimo)
-    NegocioControlador --> Administrador : tablaStockMinimo(List<MedicamentoFiltrado>)
-  deactivate Medicamento
-  deactivate NegocioControlador
+admin -> NegCtrl : accederModuloControl()
+activate NegCtrl
+NegCtrl --> admin : << Vista Control >>
+deactivate NegCtrl
 
-else listado completo de productos (búsqueda y filtros)
-  Administrador -> NegocioControlador : buscarMedicamentos(filtros: nombre/categoría/precio/laboratorio)
-  activate NegocioControlador
-  NegocioControlador -> Medicamento : obtenerMedicamentos(filtros)
-  activate Medicamento
-  alt sin resultados
-    Medicamento --> NegocioControlador : List<Medicamento> vacío
-    NegocioControlador --> Administrador : "Sin resultados"
-  else ok
-    Medicamento --> NegocioControlador : List<Medicamento>
-    NegocioControlador --> Administrador : tablaProductos(List<Medicamento>)
-  end
-  deactivate Medicamento
-  deactivate NegocioControlador
+' --- INICIO DE SELECCIÓN ---
+admin -> NegCtrl : seleccionarReporte(tipo: String, filtros: Map)
+activate NegCtrl
 
-else generar próximo pedido (manual o automático)
-  alt pedido automático por stock de seguridad
-    Administrador -> ServicioPedidos : generarPedidoAutomatico()
-    activate ServicioPedidos
-    ServicioPedidos -> Medicamento : obtenerMedicamentos(stock <= stockMinimo)
-    Medicamento --> ServicioPedidos : List<Medicamento>
-    ServicioPedidos -> Pedido : crearPedido(proveedor por cada medicamento)
-    activate Pedido
-    Pedido --> ServicioPedidos : numPedido
-    deactivate Pedido
-    ServicioPedidos --> Administrador : resumenPedido(numPedido, items)
-    deactivate ServicioPedidos
-  else pedido manual
-  Administrador -> NegocioControlador : crearPedidoManual(proveedorNombre)
-activate NegocioControlador
-NegocioControlador -> ServicioPedidos : crearPedidoManual(proveedorNombre)
-activate ServicioPedidos
-ServicioPedidos -> Pedido : new Pedido(proveedorNombre)
-activate Pedido
-Pedido --> ServicioPedidos : numPedido
-ServicioPedidos --> NegocioControlador : Pedido creado
-NegocioControlador --> Administrador : Pedido creado (numPedido)
-deactivate Pedido
-deactivate ServicioPedidos
-deactivate NegocioControlador
+alt tipo == "Informe Ventas"
 
-== Gestión de líneas del pedido ==
-loop acciones sobre líneas
-    alt agregar línea
-        Administrador -> NegocioControlador : agregarLineaPedido(numPedido, codigoBarra, cantidad)
-        activate NegocioControlador
-        NegocioControlador -> Medicamento : obtenerMedicamento(codigoBarra)
-        activate Medicamento
-        Medicamento --> NegocioControlador : Medicamento(nombre, precioUnitario)
-        deactivate Medicamento
-
-        NegocioControlador -> ServicioPedidos : generarDetallePedido(numPedido, codigoBarra, cantidad)
-        activate ServicioPedidos
-        ServicioPedidos -> DetallePedido : calcularSubtotal(codigoBarra, cantidad, precioUnitario)
-        DetallePedido --> ServicioPedidos : subtotal
-        ServicioPedidos --> NegocioControlador : línea agregada
-        NegocioControlador --> Administrador : Línea agregada al pedido
-        deactivate ServicioPedidos
-        deactivate NegocioControlador
-
-    else modificar línea
-        Administrador -> NegocioControlador : modificarLineaPedido(numPedido, codigoBarra, nuevaCantidad)
-        activate NegocioControlador
-        NegocioControlador -> ServicioPedidos : modificarDetallePedido(numPedido, codigoBarra, nuevaCantidad)
-        activate ServicioPedidos
-        ServicioPedidos -> DetallePedido : recalcularSubtotal(codigoBarra, nuevaCantidad, precioUnitario)
-        DetallePedido --> ServicioPedidos : nuevoSubtotal
-        ServicioPedidos --> NegocioControlador : línea modificada
-        NegocioControlador --> Administrador : Línea modificada
-        deactivate ServicioPedidos
-        deactivate NegocioControlador
-
-    else eliminar línea
-        Administrador -> NegocioControlador : eliminarLineaPedido(numPedido, codigoBarra)
-        activate NegocioControlador
-        NegocioControlador -> ServicioPedidos : eliminarDetallePedido(numPedido, codigoBarra)
-        activate ServicioPedidos
-        ServicioPedidos --> NegocioControlador : línea eliminada
-        NegocioControlador --> Administrador : Línea eliminada
-        deactivate ServicioPedidos
-        deactivate NegocioControlador
+    NegCtrl -> listaVtas : filtrarVentas(filtros)
+    activate listaVtas
+    
+    loop para cada v en catalogoVentas
+        listaVtas -> vta : getFecha()
+        activate vta
+        vta --> listaVtas : << date : fechaVenta >>
+        deactivate vta
+        
+        ' La lógica de filtrado es interna en el bucle
     end
-end
-  end
+    
+    listaVtas --> NegCtrl : << List<Ventas> : listaVentasFiltrada >>
+    deactivate listaVtas
+
+    NegCtrl --> admin : << Muestra Tabla >>
+
+    ' --- EXPORTAR ---
+    admin -> NegCtrl : exportarInforme("PDF")
+    
+    NegCtrl -> srv : generarPDFVentas(listaVentasFiltrada)
+    activate srv
+    srv --> NegCtrl : << File : archivoPDF >>
+    deactivate srv
+
+
+else tipo == "Control Stock / Pedido"
+
+    ' --- BUSCAR BAJO STOCK ---
+    NegCtrl -> listaMed : obtenerBajoStock()
+    activate listaMed
+    
+    loop para cada m en catalogoMeds
+        listaMed -> med : getStock()
+        activate med
+        med --> listaMed : << Int : stockActual >>
+        deactivate med
+
+        listaMed -> med : getStockMinimo()
+        activate med
+        med --> listaMed : << Int : stockMin >>
+        deactivate med
+    end
+    
+    listaMed --> NegCtrl : << List<Medicamento> : listaReposicion >>
+    deactivate listaMed
+
+    NegCtrl --> admin : << Muestra Tabla Bajo Stock >>
+
+    ' --- PROCESO DE PEDIDO ---
+    admin -> NegCtrl : confirmarPedido(items, nombreDrogueria)
+    
+    ' 1. BUSCAR PROVEEDOR
+    NegCtrl -> listaDrogs : buscarDrogueria(nombreDrogueria)
+    activate listaDrogs
+    
+    loop para cada d en catalogoDrogs
+        listaDrogs -> drog : getNombre()
+        activate drog
+        drog --> listaDrogs : << String : nombreActual >>
+        deactivate drog
+        
+        alt nombreActual == nombreDrogueria
+             listaDrogs --> NegCtrl : << Object :objDrog >>
+             break
+        end
+    end
+    deactivate listaDrogs
+
+    ' 2. OBTENER DATOS
+    NegCtrl -> drog : getCanalPreferido()
+    activate drog
+    drog --> NegCtrl : << canal >>
+    deactivate drog
+    
+    NegCtrl -> drog : getEmail()
+    activate drog
+    drog --> NegCtrl : << email >>
+    deactivate drog
+    
+    NegCtrl -> drog : getTelefono()
+    activate drog
+    drog --> NegCtrl : << telefono >>
+    deactivate drog
+
+    ' 3. GENERAR
+    NegCtrl -> srv : generarPDFPedido(items, objDrog)
+    activate srv
+    srv --> NegCtrl : << pdfPedido >>
+    deactivate srv
+
+    ' 4. ENVIAR SEGUN CANAL
+    alt canal == "WhatsApp"
+        NegCtrl -> srv : enviarWhatsApp(pdfPedido, telefono)
+        activate srv
+        srv --> NegCtrl : << resultadoEnvio >>
+        deactivate srv
+        
+    else canal == "Email"
+        NegCtrl -> srv : enviarCorreo(pdfPedido, email)
+        activate srv
+        srv --> NegCtrl : << resultadoEnvio >>
+        deactivate srv
+
+    end
+
+    ' 5. VALIDAR RESULTADO
+    alt resultadoEnvio == FALSE
+        NegCtrl -> srv : guardarArchivoLocal(pdfPedido, rutaBackup)
+        activate srv
+        srv --> NegCtrl : << OK >>
+        deactivate srv
+        NegCtrl --> admin : << Error envio. Guardado Local >>
+    else
+        NegCtrl --> admin : << Pedido Enviado >>
+    end
+
 end
 
-== Generación de PDF ==
-alt generar PDF de informe de ventas
-  Administrador -> ServicioPedidos : generarPDFPedido(numPedido?) / generarPDFInformeVentas(periodo)
-  activate ServicioPedidos
-  alt error al generar PDF
-    ServicioPedidos --> Administrador : "Error al crear PDF"
-  else ok
-    ServicioPedidos --> Administrador : pdfPath
-  end
-  deactivate ServicioPedidos
-
-else generar PDF de pedido
-  Administrador -> ServicioPedidos : generarPDFPedido(numPedido)
-  activate ServicioPedidos
-  alt error al generar PDF
-    ServicioPedidos --> Administrador : "Error al crear PDF"
-  else ok
-    ServicioPedidos --> Administrador : pdfPath
-  end
-  deactivate ServicioPedidos
-end
-
-== Envío (proveedor configurado) ==
-alt enviar pedido por canal preferido (email/WhatsApp)
-  Administrador -> ServicioPedidos : seleccionarCanalEnvioProveedor(proveedorNombre, formatoenvío)
-  activate ServicioPedidos
-  ServicioPedidos --> Administrador : canalSeleccionado(email/whatsapp)
-  Administrador -> ServicioPedidos : enviarPedido(numPedido, proveedorNombre)
-  alt envío por WhatsApp
-    ServicioPedidos -> Drogueria : enviarViaWhatsApp(numPedido, teléfono)
-    Drogueria --> ServicioPedidos : estadoEnvio(ok | error)
-  else envío por Email
-    ServicioPedidos -> Drogueria : enviarViaEmail(numPedido, email)
-    Drogueria --> ServicioPedidos : estadoEnvio(ok | error)
-  end
-  ServicioPedidos -> ServicioPedidos : registrarEnvioPedido(numPedido, proveedorNombre, canal, estado)
-  alt estadoEnvio = ok
-    ServicioPedidos --> Administrador : "Pedido enviado correctamente"
-  else estadoEnvio = error
-    ServicioPedidos --> Administrador : "Error al enviar pedido"
-  end
-  deactivate ServicioPedidos
-else no enviar (solo guardar PDF)
-  Administrador --> Administrador : guardarLocal(pdfPath)
-end
-
+deactivate NegCtrl
 @enduml
