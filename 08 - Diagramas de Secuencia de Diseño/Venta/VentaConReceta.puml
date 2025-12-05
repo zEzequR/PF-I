@@ -4,212 +4,83 @@ title Venta Con Receta
 hide footbox
 
 actor "Empleado" as emp
-participant "Interfaz: NegCtrl" as NegCtrl
-participant "List<Cliente>: CatalogoClientes" as listaCli
+participant "Interfaz: NegocioControlador" as NegCtrl
 participant "Cliente: objCliente" as cli
 participant "Venta: objVenta" as venta
 participant "Receta: objReceta" as receta
-participant "Cobertura: objCobertura" as cobertura
-participant "ServicioObrasSociales: ExtSrv" as srvOS
-participant "List<Medicamento>: CatalogoMedicamentos" as listaMed
-participant "Medicamento: objMed" as med
-participant "DetalleVenta: det" as det
+participant "Cobertura: objCobertura" as cob
+participant "Interfaz: ServicioObrasSociales" as srvOS
 
-
-emp -> NegCtrl : iniciarNuevaVenta(dniCliente: String)
 activate NegCtrl
 
-    NegCtrl -> listaCli : buscarCliente(dniCliente)
-    activate listaCli
+    emp -> NegCtrl : ingresarDatosReceta(nroReceta: String, medico: String, fecha: Date)
     
-    loop para cada c en objListaClientes
-        listaCli -> cli : getDNI()
-        activate cli
-        cli --> listaCli : << dniActual : String >>
-        deactivate cli
+    NegCtrl -> receta ** : create(nroReceta : int, fechaPrescripcion : DateTime, fechaValidez : DateTime, tipoReceta : string, obraSocialNombre: string)
+    activate receta
+    receta --> NegCtrl : << objReceta >>
+    deactivate receta
+    
+    NegCtrl -> venta : setTipoVta("ConReceta")
+    NegCtrl -> venta : setFechaVta(DateTime.Now())
+    NegCtrl -> receta : setDetalles(nroReceta, medico, fecha)
+    activate receta
+    receta --> NegCtrl : <<NULL>>
+    deactivate receta
+
+    NegCtrl -> srvOS : verificarRecetaElectronica(nroReceta)
+    activate srvOS
+    srvOS --> NegCtrl : << esValida : Boolean >>
+    deactivate srvOS
+
+    emp -> NegCtrl : cargarDatosObraSocial(nombreOS: String, nroAfiliado: String)
+    
+    NegCtrl -> cob ** : create(numAfiliado : int, descuentoPorcentaje : int)
+    activate cob
+    cob --> NegCtrl : << objCobertura >>
+    deactivate cob
+
+    NegCtrl -> cob : setDatos(nroAfiliado)
+    activate cob
+    cob --> NegCtrl : <<NULL>>
+    deactivate cob
+
+    NegCtrl -> srvOS : validarAfiliacion(nombreOS, nroAfiliado)
+    activate srvOS
+    srvOS --> NegCtrl : << porcentaje : Float >>
+    deactivate srvOS
+
+    NegCtrl -> cob : setDescuentoPorcentaje(porcentaje)
+    activate cob
+    cob --> NegCtrl : <<NULL>>
+    deactivate cob
+
+    alt esValida == true AND porcentaje > 0
+        NegCtrl -> venta : setReceta(objReceta)
+        activate venta
+        venta --> NegCtrl : <<NULL>>
+        deactivate venta
+
+        NegCtrl -> venta : setCobertura(objCobertura)
+        activate venta
+        venta --> NegCtrl : <<NULL>>
+        deactivate venta
         
-        alt dniCliente == dniActual
-            listaCli --> NegCtrl : << objClienteEncontrado : Cliente >>
-        end
-    end
-    deactivate listaCli
+        NegCtrl -> venta : getNroVta()
+        activate venta
+        venta --> NegCtrl : << nroVta : Int >>
+        deactivate venta
 
-    NegCtrl -> venta ** : create()
-    activate venta
-    venta --> NegCtrl : << objVenta : Venta >>
-    deactivate venta
+        NegCtrl -> srvOS : registrarRecetaEnVenta(nroReceta, nroVta)
+        activate srvOS
+        srvOS --> NegCtrl : <<NULL>>
+        deactivate srvOS
 
-    alt objClienteEncontrado != null
-        
-        NegCtrl -> cli : getMonto()
-        activate cli
-        cli --> NegCtrl : << MontoAcumulado : Float >>
-        deactivate cli
-
-        alt MontoAcumulado < 80000
-            NegCtrl -> venta : setCliente(objClienteEncontrado)
-            activate venta
-            venta --> NegCtrl : <<NULL>>
-            deactivate venta
-
-            emp -> NegCtrl : ingresarDatosReceta(nroReceta, medico, fecha)
-            
-            NegCtrl -> receta ** : create()
-            activate receta
-            receta --> NegCtrl : << objReceta >>
-            deactivate receta
-
-            NegCtrl -> receta : setDetalles(nro, medico, fecha)
-            activate receta
-            receta --> NegCtrl : <<NULL>>
-            deactivate receta
-
-            NegCtrl -> srvOS : verificarRecetaElectronica(objReceta.getNro())
-            activate srvOS
-            srvOS --> NegCtrl : << recetaValida : Boolean >>
-            deactivate srvOS
-
-            emp -> NegCtrl : ingresarDatosObraSocial(nombreOS, nroAfiliado)
-            
-            NegCtrl -> cobertura ** : create()
-            activate cobertura
-            cobertura --> NegCtrl : << objCobertura >>
-            deactivate cobertura
-            
-            NegCtrl -> cobertura : setDatos(nombreOS, nroAfiliado)
-            activate cobertura
-            cobertura --> NegCtrl : <<NULL>>
-            deactivate cobertura
-
-            NegCtrl -> srvOS : validarAfiliacion(nombreOS, nroAfiliado)
-            activate srvOS
-            srvOS --> NegCtrl : << porcentajeCobertura : Float >>
-            deactivate srvOS
-            
-            NegCtrl -> cobertura : setDescuentoPorcentaje(porcentajeCobertura)
-            activate cobertura
-            cobertura --> NegCtrl : <<NULL>>
-            deactivate cobertura
-
-            alt recetaValida == true AND porcentajeCobertura > 0
-                
-                NegCtrl -> venta : setReceta(objReceta)
-                activate venta
-                venta --> NegCtrl : <<NULL>>
-                deactivate venta
-
-                NegCtrl -> venta : setCobertura(objCobertura)
-                activate venta
-                venta --> NegCtrl : <<NULL>>
-                deactivate venta
-                
-                NegCtrl -> srvOS : registrarRecetaEnVenta(objReceta.getNro(), objVenta.getID())
-                activate srvOS
-                srvOS --> NegCtrl : <<NULL>>
-                deactivate srvOS
-
-                NegCtrl --> emp : <<NULL>>
-            else Datos Inválidos
-                NegCtrl -> venta : setEstado("Cancelada")
-                NegCtrl --> emp : <<NULL>>
-            end
-
-        else Deuda Excesiva
-             note right of NegCtrl: Bloqueo: Deuda > $80.000
-        end
-
-    else cliente no encontrado
+        NegCtrl --> emp : <<NULL>>
+    else Datos Inválidos
+        NegCtrl -> venta : setEstado("CANCELADA")
         NegCtrl --> emp : <<NULL>>
     end
 
     NegCtrl --> emp : <<NULL>>
-deactivate NegCtrl
-
-emp -> NegCtrl : filtrarMedicamentos(filtros)
-activate NegCtrl
-NegCtrl -> listaMed : obtenerDisponibles(filtros)
-activate listaMed
-listaMed --> NegCtrl : List<Medicamento>
-deactivate listaMed
-NegCtrl --> emp : <<NULL>>
-deactivate NegCtrl
-
-loop Mientras la venta esté abierta
-    
-    alt AGREGAR PRODUCTO
-        emp -> NegCtrl : agregarProducto(codBarra, cantidad)
-        activate NegCtrl
-        
-        NegCtrl -> listaMed : buscarMedicamento(codBarra)
-        activate listaMed
-        listaMed --> NegCtrl : << objMedEncontrado : Medicamento >>
-        deactivate listaMed
-
-        alt objMedEncontrado != null AND stock >= cantidad
-             NegCtrl -> venta : agregarDetalle(codBarra, cantidad)
-             activate venta
-             
-                venta -> det ** : create(objMedEncontrado, cantidad)
-                activate det
-                
-                det -> med : getPrecioVenta()
-                activate med
-                med --> det : << precio : Float >>
-                deactivate med
-                
-             venta --> NegCtrl : <<NULL>>
-             deactivate venta
-             NegCtrl --> emp : <<NULL>>
-        else Error Stock
-             NegCtrl --> emp : <<NULL>>
-        end
-        deactivate NegCtrl
-
-    else MODIFICAR CANTIDAD
-        emp -> NegCtrl : modificarCantidad(codBarra, nuevaCantidad)
-        activate NegCtrl
-        
-        NegCtrl -> venta : modificarCantidadDetalle(codBarra, nuevaCantidad)
-        activate venta
-            venta -> det : actualizarCantidad(nuevaCantidad)
-            activate det
-            
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
-        NegCtrl --> emp : <<NULL>>
-        deactivate NegCtrl
-
-    else ELIMINAR PRODUCTO
-        emp -> NegCtrl : eliminarProducto(codBarra)
-        activate NegCtrl
-        
-        NegCtrl -> venta : eliminarDetallePorCodigo(codBarra)
-        activate venta
-            venta -> det : eliminarLínea(codBarra)
-            
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
-        NegCtrl --> emp : <<NULL>>
-        deactivate NegCtrl
-        
-    else FINALIZAR CARGA
-        emp -> NegCtrl : confirmarVenta()
-        note right of emp: Sale del loop para pagar
-    end
-end
-
-activate NegCtrl
-NegCtrl -> venta : calcularTotal()
-activate venta
-
-venta -> cobertura : getPorcentaje()
-activate cobertura
-cobertura --> venta : << porcentaje : Float >>
-deactivate cobertura
-
-venta --> NegCtrl : << Total : Float >>
-deactivate venta
-
-NegCtrl --> emp : <<NULL>>
 deactivate NegCtrl
 @enduml
