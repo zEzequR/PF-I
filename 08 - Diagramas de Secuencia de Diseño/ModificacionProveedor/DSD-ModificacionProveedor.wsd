@@ -1,37 +1,66 @@
 @startuml
-title DSD - Modificación de Proveedor
+title Modificación de Proveedor (Droguería)
 
-actor Administrador
-control ControladorNegocio
-entity Proveedor
-entity Sistema
+hide footbox
 
-== Inicio ==
+actor "Administrador: Admin" as admin
+participant "NegocioControlador: Interfaz" as NegCtrl
+participant "List<Drogueria>: droguerias" as listaDrogs
+participant "Drogueria: objDrog" as drog
 
-Administrador -> ControladorNegocio: accederModuloProveedores()
+admin -> NegCtrl : modificarDrogueria(nombreOriginal: String, nuevoNombre: String, email: String, telefono: String, canal: String)
+activate NegCtrl
 
-Administrador -> ControladorNegocio: modificarDatosProveedor(nombre, email, telefono, formatoEnvio)
-
-ControladorNegocio -> Sistema: validarCampos(nombre, email, telefono, formatoEnvio)
-activate Sistema
-Sistema --> ControladorNegocio: camposValidos
-deactivate Sistema
-
-alt Campo duplicado
-    ControladorNegocio -> Administrador: mensaje("Campo ya registrado")
-else Campos correctos
-
-    ControladorNegocio -> Proveedor: actualizarProveedor(nuevosDatos)
-    activate Proveedor
-    Proveedor --> ControladorNegocio: resultadoActualizacion
-    deactivate Proveedor
-
-    alt Error de conexión
-        ControladorNegocio -> Administrador: mensaje("Error al modificar al proveedor. Intente nuevamente más tarde")
-    else Modificación exitosa
-        ControladorNegocio -> Administrador: mensaje("Proveedor modificado correctamente")
+    NegCtrl -> listaDrogs : buscarDrogueria(nombreOriginal)
+    activate listaDrogs
+    
+    loop [para cada d en droguerias]
+        listaDrogs -> drog : getNombre() 
+        activate drog
+        drog --> listaDrogs : << nombreActual : String >>
+        deactivate drog
+        
+        alt nombreOriginal == nombreActual
+            listaDrogs --> NegCtrl : << drogueriaAEditar : Drogueria >>
+        end
     end
-end
+    deactivate listaDrogs
 
+    alt drogueriaAEditar no encontrada
+        NegCtrl --> admin : << Error: Proveedor no existe >>
+    else proveedor encontrado
+    
+
+        NegCtrl -> listaDrogs : validarDuplicados(nuevoNombre)
+        activate listaDrogs
+        
+        loop [para cada d en droguerias]
+            listaDrogs -> drog : getNombre()
+            activate drog
+            drog --> listaDrogs : << nombreCheck : String >>
+            deactivate drog
+
+            alt (nombreCheck == nuevoNombre) AND (d != drogueriaAEditar)
+                 listaDrogs --> NegCtrl : << DUPLICADO_ENCONTRADO >>
+            end
+        end
+        deactivate listaDrogs
+
+        alt datos duplicados
+            NegCtrl --> admin : << Error: Campo ya registrado >>
+        
+        else validación correcta (Camino Básico)
+            
+            NegCtrl -> drog : actualizarContacto(nuevoNombre, email, telefono, canal)
+            activate drog
+            
+            drog --> NegCtrl : << NULL >>
+            deactivate drog
+
+            NegCtrl --> admin : << Éxito: Proveedor actualizado >>
+            
+        end
+    end
+
+deactivate NegCtrl
 @enduml
-
