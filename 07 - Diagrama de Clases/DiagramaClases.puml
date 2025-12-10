@@ -51,8 +51,16 @@ class Empleado {
 
     + getLejago()
     + setLegajo(legajo)
+<<<<<<< HEAD
     + getSueldo()
     + setSueldo(sueldo)
+=======
+    + getSueldoBase()
+    + setSueldoBase(sueldoBase)
+    + getHorasExtras()
+    + setHorasExtras(horasExtras)
+    + calcularSueldo()
+>>>>>>> 2cda4b50c7668fe14361b1a9496a59a74eb7a5fd
     + aplicarDescuentoEmpleado()
 }
 
