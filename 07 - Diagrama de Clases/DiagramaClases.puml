@@ -9,18 +9,26 @@ class Persona {
     - numTel
     - direccion
 
-    + setPersona(dni, nombre, email, numTel, direccion)
-    + getPersona(dni)
-    + actualizarContacto(dni, email, numTel, direccion)
+    + actualizarContacto(dni, email, numTel, direccion)    
+    + getNombre()
+    + setNombre(nombre)
+    + getEmail()
+    + setEmail(email)
+    + getNumTel()
+    + setNumTel(numTel)
+    + getDireccion()
+    + setDireccion(direccion)
 }
 
 class PersonaFisica {
     - DNI
     + getDNI()
+    + setDNI(dni)
 }
 class PersonaJuridica {
     - CUIT
     + getCUIT()
+    + setCUIT(cuit)
 }
 
 Persona <|-- PersonaFisica
@@ -30,18 +38,21 @@ Persona <|-- PersonaJuridica
 class Usuario {
     - nombreUsuario
     - contraseña
-
-    + setUsuario(nombreUsuario, contraseña)
-    + getUsuario(nombreUsuario)
+    
+    + getNombreUsuario()
+    + setNombreUsuario(nombreUsuario)
+    + getContraseña()
+    + setContraseña(contraseña)
 }
 
 class Empleado {
     - legajo
-    - sueldoBase
-    - horasExtras
+    - sueldo
 
     + getLejago()
-    + calcularSueldo()
+    + setLegajo(legajo)
+    + getSueldo()
+    + setSueldo(sueldo)
     + aplicarDescuentoEmpleado()
 }
 
@@ -62,6 +73,15 @@ class Asistencia {
     - estado
 
     + registrarAsistencia(nombreUsuario, fecha, horaEntrada, horaSalida, estado)
+
+    + getFecha()
+    + setFecha(fecha)
+    + getHoraEntrada()
+    + setHoraEntrada(horaEntrada)
+    + getHoraSalida()
+    + setHoraSalida(horaSalida)
+    + getEstado()
+    + setEstado(estado)
 }
 enum EstadoAsistencia {
     Licencia
@@ -83,7 +103,20 @@ class Cliente {
     - numTel
 
     + getCliente(dni)
-    + setCliente(dni, nombre, email, numTel, tipoCliente)
+    + getDNI()
+    + setDNI(dni)
+    + getNombre()
+    + setNombre(nombre)
+    + getSaldoCtaCorriente()
+    + setSaldoCtaCorriente(saldo)
+    + getTipoCliente()
+    + setTipoCliente(tipo)
+    + getMontoAcumulado()
+    + setMontoAcumulado(monto)
+    + getEmail()
+    + setEmail(email)
+    + getNumTel()
+    + setNumTel(numTel)
     + registrarPagoCuentaCorriente(dni, monto)
     + esFrecuente(dni)
 }
@@ -95,7 +128,10 @@ class Medico {
     - matriculaMed
     - nombreMedico
 
-    + getMedico(matricula)
+    + getMatriculaMed()
+    + setMatriculaMed(matricula)
+    + getNombreMedico()
+    + setNombreMedico(nombre)
 }
 class Receta {
     - nroReceta
@@ -103,11 +139,27 @@ class Receta {
     - fechaValidez
     - tipoReceta
     - obraSocialNombre
+    
     + validarReceta(nroReceta)
+    + getNroReceta()
+    + setNroReceta(nro)
+    + getFechaPrescripcion()
+    + setFechaPrescripcion(fecha)
+    + getFechaValidez()
+    + setFechaValidez(fecha)
+    + getTipoReceta()
+    + setTipoReceta(tipo)
+    + getObraSocialNombre()
+    + setObraSocialNombre(nombre)
 }
 class DetalleReceta {
     - fechaPrescripcion
     - productosRecetados
+    
+    + getFechaPrescripcion()
+    + setFechaPrescripcion(fecha)
+    + getProductosRecetados()
+    + setProductosRecetados(productos)
 }
 Medico -- Receta
 Receta *-- DetalleReceta
@@ -119,10 +171,21 @@ class ObraSocial {
     - contacto
 
     + getObraSocial(nombre)
+    
+    ' Getters y Setters agregados
+    + getNombreObraSocial()
+    + setNombreObraSocial(nombre)
+    + getContacto()
+    + setContacto(contacto)
 }
 class Cobertura {
     - numAfiliado
     - descuentoPorcentaje
+    
+    + getNumAfiliado()
+    + setNumAfiliado(num)
+    + getDescuentoPorcentaje()
+    + setDescuentoPorcentaje(porcentaje)
 }
 Cliente -- Cobertura
 Cobertura -- ObraSocial
@@ -143,6 +206,24 @@ class Medicamento {
     + disminuirStock(cantidad)
     + aumentarStock(cantidad)
     + estaPorDebajoStockMinimo()
+    + getCodigoBarra()
+    + setCodigoBarra(codigo)
+    + getNombre()
+    + setNombre(nombre)
+    + getPrecioUnitario()
+    + setPrecioUnitario(precio)
+    + getRequiereReceta()
+    + setRequiereReceta(booleano)
+    + getControlado()
+    + setControlado(booleano)
+    + getCadenaFrio()
+    + setCadenaFrio(booleano)
+    + getStock()
+    + setStock(cantidad)
+    + getStockMinimo()
+    + setStockMinimo(cantidad)
+    + getDrogueriaNombre()
+    + setDrogueriaNombre(nombre)
 }
 class Drogueria {
     - nombre
@@ -150,9 +231,15 @@ class Drogueria {
     - telefono
     - canalPreferido
 
-    + getDrogueria(nombre)
-    + setDrogueria(nombre, email, telefono, canalPreferido)
     + actualizarContacto(nombre, email, telefono, canalPreferido)
+    + getNombre()
+    + setNombre(nombre)
+    + getEmail()
+    + setEmail(email)
+    + getTelefono()
+    + setTelefono(telefono)
+    + getCanalPreferido()
+    + setCanalPreferido(canal)
 }
 PersonaJuridica <|-- Drogueria
 Drogueria -- Medicamento
@@ -179,12 +266,22 @@ class Venta {
     - estadoVenta
 
     + generarNroVta()
-    + agregarDetalle(codigoBarra, cantidad)
-    + eliminarDetallePorCodigo(codigoBarra)
-    + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
     + calcularTotal()
-    + marcarEstado(estadoVenta)
     + cancelarVta()
+    + getNroVta()
+    + setNroVta(nro)
+    + getFechaVenta()
+    + setFechaVenta(fecha)
+    + getTipoVta()
+    + setTipoVta(tipo)
+    + getTotal()
+    + setTotal(total)
+    + getClienteDNI()
+    + setClienteDNI(dni)
+    + getNombreUsuario()
+    + setNombreUsuario(nombre)
+    + getEstadoVenta()
+    + setEstadoVenta(estado)
 }
 Venta ..> TipoVenta
 Venta -- EstadoVenta
@@ -196,8 +293,21 @@ class DetalleVenta {
     - precioUnitario
     - subtotal
 
+    + agregarDetalle(codigoBarra, cantidad)
+    + eliminarDetallePorCodigo(codigoBarra)
+    + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
     + calcularSubtotal(cantidad, precioUnitario)
     + actualizarCantidad(nuevaCantidad)
+    + getNroDetalle()
+    + setNroDetalle(nro)
+    + getCodigoBarra()
+    + setCodigoBarra(codigo)
+    + getCantidad()
+    + setCantidad(cantidad)
+    + getPrecioUnitario()
+    + setPrecioUnitario(precio)
+    + getSubtotal()
+    + setSubtotal(subtotal)
 }
 Venta *-- DetalleVenta
 DetalleVenta -- Medicamento
@@ -208,9 +318,19 @@ class Pago {
     - monto
     - cuotas
 
-
     + asignarNumTransaccion(numTransacción)
-    + marcarEstadoPago(numTransacción, estado)
+    ' Getters y Setters agregados
+    + getNumTransaccion()
+    + setNumTransaccion(num)
+    + getTipoPago()
+    + setTipoPago(tipo)
+    + getMonto()
+    + setMonto(monto)
+    + getCuotas()
+    + setCuotas(cuotas)
+    + getEstado()
+    + setEstado(estado)
+
 }
 Venta -- Pago
 
@@ -227,6 +347,11 @@ class Ticket {
 
     + generarTicket(nroVta)
     + getPath()
+    + getNroTicket()
+    + setNroTicket(nro)
+    + getFechaHora()
+    + setFechaHora(fecha)
+    + setPdfPath(path)
 }
 
 enum Estado{
@@ -246,6 +371,16 @@ class TipoDescuento {
     - activo
 
     + esAplicable(nroVta)
+    + getMotivo()
+    + setMotivo(motivo)
+    + getPorcentaje()
+    + setPorcentaje(porcentaje)
+    + getFechaInicio()
+    + setFechaInicio(fecha)
+    + getFechaFin()
+    + setFechaFin(fecha)
+    + getActivo()
+    + setActivo(activo)
 }
 TipoDescuento -- Venta
 TipoDescuento -- Cliente
@@ -257,11 +392,16 @@ class Pedido {
     - proveedorNombre
     - fechaPedido
 
+    + agregarLinea(codigoBarra, cantidad)
+    + modificarLinea(codigoBarra, cantidad)
+    + eliminarLinea(codigoBarra)
     + generarNumPedido()
     + getNumPed()
     + setNumPed()
     + setFecha()
     + setProveedor()
+    + getProveedorNombre()
+    + getFechaPedido()
 }
 
 enum EstadoPedido{
@@ -279,38 +419,17 @@ class DetallePedido {
     + agregarLinea(codigoBarra, cantidad)
     + modificarLinea(codigoBarra, cantidad)
     + eliminarLinea(codigoBarra)
+    + getCodigoBarra()
+    + setCodigoBarra(codigo)
+    + getNombreMedicamento()
+    + setNombreMedicamento(nombre)
+    + getCantidad()
+    + setCantidad(cantidad)
 }
 
 Pedido *-- DetallePedido
 Pedido -- Drogueria
 Pedido -- EstadoPedido
-
-' ----------------- CATALOGOS -----------------
-Dataclass CatalogoClientes{
-+ buscarCliente(DNI)
-}
-
-CatalogoClientes -- Cliente
-
-Dataclass CatalogoMedicamentos{
-+ buscarMedicamento(filtros)
-}
-
-CatalogoMedicamentos -- Medicamento
-
-Dataclass CatalogoEmpleados{
-+ buscarEmpleado(legajo)
-+ buscarEmpleadoXnombreUsuario(nombreUsuario)
-}
-
-CatalogoEmpleados -- Empleado
-CatalogoEmpleados -- Usuario
-
-Dataclass CatalogoDescuentos{
-+ buscarDescuentosDisponibles(motivo)
-}
-
-CatalogoDescuentos -- TipoDescuento
 
 ' ----------------- CONTROLADORES / SERVICIOS -----------------
 interface NegocioControlador {
@@ -406,10 +525,6 @@ NegocioControlador -- Medicamento
 NegocioControlador -- Cliente
 NegocioControlador -- Usuario
 NegocioControlador -- Drogueria
-NegocioControlador -- CatalogoClientes
-NegocioControlador -- CatalogoDescuentos
-NegocioControlador -- CatalogoEmpleados
-NegocioControlador -- CatalogoMedicamentos
 NegocioControlador ..> ServicioPedidos
 NegocioControlador ..> ServicioObrasSociales
 NegocioControlador ..> ServicioPagos
