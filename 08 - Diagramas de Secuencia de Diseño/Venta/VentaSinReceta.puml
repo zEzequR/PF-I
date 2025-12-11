@@ -1,5 +1,5 @@
 @startuml
-title Venta Sin Receta (Con Tipos de Dato)
+title Venta Sin Receta
 
 hide footbox
 
@@ -135,6 +135,7 @@ loop Mientras carga productos
                 deactivate med
                 
                 alt stock >= cantidad
+                    opt AGREGAR PRODUCTO
                     NegCtrl -> venta : agregarDetalle(codBarra: String, cantidad: Int)
                     activate venta
                         venta -> det ** : create(objMedEncontrado: Medicamento, cantidad: Int)
@@ -151,6 +152,26 @@ loop Mientras carga productos
                     deactivate venta
                     
                     NegCtrl --> emp : <<Producto Agregado>>
+                    opt MODIFICACIÓN CANTIDAD
+                        NegCtrl -> venta : modificarCantidadDetalle(codBarra, nuevaCantidad)
+                        activate venta
+                            venta -> det : actualizarCantidad(nuevaCantidad)
+                            activate det
+                            deactivate det
+                            det --> venta : <<NULL>>
+                            deactivate det
+                            deactivate venta
+                
+                        venta --> NegCtrl : <<NULL>>
+                        deactivate venta
+                    opt ELIMINACIÓN PRODUCTO
+                        NegCtrl -> venta : eliminarDetallePorCodigo(codBarra)
+                        activate venta
+                        activate det
+                            venta -> det : eliminarDetallePorCodigo(codigoBarra)
+                            det --> venta : <<NULL>>
+                        deactivate det
+                        deactivate venta
                 else
                     NegCtrl --> emp : <<Error: Stock Insuficiente>>
                 end
