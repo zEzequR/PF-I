@@ -13,8 +13,8 @@
 3)El administrador ingresa la información requerida: 
 - Codigo de barra
 - Nombre de medicamento
-- Descripción(duplicado requerido)
-- Laboratorio
+- Drogueria
+- Controlado
 - Precio unitario
 - Stock
 4)El administrador confirma la operación presionando “Guardar”.
