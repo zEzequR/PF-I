@@ -1,56 +1,51 @@
 @startuml
-title Carga de Medicamentos
+title Carga de Medicamentos (Alta)
 
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "NegCtrl: Interfaz" as NegCtrl
+participant "gc:gestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoMedicamentos" as cat
+participant "medActual:Medicamento" as med_actual
+participant "nuevoMed:Medicamento" as nuevo_med
 
-participant "List<Medicamento>: objListaMedicamentos" as lista
-participant "Medicamento: objMedicamento" as med
-participant "Medicamento: nuevoMedicamento" as newMed
+admin -> ctrl : nuevoMedicamento(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
+activate ctrl
 
-admin -> NegCtrl : registrarMedicamento(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
-activate NegCtrl
+ctrl -> cat : buscarMedicamento(codigoBarra)
+activate cat
 
-    alt datos incompletos o formato incorrecto
-        NegCtrl --> admin : <<NULL>>
-    else datos válidos
+loop [para cada m en medicamentos]
+    cat -> med_actual : getCodigoBarra()
+    activate med_actual
+    med_actual --> cat : << codActual : String >>
+    deactivate med_actual
     
-        NegCtrl -> lista : buscarMedicamento(codBarras: String)
-        activate lista
+    alt codBarra == codActual
+        cat --> ctrl : << m : Medicamento >>
+        deactivate cat
         
-        loop [para cada m en objListaMedicamentos]
-            lista -> med : getCodBarras()
-            activate med
-            med --> lista : << codigoActual : String >>
-            deactivate med
-            
-            alt codBarras == codigoActual
-                lista --> NegCtrl : << objMedicamentoEncontrado : Medicamento >>
-            end
-        end
-        deactivate lista
+        ctrl --> admin : << "Error: Medicamento ya registrado" >>
+
+    else codBarra != codActual
+
+        deactivate cat
         
-        alt objMedicamentoEncontrado != null
-            NegCtrl --> admin : <<NULL>>
-            
-        else objMedicamentoEncontrado == null
+        ctrl -> nuevo_med : create(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
+        activate nuevo_med
+        nuevo_med --> ctrl : << nuevoMed : Medicamento >>
+        deactivate nuevo_med
 
-            NegCtrl -> newMed ** : create(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
-            activate newMed
-            newMed --> NegCtrl : << nuevoMedicamento : Medicamento >>
-            deactivate newMed
-
-            NegCtrl -> lista : agregarMedicamento(nuevoMedicamento: Medicamento)
-            activate lista
-            lista --> NegCtrl : << estado : Boolean >>
-            deactivate lista
-
-            NegCtrl --> admin : <<NULL>>
-        end
+        ctrl -> cat : agregarMedicamento(nuevoMed)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> admin : << "Éxito: Medicamento guardado" >>
         
     end
+end
 
-deactivate NegCtrl
+deactivate ctrl
 @enduml

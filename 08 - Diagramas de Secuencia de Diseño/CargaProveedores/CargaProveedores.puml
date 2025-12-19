@@ -1,60 +1,49 @@
 @startuml
-title Registrar Proveedor (Droguería)
+title Carga de Proveedores (Alta) - Final
 
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "Interfaz: NegocioControlador" as NegCtrl
-participant "List<Drogueria>: ListaProveedores" as lista
-participant "Drogueria: objDrogueria" as drog
-participant "Drogueria: nuevaDrogueria" as nuevoProv
+participant "gc:gestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoProveedores" as cat
+participant "prov[i]:Proveedor" as prov_iter
+participant "nuevoProv:Proveedor" as nuevo_prov
 
+admin -> ctrl : nuevoProveedor(nombre, email, telefono, canalPreferido)
+activate ctrl
 
-admin -> NegCtrl : registrarProveedor(nombre: String, email: String, telefono: String, formatoEnvio: String)
-activate NegCtrl
+ctrl -> cat : buscarProveedor(nombre)
+activate cat
 
-    alt formato de email o telefono invalido
-        NegCtrl --> admin : <<NULL>>
-    else formatos válidos
+loop [para cada p en proveedores]
+    cat -> prov_iter : getNombre()
+    activate prov_iter
+    prov_iter --> cat : << nombreActual : String >>
+    deactivate prov_iter
     
-        NegCtrl -> lista : buscarDrogueria(nombre: String, email: String)
-        activate lista
+    alt nombre == nombreActual
+        cat --> ctrl : << p : Proveedor >>
         
-        loop [para cada d en  ListaProveedores]
-            lista -> drog : getNombre()
-            activate drog
-            drog --> lista : << nombreActual : String >>
-            deactivate drog
+        ctrl --> admin : << "Error: Proveedor ya registrado" >>
 
-            lista -> drog : getEmail()
-            activate drog
-            drog --> lista : << emailActual : String >>
-            deactivate drog
-            
-            alt (nombre == nombreActual) || (email == emailActual)
-                lista --> NegCtrl : << objDrogueria : Drogueria >>
-            end
-        end
-        deactivate lista
+    else nombre != nombreActual
+    
+        ctrl -> nuevo_prov : crearProveedor(nombre, email, telefono, canalPreferido)
+        activate nuevo_prov
+        nuevo_prov --> ctrl : << nuevoProv : Proveedor >>
+        deactivate nuevo_prov
 
-        alt objDrogueria encontrado
-            NegCtrl --> admin : <<NULL>>
-            
-        else objDrogueria no encontrado
-            NegCtrl -> nuevoProv ** : crearProveedor(nombre: String, email: String, telefono: String, formatoEnvio: String)
-            activate nuevoProv
-            nuevoProv --> NegCtrl : << nuevaDrogueria : Drogueria >>
-            deactivate nuevoProv
-
-            NegCtrl -> lista : agregarDrogueria(nuevaDrogueria: Drogueria)
-            activate lista
-            lista --> NegCtrl : << estado : Boolean >>
-            deactivate lista
-
-            NegCtrl --> admin : <<NULL>>
-        end
+        ctrl -> cat : agregarProveedor(nuevoProv)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> admin : << "Éxito: Proveedor registrado" >>
         
     end
+end
 
-deactivate NegCtrl
+deactivate cat
+deactivate ctrl
 @enduml
