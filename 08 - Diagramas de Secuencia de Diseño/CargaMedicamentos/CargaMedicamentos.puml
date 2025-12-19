@@ -31,7 +31,7 @@ loop [para cada m en medicamentos]
 
         deactivate cat
         
-        ctrl -> nuevo_med : create(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
+        ctrl -> nuevo_med : crearMedicamento(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
         activate nuevo_med
         nuevo_med --> ctrl : << nuevoMed : Medicamento >>
         deactivate nuevo_med

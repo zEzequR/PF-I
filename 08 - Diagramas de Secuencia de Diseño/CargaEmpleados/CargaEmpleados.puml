@@ -1,92 +1,51 @@
 @startuml
-title Secuencia: Carga Empleados (Validación Correcta)
+title Carga de Nuevos Empleados (Alta)
 
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "Interfaz: NegCtrl" as NegCtrl
+participant "cu:controladorUsuario" as ctrl
+participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
+participant "usuActual:Usuario" as usu_actual
+participant "nuevoUsu:Usuario" as nuevo_usu
 
-participant "List<Usuario>: objListaUsuarios" as listaUser
-participant "Usuario: objUsuario" as user
-participant "Usuario: nuevoUsuario" as newUser
+admin -> ctrl : nuevoEmpleado(nombreUsuario, contraseña, tipoUsuario)
+activate ctrl
 
-participant "List<Empleado>: objListaEmpleados" as listaEmp
-participant "Empleado: objEmpleado" as emp
-participant "Empleado: nuevoEmpleado" as newEmp
+ctrl -> cat : buscarUsuario(nombreUsuario)
+activate cat
 
-
-admin -> NegCtrl : registrarNuevoEmpleado(nombreUsuario: String, contrasenia: String, tipo: TipoUsuario, legajo: String, sueldo: Float)
-activate NegCtrl
-
-    alt datos incompletos o formato inválido
-        NegCtrl --> admin : <<NULL>>
-    else datos válidos
+loop [para cada u en usuarios]
+    cat -> usu_actual : getNombreUsuario()
+    activate usu_actual
+    usu_actual --> cat : << nombreActual : String >>
+    deactivate usu_actual
     
-        NegCtrl -> listaUser : buscarUsuario(nombreUsuario: String)
-        activate listaUser
+    alt nombreUsuario == nombreActual
+        cat --> ctrl : << u : Usuario >>
+        deactivate cat
         
-        loop [para cada u en objListaUsuarios]
-            listaUser -> user : getNombreUsuario()
-            activate user
-            user --> listaUser : << nombreActual : String >>
-            deactivate user
-            
-            alt nombreUsuario == nombreActual
-                listaUser --> NegCtrl : << objUsuarioEncontrado : Usuario >>
-            end
-        end
-        deactivate listaUser
+        ctrl --> admin : << "Error: Empleado ya registrado" >>
 
-        NegCtrl -> listaEmp : buscarEmpleado(legajo: String)
-        activate listaEmp
+    else nombreUsuario != nombreActual
+
+        deactivate cat
         
-        loop [para cada emp en objListaEmpleados]
-            listaEmp -> emp : getLegajo()
-            activate emp
-            emp --> listaEmp : << legajoActual : String >>
-            deactivate emp
-            
-            alt legajo == legajoActual
-                listaEmp --> NegCtrl : << objEmpleadoEncontrado : Empleado >>
-            end
-        end
-        deactivate listaEmp
+        ctrl -> nuevo_usu : crearNuevoUsuario(nombreUsuario, contraseña, tipoUsuario)
+        activate nuevo_usu
+        nuevo_usu --> ctrl : << nuevoUsu : Usuario >>
+        deactivate nuevo_usu
 
-        alt (objUsuarioEncontrado != null) || (objEmpleadoEncontrado != null)
-            
-            NegCtrl --> admin : <<NULL>>
-            
-        else (ninguno existe)
-            
-            NegCtrl -> newUser ** : crearUsuario(nombreUsuario: String, contrasenia: String, tipo: TipoUsuario)
-            activate newUser
-            newUser --> NegCtrl : << nuevoUsuario : Usuario >>
-            deactivate newUser
-
-            NegCtrl -> newEmp ** : crearEmpleado(legajo: String, sueldo: Float)
-            activate newEmp
-            newEmp --> NegCtrl : << nuevoEmpleado : Empleado >>
-            deactivate newEmp
-
-            NegCtrl -> newEmp : setUsuario(nuevoUsuario: Usuario)
-            activate newEmp
-            newEmp --> NegCtrl : <<NULL>>
-            deactivate newEmp
-
-            NegCtrl -> listaUser : agregarUsuario(nuevoUsuario: Usuario)
-            activate listaUser
-            listaUser --> NegCtrl : << estado : Boolean >>
-            deactivate listaUser
-
-            NegCtrl -> listaEmp : agregarEmpleado(nuevoEmpleado: Empleado)
-            activate listaEmp
-            listaEmp --> NegCtrl : << estado : Boolean >>
-            deactivate listaEmp
-
-            NegCtrl --> admin : <<NULL>>
-        end
+        ctrl -> cat : agregarUsuario(nuevoUsu)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> admin : << "Éxito: Empleado registrado" >>
         
     end
+end
 
-deactivate NegCtrl
+deactivate ctrl
 @enduml
