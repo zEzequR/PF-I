@@ -1,9 +1,14 @@
 @startuml
+<<<<<<< Updated upstream
 title Carga de Medicamentos (Alta)
+=======
+title Carga de Medicamentos
+>>>>>>> Stashed changes
 
 hide footbox
 
 actor "Administrador:Admin" as admin
+<<<<<<< Updated upstream
 participant "gc:gestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoMedicamentos" as cat
 participant "medActual:Medicamento" as med_actual
@@ -48,4 +53,55 @@ loop [para cada m en medicamentos]
 end
 
 deactivate ctrl
+=======
+participant "NegCtrl: Interfaz" as NegCtrl
+
+participant "List<Medicamento>: objListaMedicamentos" as lista
+participant "Medicamento: objMedicamento" as med
+participant "Medicamento: nuevoMedicamento" as newMed
+
+admin -> NegCtrl : registrarMedicamento(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
+activate NegCtrl
+
+    alt datos incompletos o formato incorrecto
+        NegCtrl --> admin : <<NULL>>
+    else datos válidos
+    
+        NegCtrl -> lista : buscarMedicamento(codBarras: String)
+        activate lista
+        
+        loop [para cada m en objListaMedicamentos]
+            lista -> med : getCodBarras()
+            activate med
+            med --> lista : << codigoActual : String >>
+            deactivate med
+            
+            alt codBarras == codigoActual
+                lista --> NegCtrl : << objMedicamentoEncontrado : Medicamento >>
+            end
+        end
+        deactivate lista
+        
+        alt objMedicamentoEncontrado != null
+            NegCtrl --> admin : <<NULL>>
+            
+        else objMedicamentoEncontrado == null
+
+            NegCtrl -> newMed ** : create(codBarras: String, nombre: String, descripcion: String, drogueria: String, precio: Float, stock: Int)
+            activate newMed
+            newMed --> NegCtrl : << nuevoMedicamento : Medicamento >>
+            deactivate newMed
+
+            NegCtrl -> lista : agregarMedicamento(nuevoMedicamento: Medicamento)
+            activate lista
+            lista --> NegCtrl : << estado : Boolean >>
+            deactivate lista
+
+            NegCtrl --> admin : <<NULL>>
+        end
+        
+    end
+
+deactivate NegCtrl
+>>>>>>> Stashed changes
 @enduml

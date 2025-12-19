@@ -8,7 +8,7 @@ participant "gc:gestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "clienteActual:Cliente" as cliente_actual
 
-emp -> ctrl : nuevoCliente(dni, nombre, email, numTel)
+emp -> ctrl : nuevoCliente(dni: String, nombre: String, email: String, numTel: String)
 activate ctrl
 
 ctrl -> cat : buscarCliente(dni)
@@ -31,7 +31,7 @@ loop [para cada c en clientes]
         deactivate cat
 
         create participant "nuevoCliente:Cliente" as nuevo_cliente
-        ctrl -> nuevo_cliente : registrarCliente(dni, nombre, email, numTel)
+        ctrl -> nuevo_cliente : registrarCliente(dni: String, nombre: String, email: String, numTel: String)
         activate nuevo_cliente
         nuevo_cliente --> ctrl : << nuevoCliente : Cliente >>
         deactivate nuevo_cliente
