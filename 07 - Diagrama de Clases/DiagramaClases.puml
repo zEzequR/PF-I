@@ -1,14 +1,15 @@
 @startuml CLASES
 left to right direction
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
 
 ' ----------------- PERSONAS -----------------
 class Persona {
     - nombre
     - email
     - numTel
-    - direccion
-
+    
+    + CrearPersona(nombre, email, numTel, direccion)
     + actualizarContacto(dni, email, numTel, direccion)    
     + getNombre()
     + setNombre(nombre)
@@ -20,25 +21,48 @@ class Persona {
     + setDireccion(direccion)
 }
 
+class Direccion {
+    - calle
+    - numero
+    - localidad
+    - provincia
+    - cp
+    
+    + CrearDireccion(calle, num, loc, prov, cp)
+    + getCalle()
+    + setCalle()
+    + getNumero()
+    + setNumero()
+    + getLocalidad()
+    + setLocalidad()
+    + getProvincia()
+    + setProvincia()
+    + getCp()
+}
+
 class PersonaFisica {
     - DNI
+    + CrearPersonaFisica(nombre, email, tel, dir, dni)
     + getDNI()
     + setDNI(dni)
 }
 class PersonaJuridica {
     - CUIT
+    + CrearPersonaJuridica(nombre, email, tel, dir, cuit)
     + getCUIT()
     + setCUIT(cuit)
 }
 
 Persona <|-- PersonaFisica
 Persona <|-- PersonaJuridica
+Persona *-- Direccion
 
 ' ----------------- USUARIO / EMPLEADO -----------------
 class Usuario {
     - nombreUsuario
     - contraseña
     
+    + CrearUsuario(nombreUsuario, contraseña, rol)
     + getNombreUsuario()
     + setNombreUsuario(nombreUsuario)
     + getContraseña()
@@ -46,14 +70,16 @@ class Usuario {
 }
 
 class Empleado {
+    ' Sin atributos repetidos (hereda nombre, dni, etc.)
     - legajo
     - sueldo
 
+    ' Constructor completo
+    + CrearEmpleado(nombre, dni, email, tel, dir, legajo, sueldo, usuario)
     + getLejago()
     + setLegajo(legajo)
     + getSueldo()
     + setSueldo(sueldo)
-    + aplicarDescuentoEmpleado()
 }
 
 Empleado -- Usuario
@@ -72,8 +98,8 @@ class Asistencia {
     - horaSalida
     - estado
 
+    + CrearAsistencia(usuario, fecha, horaEntrada)
     + registrarAsistencia(nombreUsuario, fecha, horaEntrada, horaSalida, estado)
-
     + getFecha()
     + setFecha(fecha)
     + getHoraEntrada()
@@ -94,44 +120,38 @@ Empleado -- Asistencia
 
 ' ----------------- CLIENTE -----------------
 class Cliente {
-    - DNI
-    - nombre
+    ' Sin atributos repetidos
     - SaldoCtaCorriente
     - tipoCliente
     - montoAcumulado
-    - email
-    - numTel
+    - esFrecuente
 
+    + CrearCliente(dni, nombre, email, tel, dir, tipoCliente)
+    
+    + verificarLimiteDeuda(SaldoCtaCorriente)
     + getCliente(dni)
-    + getDNI()
-    + setDNI(dni)
-    + getNombre()
-    + setNombre(nombre)
     + getSaldoCtaCorriente()
     + setSaldoCtaCorriente(saldo)
     + getTipoCliente()
     + setTipoCliente(tipo)
     + getMontoAcumulado()
     + setMontoAcumulado(monto)
-    + getEmail()
-    + setEmail(email)
-    + getNumTel()
-    + setNumTel(numTel)
+    + getesFrecuente()
+    + setesFrecuente(booleano)
     + registrarPagoCuentaCorriente(dni, monto)
-    + esFrecuente(dni)
 }
 PersonaFisica <|-- Cliente
 PersonaFisica <|-- Empleado
 PersonaFisica <|-- Medico
+
 ' ----------------- MEDICO / RECETA -----------------
 class Medico {
+    ' Sin atributos repetidos
     - matriculaMed
-    - nombreMedico
-
+    
+    + CrearMedico(nombre, dni, email, tel, dir, matricula)
     + getMatriculaMed()
     + setMatriculaMed(matricula)
-    + getNombreMedico()
-    + setNombreMedico(nombre)
 }
 class Receta {
     - nroReceta
@@ -140,7 +160,7 @@ class Receta {
     - tipoReceta
     - obraSocialNombre
     
-    + validarReceta(nroReceta)
+    + CrearReceta(nro, fecha, medico, cliente)
     + getNroReceta()
     + setNroReceta(nro)
     + getFechaPrescripcion()
@@ -156,6 +176,7 @@ class DetalleReceta {
     - fechaPrescripcion
     - productosRecetados
     
+    + CrearDetalleReceta(medicamento, cantidad, indicaciones)
     + getFechaPrescripcion()
     + setFechaPrescripcion(fecha)
     + getProductosRecetados()
@@ -170,9 +191,7 @@ class ObraSocial {
     - nombreObraSocial
     - contacto
 
-    + getObraSocial(nombre)
-    
-    ' Getters y Setters agregados
+    + CrearObraSocial(nombre, contacto)
     + getNombreObraSocial()
     + setNombreObraSocial(nombre)
     + getContacto()
@@ -182,6 +201,7 @@ class Cobertura {
     - numAfiliado
     - descuentoPorcentaje
     
+    + CrearCobertura(cliente, obraSocial, nroAfiliado)
     + getNumAfiliado()
     + setNumAfiliado(num)
     + getDescuentoPorcentaje()
@@ -195,25 +215,22 @@ class Medicamento {
     - codigoBarra
     - nombre
     - precioUnitario
-    - requiereReceta
+    - precioDrog
     - controlado
-    - cadenaFrio
     - stock
     - stockMinimo
     - drogueriaNombre
 
-    + consultarStock()
+    + CrearMedicamento(cod, nom, precio, stock, drogueria)
+    + calcularPrecioVenta()
     + disminuirStock(cantidad)
     + aumentarStock(cantidad)
-    + estaPorDebajoStockMinimo()
     + getCodigoBarra()
     + setCodigoBarra(codigo)
     + getNombre()
     + setNombre(nombre)
     + getPrecioUnitario()
     + setPrecioUnitario(precio)
-    + getRequiereReceta()
-    + setRequiereReceta(booleano)
     + getControlado()
     + setControlado(booleano)
     + getCadenaFrio()
@@ -226,18 +243,11 @@ class Medicamento {
     + setDrogueriaNombre(nombre)
 }
 class Drogueria {
-    - nombre
-    - email
-    - telefono
+    ' Sin atributos repetidos (hereda nombre de Persona)
     - canalPreferido
 
+    + CrearDrogueria(nombre, email, tel, dir, cuit, canalPreferido)
     + actualizarContacto(nombre, email, telefono, canalPreferido)
-    + getNombre()
-    + setNombre(nombre)
-    + getEmail()
-    + setEmail(email)
-    + getTelefono()
-    + setTelefono(telefono)
     + getCanalPreferido()
     + setCanalPreferido(canal)
 }
@@ -265,6 +275,11 @@ class Venta {
     - nombreUsuario
     - estadoVenta
 
+    + CrearVenta(nro, cliente, usuario, fecha)
+    + agregarDetalle(codigoBarra, cantidad)
+    + eliminarDetallePorCodigo(codigoBarra)
+    + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
+    + calcularSubtotal(cantidad, precioUnitario)
     + generarNroVta()
     + calcularTotal()
     + cancelarVta()
@@ -285,6 +300,7 @@ class Venta {
 }
 Venta ..> TipoVenta
 Venta -- EstadoVenta
+Venta -- Usuario
 
 class DetalleVenta {
     - nroDetalle
@@ -293,11 +309,7 @@ class DetalleVenta {
     - precioUnitario
     - subtotal
 
-    + agregarDetalle(codigoBarra, cantidad)
-    + eliminarDetallePorCodigo(codigoBarra)
-    + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
-    + calcularSubtotal(cantidad, precioUnitario)
-    + actualizarCantidad(nuevaCantidad)
+    + CrearDetalleVenta(medicamento, cantidad)
     + getNroDetalle()
     + setNroDetalle(nro)
     + getCodigoBarra()
@@ -318,8 +330,8 @@ class Pago {
     - monto
     - cuotas
 
-    + asignarNumTransaccion(numTransacción)
-    ' Getters y Setters agregados
+    + CrearPago(venta, tipo, monto, cuotas)
+    + calcularRecargo(cuotas)
     + getNumTransaccion()
     + setNumTransaccion(num)
     + getTipoPago()
@@ -345,7 +357,7 @@ class Ticket {
     - fechaHora
     - pdfPath
 
-    + generarTicket(nroVta)
+    + CrearTicket(venta)
     + getPath()
     + getNroTicket()
     + setNroTicket(nro)
@@ -354,7 +366,7 @@ class Ticket {
     + setPdfPath(path)
 }
 
-enum Estado{
+enum Estado {
     error
     creado
     enviado
@@ -370,6 +382,7 @@ class TipoDescuento {
     - fechaFin
     - activo
 
+    + CrearTipoDescuento(motivo, porcentaje, fechas)
     + esAplicable(nroVta)
     + getMotivo()
     + setMotivo(motivo)
@@ -392,9 +405,11 @@ class Pedido {
     - proveedorNombre
     - fechaPedido
 
+    + CrearPedido(proveedor, fecha)
     + agregarLinea(codigoBarra, cantidad)
     + modificarLinea(codigoBarra, cantidad)
     + eliminarLinea(codigoBarra)
+    + calcularSubtotal(cantidad, precioUnitario)
     + generarNumPedido()
     + getNumPed()
     + setNumPed()
@@ -404,7 +419,7 @@ class Pedido {
     + getFechaPedido()
 }
 
-enum EstadoPedido{
+enum EstadoPedido {
     error
     creado
     enviado
@@ -415,10 +430,7 @@ class DetallePedido {
     - nombreMedicamento
     - cantidad
 
-    + calcularSubtotal(cantidad, precioUnitario)
-    + agregarLinea(codigoBarra, cantidad)
-    + modificarLinea(codigoBarra, cantidad)
-    + eliminarLinea(codigoBarra)
+    + CrearDetallePedido(medicamento, cantidad)
     + getCodigoBarra()
     + setCodigoBarra(codigo)
     + getNombreMedicamento()
@@ -430,118 +442,154 @@ class DetallePedido {
 Pedido *-- DetallePedido
 Pedido -- Drogueria
 Pedido -- EstadoPedido
+DetallePedido ..> Medicamento
 
 ' ----------------- CONTROLADORES / SERVICIOS -----------------
-interface NegocioControlador {
+class ControladorUsuario {
+    ' Gestiona el acceso
     + iniciarSesion(nombreUsuario, contraseña)
     + cerrarSesion()
-    + crearUsuario(nombreUsuario, contraseña, tipoUsuario)
-    + modificarUsuario(nombreUsuario, campos)
-    + buscarUsuarios(filtros)
-
-    + crearCliente(dni, nombre, email, numTel, tipoCliente)
-    + modificarCliente(dni, camposContacto)
-    + buscarClientes(filtros)
-    + abrirCuentaCorriente(dni)
-    + registrarPagoCuentaCorriente(dni, monto)
-    + mostrarClientes()
-
-    + crearMedicamento(codigoBarra, nombre, precioUnitario, stock, stockMinimo, drogueriaNombre)
-    + modificarMedicamento(codigoBarra, campos)
-    + eliminarMedicamento(codigoBarra)
-    + buscarMedicamentos(filtros)
-    + ajustarStock(codigoBarra, cantidad)
-    + MostrarMedicamentos()
-
-    + crearDrogueria(nombre, email, telefono, canalPreferido)
-    + modificarDrogueria(nombre, campos)
-    + eliminarDrogueria(nombre)
-    + buscarDroguerias(filtros)
-
-    + crearVenta(clienteDNI, tipoVta)
-    + agregarLineaVenta(nroVta, codigoBarra, cantidad)
-    + editarLineaVenta(nroVta, codigoBarra, nuevaCantidad)
-    + eliminarLineaVenta(nroVta, codigoBarra)
-    + cancelarVenta(nroVta)
-    + aplicarDescuentoVenta(nroVta, motivo)
-    + finalizarVenta(nroVta, tipoPago, nroCuotas)
-    + buscarVentas(filtros)
-    + finalizar(tipoPago, nroCuotas)
-
-    + crearPago(nroVta, tipoPago, monto, cuotas)
-    + procesarPago(nroVta, tipoPago)
-    + procesarRespuestaPosnet(estadoPago, numTransacción)
-    + procesarRespuestaPago(nroVta, estadoPago, numTransacción)
-    + registrarTransaccion(nroVta, numTransacción, estadoPago)
-    + actualizarEstadoVenta(nroVta, estadoVenta)
-    + reintentarEnvioComprobante(nroVta)
 }
 
-interface ServicioPedidos {
-    + generarPedidoAutomatico()
-    + crearPedidoManual(proveedorNombre, listaItems)
-    + generarDetallePedido(numPedido, codigoBarra, cantidad)
-    + generarPDFPedido(numPedido)
-    + seleccionarCanalEnvioProveedor(proveedorNombre)
-    + enviarPedido(numPedido, proveedorNombre)
-    + enviarViaWhatsApp(numPedido, telefono)
-    + enviarViaEmail(numPedido, email)
-    + registrarEnvioPedido(numPedido, proveedorNombre, canal, estado)
-    + ObtenerEstadoPedido(numPedido)
-    + ReintentarDetallePedido(numPedido)
+class GestionControlador {
+    ' Gestiona el ABM de datos maestros
+    
+    ' Cliente: (DNI es la clave para modificar/eliminar)
+    + registrarCliente(dni, nombre, email, telefono, direccion, tipoCliente)
+    + modificarCliente(dni, email, telefono, direccion, tipoCliente)
+    + eliminarCliente(dni)
 
-    + generarPDFTicket(nroVta)
-    + enviarComprobante(nroVta, clienteDNI)
-    + enviarViaWhatsAppComprobante(nroVta, telefono)
-    + enviarViaEmailComprobante(nroVta, email)
-    + guardarTicketLocal(nroVta)
-    + registrarEnvioComprobante(nroVta, canal, estado)
-    + ObtenerEstadoTicket(nroTicket)
-    + ReintentarTicket(nroTicket)
+    ' Empleado: 
+    + registrarEmpleado(nombre, dni, email, direccion, legajo, sueldo, usuario, contraseña, rol)
+    
+    ' Medicamento:
+    + registrarMedicamento(codBarra, nombre, precioUnitario, precioDrog, stock, stockMinimo, drogueriaNombre, esControlado, cadenaFrio)
+    + modificarMedicamento(codBarra, precioUnitario, stock, stockMinimo)
+    + eliminarMedicamento(codBarra)
+
+    ' Descuentos:
+    + registrarTipoDescuento(motivo, porcentaje, fechaInicio, fechaFin)
+    + bajaTipoDescuento(motivo)
+
+    ' Droguería:
+    + registrarDrogueria(nombre, email, telefono, direccion, cuit, canalPreferido)
+    + modificarDrogueria(nombre, email, telefono, direccion, canalPreferido)
+    + bajaDrogueria(nombre)
+    
+    ' Pedidos:
+    + generarPedidoProveedor(nombreProveedor, listaProductos)
+}
+
+class ControladorVentas {
+    ' Orquesta la transacción
+    + iniciarNuevaVenta(dniCliente)
+
+    + validarReglasNegocio(dniCliente)
+
+    + escanearProducto(codBarra, cantidad)
+    + quitarProducto(codBarra)
+    + aplicarDescuento(motivo)
+    + finalizarVenta(medioPago, cuotas)
+    + cancelarVenta(nroVta)
+}
+
+interface ServicioCorreos {
+    ' Solo se encarga de la comunicación
+    + enviarPedidoPDF(pedido, emailProveedor)
+    + enviarTicketDigital(ticket, emailCliente, numtel)
 }
 
 interface ServicioObrasSociales {
     + validarAfiliacion(obraSocialNombre, numAfiliado)
     + verificarRecetaElectronica(nroReceta)
-    + registrarRecetaEnVenta(nroReceta, nroVta)
-    + aplicarCoberturaVenta(nroVta, obraSocialNombre, nroReceta numAfiliado)
+    + autorizarCobertura(nroVta, obraSocialNombre, nroReceta)
 }
 
 interface ServicioPagos {
-    + crearPago(nroVta, tipoPago, monto, cuotas)
-    + iniciarTransaccion(nroVta, numTransacción)
-    + procesarRespuesta(numTransacción, estadoPago)
-    + confirmarPago(nroVta, numTransacción)
-    + obtenerEstadoPago(numTransacción)
-    + retryTransaccion(numTransacción)
-    + registrarTransaccion(nroVta, numTransacción, estadoPago)
-    + validarMediosAceptados(nroVta, tipoPago, monto)
+    + procesarPago(nroVta, tipoPago, monto, cuotas)
+    + validarSaldo()
+    + confirmarTransaccion(numTransaccion)
 }
 
+' ----------------- CATÁLOGOS (SINGLETONS) -----------------
+dataclass CatalogoMedicamentos <<Singleton>> {
+    - listaMedicamentos: List<Medicamento>
+    + agregarMedicamento(medicamento)
+    + eliminarMedicamento(codigoBarra)
+    + buscarMedicamento(codigoBarra) : Medicamento
+    + buscarPorNombre(nombre) : List<Medicamento>
+    + verificarExistencia(codigoBarra) : Boolean
+}
 
-' ----------------- ASOCIACIONES -----------------
-NegocioControlador -- Venta
-NegocioControlador -- Medicamento
-NegocioControlador -- Cliente
-NegocioControlador -- Usuario
-NegocioControlador -- Drogueria
-NegocioControlador ..> ServicioPedidos
-NegocioControlador ..> ServicioObrasSociales
-NegocioControlador ..> ServicioPagos
+dataclass CatalogoClientes <<Singleton>> {
+    - listaClientes: List<Cliente>
+    + registrarCliente(cliente)
+    + buscarCliente(dni) : Cliente
+    + existeCliente(dni) : Boolean
+}
 
+dataclass CatalogoVentas <<Singleton>> {
+    - listaVentas: List<Venta>
+    + registrarVenta(venta)
+    + buscarVenta(nroVta)
+    + obtenerVentasPorFecha(fecha)
+}
 
-ServicioPagos -- Pago
+dataclass CatalogoDescuentos <<Singleton>>
+{
+    - listaDescuentos: List<TipoDescuento>
+    + agregarDescuento(descuento)
+    + eliminarDescuento(motivo)
+    + obtenerDescuentosActivos()
+}
 
-ServicioPedidos -- Drogueria
-ServicioPedidos -- Pedido
-ServicioPedidos -- DetallePedido
-ServicioPedidos -- Ticket
-ServicioPedidos -- Venta
+dataclass CatalogoProveedores <<Singleton>> {
+    - listaProveedores: List<Drogueria>
+    + agregarProveedor(drogueria)
+    + eliminarProveedor(nombre)
+    + buscarProveedor(nombre)
+}
 
-ServicioObrasSociales -- ObraSocial
-ServicioObrasSociales -- Cobertura
-ServicioObrasSociales -- Receta
-ServicioObrasSociales -- Venta
-ServicioObrasSociales -- Cliente
+dataclass CatalogoUsuarios <<Singleton>> {
+    - listaUsuarios: List<Usuario>
+    + autenticarUsuario(user, pass) : Usuario
+    + agregarUsuario(usuario)
+    + eliminarUsuario(user)
+}
+
+' ----------------- ASOCIACIONES (REVISADAS) -----------------
+
+' 1. Relaciones de Contenedor (Catálogo TIENE Entidades)
+CatalogoMedicamentos o-- Medicamento
+CatalogoProveedores o-- Drogueria
+CatalogoClientes o-- Cliente
+CatalogoVentas o-- Venta
+CatalogoUsuarios o-- Usuario
+CatalogoDescuentos o-- TipoDescuento
+
+' 2. Relaciones Controlador -> Catálogo (El cerebro usa la memoria)
+ControladorUsuario --> CatalogoUsuarios
+GestionControlador --> CatalogoMedicamentos
+GestionControlador --> CatalogoProveedores
+GestionControlador --> CatalogoClientes
+GestionControlador --> CatalogoDescuentos
+
+ControladorVentas --> CatalogoVentas
+ControladorVentas --> CatalogoMedicamentos
+ControladorVentas --> CatalogoClientes
+ControladorVentas --> CatalogoDescuentos
+
+' 3. Relaciones Controlador -> Servicios (Uso externo)
+ControladorVentas ..> ServicioPagos
+ControladorVentas ..> ServicioObrasSociales
+ControladorVentas ..> ServicioCorreos
+GestionControlador ..> ServicioCorreos
+
+' 4. Relaciones de las Entidades y Servicios (Detalles)
+ServicioPagos ..> Pago
+ServicioObrasSociales ..> ObraSocial
+ServicioObrasSociales ..> Receta
+ServicioCorreos ..> Ticket
+ServicioCorreos ..> Pedido
 
 @enduml

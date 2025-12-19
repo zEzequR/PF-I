@@ -14,8 +14,8 @@
 4)El administrador cambia uno o más atributos del objeto medicamento: 
 - Codigo de barra
 - Nombre de medicamento
-- Descripción(duplicado requerido)
-- Laboratorio
+- Drogueria
+- Controlado
 - Precio unitario
 - Stock
 >5)El administrador confirma la modificación.
