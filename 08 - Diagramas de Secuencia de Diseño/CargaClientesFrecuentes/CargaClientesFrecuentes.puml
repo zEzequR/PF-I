@@ -1,52 +1,52 @@
 @startuml
-title Carga Clientes Frecuentes
+title Carga de Clientes Frecuentes (Alta)
 
 hide footbox
 
-actor "Admin:Administrador" as admin
-participant "Interfaz: NegocioControlador" as NegCtrl
-participant "List<Cliente>: ListaClientes" as lista
-participant "Cliente: objCliente" as cliente
+actor "Administrador:Admin" as admin
+participant "gc:gestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoClientes" as cat
+participant "clienteActual:Cliente" as cliente_actual
 
+admin -> ctrl : nuevoClienteFrecuente(dni, nombre, mail, numTel, saldo)
+activate ctrl
 
-admin -> NegCtrl : registrarClienteFrecuente(dni: String, saldoInicial: Float)
-activate NegCtrl
+ctrl -> cat : buscarCliente(dni)
+activate cat
 
-    NegCtrl -> lista : buscarCliente(dni: String)
-    activate lista
+loop [para cada c en clientes]
+    cat -> cliente_actual : getDni()
+    activate cliente_actual
+    cliente_actual --> cat : << dniActual : String >>
+    deactivate cliente_actual
     
-    loop [para cada c en ListaClientes]
-        lista -> cliente : getDNI()
-        activate cliente
-        cliente --> lista : << dniActual : String >>
-        deactivate cliente
+    alt dni == dniActual
+        cat --> ctrl : << c : Cliente >>
+        deactivate cat
         
-        alt dni == dniActual
-            lista --> NegCtrl : << objCliente : Cliente >>
-        end
+        ctrl --> admin : << "Error: Cliente ya registrado" >>
+
+    else dni != dniActual
+
+        deactivate cat
+
+        
+        create participant "nuevoCF:ClienteFrecuente" as nuevo_cf
+        ctrl -> nuevo_cf : create(dni, nombre, mail, numTel, saldo)
+        activate nuevo_cf
+        nuevo_cf --> ctrl : << nuevoCF : ClienteFrecuente >>
+        deactivate nuevo_cf
+
+        ctrl -> cat : agregarCliente(nuevoCF)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> admin : << "Cliente registrado como frecuente" >>
+        
     end
-    deactivate lista
+end
 
-    alt objCliente encontrado
-    
-        NegCtrl -> cliente : setEsFrecuente(true)
-        activate cliente
-        ' CORRECCIÓN: Retorno NULL
-        cliente --> NegCtrl : <<NULL>>
-        deactivate cliente
-
-        NegCtrl -> cliente : setMontoAcumulado(saldoInicial: Float)
-        activate cliente
-
-        cliente --> NegCtrl : <<NULL>>
-        deactivate cliente
-
-
-        NegCtrl --> admin : <<NULL>>
-
-    else objCliente no encontrado
-        NegCtrl --> admin : <<NULL>>
-    end
-
-deactivate NegCtrl
+deactivate ctrl
 @enduml
