@@ -1,0 +1,76 @@
+@startuml
+!pragma teoz true
+hide footbox
+title Eliminación de Proveedores
+
+actor "admin:Administrador" as admin
+participant "gc:GestionControlador" as gc
+participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
+participant "listaProv[i]:Drogueria" as arrayProv
+participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
+participant "listaMed[j]:Medicamento" as arrayMed
+
+' =================================================================
+' INICIO
+' =================================================================
+admin -> gc : bajaDrogueria(nombre : String)
+activate gc
+
+' -----------------------------------------------------------------
+' PASO 1: BUSCAR EL PROVEEDOR
+' -----------------------------------------------------------------
+gc -> catProv : buscarProveedor(nombre : String)
+activate catProv
+
+loop hasta nombre == nombreProv
+    catProv -> arrayProv : getNombre()
+    activate arrayProv
+    arrayProv --> catProv : <<nombreProv : String>>
+    deactivate arrayProv
+end
+
+catProv --> gc : <<NULL o DrogEncontrada : Object Type : Drogueria>>
+
+deactivate catProv
+
+' -----------------------------------------------------------------
+' PASO 2: VERIFICAR PRODUCTOS ASOCIADOS
+' -----------------------------------------------------------------
+alt DrogEncontrada == null
+    gc --> admin : "Error: El proveedor no existe"
+else
+    note right of gc
+        tieneProductos = FALSE
+    end note
+    loop para cada m en listaMedicamentos
+        gc -> arrayMed : getDrogueriaNombre()
+        activate arrayMed
+        arrayMed --> gc : <<drogNombre : String>>
+        deactivate arrayMed
+        alt drogNombre == nombre
+            note right of gc
+                tieneProductos = TRUE
+            end note
+        end
+    end
+
+' -----------------------------------------------------------------
+' PASO 3: DECISIÓN FINAL Y ELIMINACIÓN
+' -----------------------------------------------------------------
+    
+    alt tieneProductos == TRUE
+        gc --> admin : "Error: No se puede eliminar. Tiene productos asociados."
+    else
+        gc -> catProv : eliminarProveedor(DrogEncontrada : Object Type : Drogueria)
+        activate catProv
+        catProv -> arrayProv : eliminar(DrogEncontrada : Object Type : Drogueria)
+        activate arrayProv
+        arrayProv --> catProv : <<NULL>>
+        deactivate arrayProv
+        catProv --> gc : <<NULL>>
+        deactivate catProv
+        gc --> admin : "Proveedor eliminado exitosamente"
+        deactivate gc
+    end
+end
+@enduml

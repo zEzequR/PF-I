@@ -1,0 +1,90 @@
+@startuml
+!pragma teoz true
+hide footbox
+title Modificación de Proveedores
+
+actor "admin:Administrador" as admin
+participant "gc:GestionControlador" as gc
+participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
+participant "listaProv[i]:Drogueria" as arrayProv
+participant "provEncontrado:Drogueria" as provObj
+participant "suDireccion:Direccion" as dirObj
+
+' =================================================================
+' INICIO
+' =================================================================
+' El admin envía los datos desglosados (incluyendo los de la dirección)
+admin -> gc : modificarDrogueria(nombre : String, email : String, tel : String, calle : String, num : INT, loc : String, CUIT : INT, canalPreferido : String)
+activate gc
+
+' -----------------------------------------------------------------
+' PASO 1: BUSCAR EL PROVEEDOR
+' -----------------------------------------------------------------
+gc -> catProv : buscarProveedor(nombre)
+activate catProv
+
+loop hasta nombre == nombreDrog
+    catProv -> arrayProv : getNombre()
+    activate arrayProv
+    arrayProv --> catProv : <<nombreDrog : String>>
+    deactivate arrayProv
+end
+
+catProv --> gc : <<NULL o DrogEncontrada : Object Type : Drogueria
+deactivate catProv
+
+' -----------------------------------------------------------------
+' PASO 2: MODIFICACIÓN
+' -----------------------------------------------------------------
+alt DrogEncontrada == null
+    gc --> admin : "Error: El proveedor no existe"
+else
+    gc -> provObj : setEmail(email : String)
+    activate provObj
+    provObj --> gc : <<NULL>>
+    deactivate provObj
+    
+    gc -> provObj : setCUIT(CUIT : INT)
+
+    provObj --> gc <<NULL>>
+
+    gc -> provObj : setNumTel(tel)
+    activate provObj
+    provObj --> gc : <<NULL>>
+    deactivate provObj
+
+    note right of gc
+        Accedemos al objeto compuesto
+        para editar sus campos
+    end note
+    
+    gc -> provObj : getDireccion()
+    activate provObj
+    provObj --> gc : << suDireccion : Object Type : Direccion>>
+    deactivate provObj
+    
+    gc -> dirObj : setCalle(calle : String)
+    activate dirObj
+    dirObj --> gc : <<NULL>>
+    deactivate dirObj
+    
+    gc -> dirObj : setNumero(num : INT)
+    activate dirObj
+    dirObj --> gc : <<NULL>>
+    deactivate dirObj
+    
+    gc -> dirObj : setLocalidad(loc : String)
+    activate dirObj
+    dirObj --> gc : <<NULL>>
+    deactivate dirObj
+
+    ' C) MODIFICAR ATRIBUTOS PROPIOS (Drogueria)
+    gc -> provObj : setCanalPreferido(canalPreferido : String)
+    activate provObj
+    provObj --> gc : <<NULL>>
+    deactivate provObj
+    
+    gc --> admin : "Éxito: Proveedor modificado correctamente."
+    deactivate gc
+end
+@enduml

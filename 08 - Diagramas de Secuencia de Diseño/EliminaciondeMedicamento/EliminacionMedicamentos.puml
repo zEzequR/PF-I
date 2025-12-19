@@ -1,0 +1,72 @@
+@startuml
+!pragma teoz true
+hide footbox
+title Eliminación de Medicamentos
+
+actor "admin:Administrador" as admin
+participant "gc:GestionControlador" as gc
+participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
+participant "listaMed[i]:Medicamento" as arrayMed
+participant "catVentas:<<Singleton>>\nCatalogoVentas" as catVentas
+participant "listaVentas[j]:Venta" as arrayVentas
+participant "detalles[k]:DetalleVenta" as arrayDetalles
+
+' =================================================================
+' INICIO
+' =================================================================
+admin -> gc : eliminarMedicamento(codBarra : INT)
+activate gc
+
+' -----------------------------------------------------------------
+' PASO 1: BUSCAR EL MEDICAMENTO (Para confirmar que existe)
+' -----------------------------------------------------------------
+gc -> catMed : buscarMedicamento(codBarra : INT)
+activate catMed
+
+    loop hasta cod == codBarra
+        catMed -> arrayMed : getCodigoBarra()
+        activate arrayMed
+        arrayMed --> catMed : <<cod : INT>>
+        deactivate arrayMed
+    end
+    catMed --> gc : << NULL O medEncontrado : Object Type : Medicamento>>
+    deactivate catMed
+' -----------------------------------------------------------------
+' PASO 2: VALIDACIÓN (Req 4.a - Verificar asociación con Ventas)
+' -----------------------------------------------------------------
+alt cod == null
+    gc --> admin : "Error: El medicamento no existe"
+else
+    note right of gc
+        vtaAsociada = FALSE
+    end note
+    loop para cada v en listaVentas
+        loop para cada d en detalles de v
+            gc -> arrayDetalles : getCodigoBarra()
+            activate arrayDetalles
+            arrayDetalles --> gc : <<codDetalle : INT>>
+            deactivate arrayDetalles
+            alt codDetalle == codBarra
+                note right of gc
+                    vtaAsociada = TRUE
+                end note
+        end
+    end
+' -----------------------------------------------------------------
+' PASO 3: ELIMINAR - DEVOLVER MENSAJE DE ERROR
+' -----------------------------------------------------------------
+alt vtaAsociada == TRUE
+    gc --> admin : "Error: No se puede eliminar porque el medicamento tiene ventas asociadas"
+else
+    gc -> catMed : eliminarMedicamento(medEncontrado : Object Type : Medicamento)
+    activate catMed
+    catMed -> arrayMed : eliminar(medEncontrado : Object Type : Medicamento)
+    activate arrayMed
+    arrayMed --> catMed : <<NULL>>
+    deactivate arrayMed
+    catMed --> gc : <<NULL>>
+    deactivate catMed
+    gc --> admin : "Medicamento eliminado exitosamente"
+    deactivate gc
+end
+@enduml

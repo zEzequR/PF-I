@@ -515,7 +515,7 @@ interface ServicioPagos {
 dataclass CatalogoMedicamentos <<Singleton>> {
     - listaMedicamentos: List<Medicamento>
     + agregarMedicamento(medicamento)
-    + eliminarMedicamento(codigoBarra)
+    + eliminarMedicamento(medicamento)
     + buscarMedicamento(codigoBarra) : Medicamento
     + buscarPorNombre(nombre) : List<Medicamento>
     + verificarExistencia(codigoBarra) : Boolean
@@ -539,14 +539,15 @@ dataclass CatalogoDescuentos <<Singleton>>
 {
     - listaDescuentos: List<TipoDescuento>
     + agregarDescuento(descuento)
-    + eliminarDescuento(motivo)
+    + eliminarDescuento(tipoDescuento)
     + obtenerDescuentosActivos()
+    + buscarDescuento(motivo)
 }
 
 dataclass CatalogoProveedores <<Singleton>> {
     - listaProveedores: List<Drogueria>
     + agregarProveedor(drogueria)
-    + eliminarProveedor(nombre)
+    + eliminarProveedor(drogueria)
     + buscarProveedor(nombre)
 }
 
@@ -554,7 +555,8 @@ dataclass CatalogoUsuarios <<Singleton>> {
     - listaUsuarios: List<Usuario>
     + autenticarUsuario(user, pass) : Usuario
     + agregarUsuario(usuario)
-    + eliminarUsuario(user)
+    + eliminarUsuario(usuario)
+    + buscarUsuario(user)
 }
 
 ' ----------------- ASOCIACIONES (REVISADAS) -----------------

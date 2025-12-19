@@ -1,0 +1,58 @@
+@startuml
+!pragma teoz true
+hide footbox
+title Modificación de Medicamentos
+
+actor "admin:Administrador" as admin
+participant "gc:GestionControlador" as gc
+participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
+participant "listaMed[i]:Medicamento" as arrayMed
+participant "medEncontrado:Medicamento" as medObj
+
+' =================================================================
+' INICIO
+' =================================================================
+admin -> gc : modificarMedicamento(codBarra : INT, precio : DECIMAL, stock : INT, stockMin : INT)
+activate gc
+
+' -----------------------------------------------------------------
+' PASO 1: BUSCAR EL MEDICAMENTO
+' -----------------------------------------------------------------
+gc -> catMed : buscarMedicamento(codBarra : INT)
+activate catMed
+
+loop hasta cod == codBarra
+    catMed -> arrayMed : getCodigoBarra()
+    activate arrayMed
+    arrayMed --> catMed : <<cod : INT>>
+    deactivate arrayMed
+end
+    
+catMed --> gc : <<NULL O medEncontrado : Object Type : Medicamento>>
+deactivate catMed
+
+' -----------------------------------------------------------------
+' PASO 2: VALIDACIÓN Y MODIFICACIÓN
+' -----------------------------------------------------------------
+alt medEncontrado == null
+    gc --> admin : "Error: El medicamento no existe"
+else
+    gc -> medObj : setPrecioUnitario(precio : DECIMAL)
+    activate medObj
+    medObj --> gc : <<NULL>>
+    deactivate medObj
+    
+    gc -> medObj : setStock(stock : INT)
+    activate medObj
+    medObj --> gc : <<NULL>>
+    deactivate medObj
+    
+    gc -> medObj : setStockMinimo(stockMin : INT)
+    activate medObj
+    medObj --> gc : <<NULL>>
+    deactivate medObj
+    
+    gc --> admin : "Éxito: Medicamento modificado correctamente."
+    deactivate gc
+end
+@enduml

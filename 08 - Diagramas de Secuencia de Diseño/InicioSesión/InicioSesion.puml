@@ -1,69 +1,61 @@
 @startuml
+!pragma teoz true
+hide footbox
 title Inicio de Sesión
 
-hide footbox
+actor "user:Usuario" as user
+participant "cu:ControladorUsuario" as cu
+participant "catUsu:<<Singleton>>\nCatalogoUsuarios" as catUsu
+participant "listaUsuarios[i]:Usuario" as arrayUsu
 
-actor "Usuario:User" as user
-participant "Interfaz: NegCtrl" as NegCtrl
-participant "List<Usuario>: objListaUsuarios" as lista
-participant "Usuario: objUsuario" as objUser
+user -> cu : iniciarSesion(nombreUsuario : String, contraseña : String)
+activate cu
 
-user -> NegCtrl : iniciarSesion(nombreUsuario: String, contraseña: String)
-activate NegCtrl
-
-    ' CORREGIDO: Espacios normales aquí
-    alt nombreUsuario es vacío O contraseña es vacía
-        NegCtrl --> user : <<NULL>>
-
-        
-    else datos completos
+alt nombreUsuario es vacío O contraseña es vacía
+    cu --> user : "Error: Debe completar todos los campos"
+else
+    ' El controlador delega la búsqueda al catálogo usando el método definido en V5.1
     
-        NegCtrl -> lista : buscarUsuario(nombreUsuario: String)
-        activate lista
-        
-        loop [para cada u en objListaUsuarios]
-            lista -> objUser : getNombreUsuario()
-            activate objUser
-            objUser --> lista : << nombreActual : String >>
-            deactivate objUser
-            
-            alt nombreUsuario == nombreActual
-                lista --> NegCtrl : << objUsuarioEncontrado : Usuario >>
-                
-            end
-        end
-        deactivate lista
-        
-        alt objUsuarioEncontrado == null
-            NegCtrl --> user : <<NULL>>
+    cu -> catUsu : autenticarUsuario(nombreUsuario : String, contraseña : String)
+    activate catUsu
 
+    loop para cada u en listaUsuarios
+        ' 1. Pedimos el nombre al objeto en la posición i
+        catUsu -> arrayUsu : getNombreUsuario()
+        activate arrayUsu
+        arrayUsu --> catUsu : <<nomUsuario : String>>
+        deactivate arrayUsu
+        
+        ' 2. Comparamos nombres
+        alt nomUsuario == nombreUsuario
+            ' 3. Si el nombre coincide, pedimos la contraseña
+            catUsu -> arrayUsu : getContraseña()
+            activate arrayUsu
+            arrayUsu --> catUsu : <<contraUsuario : String>>
+            deactivate arrayUsu
             
-        else objUsuarioEncontrado != null
-            
-            NegCtrl -> objUser : getContraseña()
-            activate objUser
-            objUser --> NegCtrl : << contraAlmacenada : String >>
-            deactivate objUser
-            
-            alt contraseña == contraAlmacenada
-            
-                NegCtrl -> objUser : getTipoUsuario()
-                activate objUser
-                objUser --> NegCtrl : << rol : TipoUsuario >>
-                deactivate objUser
-                
-                NegCtrl --> user : <<NULL>>
-                note right of NegCtrl
-                Inicio de sesión exitoso
+            alt contraUsuario == contraseña
+                note right of catUsu
+                    usuarioEncontrado = listaUsuarios[i]
                 end note
-                
-            else contraseña incorrecta
-                NegCtrl --> user : <<NULL>>
-
+                ' Si todo coincide, retornamos el usuario y cortamos
+                catUsu --> cu : <<usuarioEncontrado : Object Type : Usuario>>
+                break
             end
         end
-        
     end
+    
+    catUsu --> cu : <<response : bool>>
+    deactivate catUsu
+    
+    alt response == false
+        ' Camino Alternativo 3.a (Credenciales incorrectas)
+        cu --> user : <<"Error: Credenciales incorrectas">>
+    else
+        ' Escenario de Éxito: Acceso concedido
+        cu --> user : <<"Acceso concedido">>
+    end
+end
 
-deactivate NegCtrl
+deactivate cu
 @enduml
