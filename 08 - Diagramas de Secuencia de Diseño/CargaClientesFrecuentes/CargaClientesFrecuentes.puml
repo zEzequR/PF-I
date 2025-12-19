@@ -1,5 +1,5 @@
 @startuml
-title Carga de Clientes Frecuentes (Alta)
+title Registrar Cliente Frecuente (Validación de Requisitos)
 
 hide footbox
 
@@ -8,7 +8,7 @@ participant "gc:gestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "clienteActual:Cliente" as cliente_actual
 
-admin -> ctrl : nuevoClienteFrecuente(dni, nombre, mail, numTel, saldo)
+admin -> ctrl : registrarClienteFrecuente(dni: String)
 activate ctrl
 
 ctrl -> cat : buscarCliente(dni)
@@ -24,26 +24,28 @@ loop [para cada c en clientes]
         cat --> ctrl : << c : Cliente >>
         deactivate cat
         
-        ctrl --> admin : << "Error: Cliente ya registrado" >>
+        ctrl -> cliente_actual : getMontoAcumulado()
+        activate cliente_actual
+        cliente_actual --> ctrl : << montoAcumulado : Float >>
+        deactivate cliente_actual
+        
+        alt monto >= 400000
+            ctrl -> cliente_actual : setEsFrecuente(true)
+            activate cliente_actual
+            cliente_actual --> ctrl : << null >> 
+            deactivate cliente_actual
+            
+            ctrl --> admin : << "Éxito: Cliente actualizado a Frecuente" >>
+            
+        else monto < 400000
+            ctrl --> admin : << "Error: No cumple con el monto ($400.000)" >>
+        end
 
     else dni != dniActual
 
         deactivate cat
-
         
-        create participant "nuevoCF:ClienteFrecuente" as nuevo_cf
-        ctrl -> nuevo_cf : create(dni, nombre, mail, numTel, saldo)
-        activate nuevo_cf
-        nuevo_cf --> ctrl : << nuevoCF : ClienteFrecuente >>
-        deactivate nuevo_cf
-
-        ctrl -> cat : agregarCliente(nuevoCF)
-        activate cat
-        
-        cat --> ctrl : << null >>
-        deactivate cat
-        
-        ctrl --> admin : << "Cliente registrado como frecuente" >>
+        ctrl --> admin : << "Error: Cliente no registrado" >>
         
     end
 end
