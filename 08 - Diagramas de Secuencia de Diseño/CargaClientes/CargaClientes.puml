@@ -1,56 +1,51 @@
 @startuml
-title Carga Cliente
+title Registro de Cliente (Alta)
 
 hide footbox
 
-actor "Empleado:Vendedor" as user
-participant "NegocioControlador: Interfaz" as NegCtrl
-participant "List<Cliente>: clientes" as listaClientes
-participant "Cliente: objClient" as cliente
-participant "Cliente: nuevoCliente" as NewClient
+actor "Empleado:Empleado" as emp
+participant "gc:gestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoClientes" as cat
+participant "clienteActual:Cliente" as cliente_actual
 
-user -> NegCtrl : registrarCliente(dni: String, nombre: String, email: String, telefono: String)
-activate NegCtrl
+emp -> ctrl : nuevoCliente(dni: String, nombre: String, email: String, numTel: String)
+activate ctrl
 
-    alt formato email o telefono invalido
-        
-        NegCtrl --> user : <<NULL>>
-        
-    else datos válidos
+ctrl -> cat : buscarCliente(dni)
+activate cat
+
+loop [para cada c en clientes]
+    cat -> cliente_actual : getDni()
+    activate cliente_actual
+    cliente_actual --> cat : << dniActual : String >>
+    deactivate cliente_actual
     
-        NegCtrl -> listaClientes : buscarCliente(dni: String)
-        activate listaClientes
+    alt dni == dniActual
+        cat --> ctrl : << c : Cliente >>
+        deactivate cat
         
-        loop [para cada objClient en clientes]
-            listaClientes -> cliente : getDNI()
-            activate cliente
-            cliente --> listaClientes : << dniActual : String >>
-            deactivate cliente
-            
-            alt dni == dniActual
-                listaClientes --> NegCtrl : << objClient : Cliente >>
-            end
-        end
-        deactivate listaClientes
+        ctrl --> emp : << "Error: Cliente ya registrado" >>
 
-        alt cliente encontrado
-            NegCtrl --> user : <<NULL>>
-            
-        else cliente no encontrado
-            NegCtrl -> NewClient ** : crearCliente(dni: String, nombre: String, email: String, telefono: String)
-            activate NewClient
-            NewClient --> NegCtrl : << nuevoCliente : Cliente >>
-            deactivate NewClient
+    else dni != dniActual
 
-            NegCtrl -> listaClientes : agregarCliente(nuevoCliente: Cliente)
-            activate listaClientes
-            listaClientes --> NegCtrl : << estado : Boolean >>
-            deactivate listaClientes
+        deactivate cat
 
-            NegCtrl --> user : <<NULL>>
-        end
+        create participant "nuevoCliente:Cliente" as nuevo_cliente
+        ctrl -> nuevo_cliente : registrarCliente(dni: String, nombre: String, email: String, numTel: String)
+        activate nuevo_cliente
+        nuevo_cliente --> ctrl : << nuevoCliente : Cliente >>
+        deactivate nuevo_cliente
+
+        ctrl -> cat : agregarCliente(nuevoCliente)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> emp : << "Cliente registrado correctamente" >>
         
     end
+end
 
-deactivate NegCtrl
+deactivate ctrl
 @enduml

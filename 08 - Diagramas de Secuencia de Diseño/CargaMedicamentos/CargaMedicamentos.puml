@@ -1,9 +1,59 @@
 @startuml
+<<<<<<< Updated upstream
+title Carga de Medicamentos (Alta)
+=======
 title Carga de Medicamentos
+>>>>>>> Stashed changes
 
 hide footbox
 
 actor "Administrador:Admin" as admin
+<<<<<<< Updated upstream
+participant "gc:gestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoMedicamentos" as cat
+participant "medActual:Medicamento" as med_actual
+participant "nuevoMed:Medicamento" as nuevo_med
+
+admin -> ctrl : nuevoMedicamento(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
+activate ctrl
+
+ctrl -> cat : buscarMedicamento(codigoBarra)
+activate cat
+
+loop [para cada m en medicamentos]
+    cat -> med_actual : getCodigoBarra()
+    activate med_actual
+    med_actual --> cat : << codActual : String >>
+    deactivate med_actual
+    
+    alt codBarra == codActual
+        cat --> ctrl : << m : Medicamento >>
+        deactivate cat
+        
+        ctrl --> admin : << "Error: Medicamento ya registrado" >>
+
+    else codBarra != codActual
+
+        deactivate cat
+        
+        ctrl -> nuevo_med : crearMedicamento(codigoBarra, nombre, controlado, drogueriaNombre, precioUnitario, stock)
+        activate nuevo_med
+        nuevo_med --> ctrl : << nuevoMed : Medicamento >>
+        deactivate nuevo_med
+
+        ctrl -> cat : agregarMedicamento(nuevoMed)
+        activate cat
+        
+        cat --> ctrl : << null >>
+        deactivate cat
+        
+        ctrl --> admin : << "Éxito: Medicamento guardado" >>
+        
+    end
+end
+
+deactivate ctrl
+=======
 participant "NegCtrl: Interfaz" as NegCtrl
 
 participant "List<Medicamento>: objListaMedicamentos" as lista
@@ -53,4 +103,5 @@ activate NegCtrl
     end
 
 deactivate NegCtrl
+>>>>>>> Stashed changes
 @enduml
