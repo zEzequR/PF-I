@@ -1,14 +1,14 @@
 @startuml
-title Registrar Cliente Frecuente (Validación de Requisitos)
+title Carga de clientes frecuentes 
 
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:gestionControlador" as ctrl
+participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "clienteActual:Cliente" as cliente_actual
 
-admin -> ctrl : registrarClienteFrecuente(dni: String)
+admin -> ctrl : registrarCliente(dni: String)
 activate ctrl
 
 ctrl -> cat : buscarCliente(dni)
@@ -26,7 +26,7 @@ loop [para cada c en clientes]
         
         ctrl -> cliente_actual : getMontoAcumulado()
         activate cliente_actual
-        cliente_actual --> ctrl : << montoAcumulado : Float >>
+        cliente_actual --> ctrl : << monto : Float >>
         deactivate cliente_actual
         
         alt monto >= 400000
@@ -42,11 +42,8 @@ loop [para cada c en clientes]
         end
 
     else dni != dniActual
-
         deactivate cat
-        
         ctrl --> admin : << "Error: Cliente no registrado" >>
-        
     end
 end
 

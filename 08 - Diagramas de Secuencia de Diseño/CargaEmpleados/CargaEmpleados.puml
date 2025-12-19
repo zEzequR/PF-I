@@ -1,15 +1,14 @@
 @startuml
-title Carga de Nuevos Empleados (Alta)
+title Carga de nuevos empleados
 
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "cu:controladorUsuario" as ctrl
+participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
 participant "usuActual:Usuario" as usu_actual
-participant "nuevoUsu:Usuario" as nuevo_usu
 
-admin -> ctrl : nuevoEmpleado(nombreUsuario, contraseña, tipoUsuario)
+admin -> ctrl : registrarEmpleado(nombreUsuario: String, contraseña: String, tipoUsuario: String)
 activate ctrl
 
 ctrl -> cat : buscarUsuario(nombreUsuario)
@@ -24,26 +23,23 @@ loop [para cada u en usuarios]
     alt nombreUsuario == nombreActual
         cat --> ctrl : << u : Usuario >>
         deactivate cat
-        
-        ctrl --> admin : << "Error: Empleado ya registrado" >>
+        ctrl --> admin : << "Error: Usuario ya registrado" >>
 
     else nombreUsuario != nombreActual
-
         deactivate cat
         
-        ctrl -> nuevo_usu : crearNuevoUsuario(nombreUsuario, contraseña, tipoUsuario)
+        create participant "nuevoUsu:Usuario" as nuevo_usu
+        ctrl -> nuevo_usu : CrearUsuario(nombreUsuario: String, contraseña: String, tipoUsuario: String)
         activate nuevo_usu
         nuevo_usu --> ctrl : << nuevoUsu : Usuario >>
         deactivate nuevo_usu
 
         ctrl -> cat : agregarUsuario(nuevoUsu)
         activate cat
-        
         cat --> ctrl : << null >>
         deactivate cat
         
-        ctrl --> admin : << "Éxito: Empleado registrado" >>
-        
+        ctrl --> admin : << "Éxito: Empleado/Usuario registrado" >>
     end
 end
 

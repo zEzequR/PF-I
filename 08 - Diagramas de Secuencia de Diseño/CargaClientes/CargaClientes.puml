@@ -1,14 +1,14 @@
 @startuml
-title Registro de Cliente
+title Registro de cliente
 
 hide footbox
 
 actor "Empleado:Empleado" as emp
-participant "gc:gestionControlador" as ctrl
+participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "clienteActual:Cliente" as cliente_actual
 
-emp -> ctrl : nuevoCliente(dni: String, nombre: String, email: String, numTel: String)
+emp -> ctrl : registrarCliente(dni: String, nombre: String, email: String, tel: String, dir: String, tipo: String)
 activate ctrl
 
 ctrl -> cat : buscarCliente(dni)
@@ -30,13 +30,13 @@ loop [para cada c en clientes]
 
         deactivate cat
 
-        create participant "nuevoCliente:Cliente" as nuevo_cliente
-        ctrl -> nuevo_cliente : registrarCliente(dni: String, nombre: String, email: String, numTel: String)
-        activate nuevo_cliente
-        nuevo_cliente --> ctrl : << nuevoCliente : Cliente >>
-        deactivate nuevo_cliente
+        create participant "nuevoCli:Cliente" as nuevo_cli
+        ctrl -> nuevo_cli : CrearCliente(dni: String, nombre: String, email: String, tel: String, dir: String, tipo: String)
+        activate nuevo_cli
+        nuevo_cli --> ctrl : << nuevoCli : Cliente >>
+        deactivate nuevo_cli
 
-        ctrl -> cat : agregarCliente(nuevoCliente)
+        ctrl -> cat : registrarCliente(nuevoCli)
         activate cat
         
         cat --> ctrl : << null >>
