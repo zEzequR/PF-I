@@ -19,7 +19,7 @@
 - Precio unitario
 - Stock
 >5)El administrador confirma la modificación.
-6)El sistema elimina el registro del medicamento de la base de datos.
+6)El sistema actualiza el medicamento en la base de datos.
 
 # Camino alternativo:
 
