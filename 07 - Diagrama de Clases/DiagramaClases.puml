@@ -276,7 +276,7 @@ class Venta {
     - estadoVenta
 
     + CrearVenta(nro, cliente, usuario, fecha)
-    + agregarDetalle(codigoBarra, cantidad)
+    + agregarDetalle(medicamento, cantidad)
     + eliminarDetallePorCodigo(codigoBarra)
     + modificarCantidadDetalle(codigoBarra, nuevaCantidad)
     + calcularSubtotal(cantidad, precioUnitario)
@@ -506,8 +506,7 @@ interface ServicioObrasSociales {
 }
 
 interface ServicioPagos {
-    + procesarPago(nroVta, tipoPago, monto, cuotas)
-    + validarSaldo()
+    + procesarPago(pago)
     + confirmarTransaccion(numTransaccion)
 }
 
@@ -516,16 +515,16 @@ dataclass CatalogoMedicamentos <<Singleton>> {
     - listaMedicamentos: List<Medicamento>
     + agregarMedicamento(medicamento)
     + eliminarMedicamento(medicamento)
-    + buscarMedicamento(codigoBarra) : Medicamento
-    + buscarPorNombre(nombre) : List<Medicamento>
-    + verificarExistencia(codigoBarra) : Boolean
+    + buscarMedicamento(codigoBarra)
+    + buscarPorNombre(nombre)
+    + verificarExistencia(codigoBarra)
 }
 
 dataclass CatalogoClientes <<Singleton>> {
     - listaClientes: List<Cliente>
     + registrarCliente(cliente)
-    + buscarCliente(dni) : Cliente
-    + existeCliente(dni) : Boolean
+    + buscarCliente(dni)
+    + existeCliente(dni)
 }
 
 dataclass CatalogoVentas <<Singleton>> {
@@ -553,7 +552,7 @@ dataclass CatalogoProveedores <<Singleton>> {
 
 dataclass CatalogoUsuarios <<Singleton>> {
     - listaUsuarios: List<Usuario>
-    + autenticarUsuario(user, pass) : Usuario
+    + autenticarUsuario(user, pass)
     + agregarUsuario(usuario)
     + eliminarUsuario(usuario)
     + buscarUsuario(user)
