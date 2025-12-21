@@ -83,7 +83,6 @@ class Empleado {
 }
 
 Empleado -- Usuario
-Empleado -- Asistencia
 
 enum TipoUsuario {
     Administrador
@@ -99,7 +98,6 @@ class Asistencia {
     - estado
 
     + CrearAsistencia(usuario, fecha, horaEntrada)
-    + registrarAsistencia(nombreUsuario, fecha, horaEntrada, horaSalida, estado)
     + getFecha()
     + setFecha(fecha)
     + getHoraEntrada()
@@ -462,8 +460,11 @@ class GestionControlador {
     ' Empleado: 
     + registrarEmpleado(nombre, dni, email, direccion, legajo, sueldo, usuario, contraseña, rol)
     
+    ' Asistencia
+    + registrarAsistencia(nombreUsuario, fecha, horaEntrada, horaSalida, estado)
+
     ' Medicamento:
-    + registrarMedicamento(codBarra, nombre, precioUnitario, precioDrog, stock, stockMinimo, drogueriaNombre, esControlado, cadenaFrio)
+    + registrarMedicamento(codBarra, nombre, precioUnitario, precioDrog, stock, stockMinimo, drogueriaNombre, esControlado)
     + modificarMedicamento(codBarra, precioUnitario, stock, stockMinimo)
     + eliminarMedicamento(codBarra)
 
@@ -558,6 +559,11 @@ dataclass CatalogoUsuarios <<Singleton>> {
     + buscarUsuario(user)
 }
 
+dataclass CatalogoAsistencia <<Singleton>>{
+    - listaAsistencia: List<Asistencia>
+    + agregarAsistencia(nuevaAsis)
+}
+
 ' ----------------- ASOCIACIONES (REVISADAS) -----------------
 
 ' 1. Relaciones de Contenedor (Catálogo TIENE Entidades)
@@ -567,6 +573,7 @@ CatalogoClientes o-- Cliente
 CatalogoVentas o-- Venta
 CatalogoUsuarios o-- Usuario
 CatalogoDescuentos o-- TipoDescuento
+CatalogoAsistencia o-- Asistencia
 
 ' 2. Relaciones Controlador -> Catálogo (El cerebro usa la memoria)
 ControladorUsuario --> CatalogoUsuarios
@@ -574,6 +581,7 @@ GestionControlador --> CatalogoMedicamentos
 GestionControlador --> CatalogoProveedores
 GestionControlador --> CatalogoClientes
 GestionControlador --> CatalogoDescuentos
+GestionControlador --> CatalogoAsistencia
 
 ControladorVentas --> CatalogoVentas
 ControladorVentas --> CatalogoMedicamentos
