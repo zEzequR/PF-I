@@ -1,60 +1,57 @@
 @startuml
-title Asistencia Empleado
+title Registro de Asistencia
 
 hide footbox
 
-actor "Administrador: Admin" as admin
-participant "NegocioControlador: Interfaz" as NegCtrl
-participant "List<Empleado>: empleados" as listaEmpls
-participant "Empleado: objEmpl" as empl
-participant "Asistencia: nuevaAsistencia" as asis
+actor "Administrador:Admin" as admin
+participant "gc:GestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
+participant "usuActual:Usuario" as usu_actual
+participant "catAsis:<<Singleton>>\nCatalogoAsistencias" as cat_asis
 
-admin -> NegCtrl : solicitarListaEmpleados()
-activate NegCtrl
+admin -> ctrl : registrarAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
+activate ctrl
 
-    NegCtrl -> listaEmpls : getEmpleados()
-    activate listaEmpls
-    listaEmpls --> NegCtrl : << listaCompleta : List<Empleado> >>
-    deactivate listaEmpls
+alt legajo == null OR fecha == null OR estado == null
+    ctrl --> admin : << "Error: Complete todos los campos requeridos" >>
 
-NegCtrl --> admin : <<NULL>>
-deactivate NegCtrl
-
-admin -> NegCtrl : registrarAsistencia(dni: String, legajo: String, fecha: Date, hEntrada: Time, hSalida: Time, estado: EstadoAsistencia)
-activate NegCtrl
-
-    NegCtrl -> listaEmpls : buscarEmpleado(dni: String, legajo: String)
-    activate listaEmpls
+else datosCompletos
     
-    loop [para cada e en empleados]
-        listaEmpls -> empl : getDNI()
-        activate empl
-        empl --> listaEmpls : << dniActual : String >>
-        deactivate empl
+    ctrl -> cat : buscarUsuario(legajo)
+    activate cat
+
+    loop [para cada u en usuarios]
+        cat -> usu_actual : getLegajo()
+        activate usu_actual
+        usu_actual --> cat : << legajoActual : String >>
+        deactivate usu_actual
         
-        listaEmpls -> empl : getLegajo()
-        activate empl
-        empl --> listaEmpls : << legajoActual : String >>
-        deactivate empl
-        
-        alt (dni == dniActual) || (legajo == legajoActual)
-            listaEmpls --> NegCtrl : << objEmpl : Empleado >>
+        alt legajo == legajoActual
+            cat --> ctrl : << usuActual : Usuario >>
+            deactivate cat
+            
+            create participant "nuevaAsis:Asistencia" as nueva_asis
+            ctrl -> nueva_asis : CrearAsistencia(fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
+            activate nueva_asis
+            nueva_asis --> ctrl : << nuevaAsis : Asistencia >>
+            deactivate nueva_asis
+            
+            ctrl -> cat_asis : agregarAsistencia(nuevaAsis)
+            activate cat_asis
+            cat_asis --> ctrl : << null >>
+            deactivate cat_asis
+            
+            ctrl --> admin : << "Éxito: Asistencia registrada" >>
+
+        else legajo != legajoActual
+
+            deactivate cat
+
+            ctrl --> admin : << "Error: Empleado no encontrado" >>
+            
         end
     end
-    deactivate listaEmpls
+end
 
-    NegCtrl -> asis ** : crearAsistencia(fecha: Date, hEntrada: Time, hSalida: Time, estado: EstadoAsistencia)
-    activate asis
-    asis --> NegCtrl : << nuevaAsistencia : Asistencia >>
-    deactivate asis
-
-    NegCtrl -> empl : agregarAsistencia(nuevaAsistencia: Asistencia)
-    activate empl
-
-    empl --> NegCtrl : << estado : Boolean >>
-    deactivate empl
-
-NegCtrl --> admin : <<NULL>>
-deactivate NegCtrl
-
+deactivate ctrl
 @enduml
