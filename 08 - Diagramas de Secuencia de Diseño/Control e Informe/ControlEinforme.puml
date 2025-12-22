@@ -1,147 +1,86 @@
 @startuml
-title Control e Informe: Reportes y Pedidos
+title Control e Informe
 
 hide footbox
 
 actor "Administrador" as admin
-participant "NegocioControlador" as NegCtrl
-participant "List<Venta>: catalogoVentas" as listaVtas
-participant "Venta: v" as vta
-participant "List<Medicamento>: catalogoMeds" as listaMed
-participant "Medicamento: m" as med
-participant "List<Drogueria>: catalogoDrogs" as listaDrogs
-participant "Drogueria: d" as drog
-participant "ServicioExterno" as srv
+participant "gc:GestionControlador" as ctrl
+participant "catV:<<Singleton>>\nCatalogoVentas" as cat_ventas
+participant "v:Venta" as venta 
+participant "catM:<<Singleton>>\nCatalogoMedicamentos" as cat_med
+participant "m:Medicamento" as med
+participant "gen:GeneradorReportes" as gen
+participant "sc:ServicioCorreos" as srv_mail
 
-admin -> NegCtrl : accederModuloControl()
-activate NegCtrl
-NegCtrl --> admin : << Vista Control >>
-deactivate NegCtrl
+admin -> ctrl : solicitarInforme(tipoInforme: String, filtro: String)
+activate ctrl
 
-' --- INICIO DE SELECCIÓN ---
-admin -> NegCtrl : seleccionarReporte(tipo: String, filtros: Map)
-activate NegCtrl
-
-alt tipo == "Informe Ventas"
-
-    NegCtrl -> listaVtas : filtrarVentas(filtros)
-    activate listaVtas
+alt tipo == "VENTAS"
+    ctrl -> cat_ventas : obtenerVentasPorFecha(fecha: String)
+    activate cat_ventas
     
-    loop para cada v en catalogoVentas
-        listaVtas -> vta : getFecha()
-        activate vta
-        vta --> listaVtas : << date : fechaVenta >>
-        deactivate vta
-        
-        ' La lógica de filtrado es interna en el bucle
+    loop Para cada venta en la lista
+        cat_ventas -> venta : getFecha()
+        activate venta
+        venta --> cat_ventas : << fechaRegistrada: Date >>
+        deactivate venta
     end
     
-    listaVtas --> NegCtrl : << List<Ventas> : listaVentasFiltrada >>
-    deactivate listaVtas
+    alt Sin Resultados
+        cat_ventas --> ctrl : << null >>
+        ctrl --> admin : << "Sin resultados" >>
+    else Lista Encontrada
+        cat_ventas --> ctrl : << listaVentas: List<Venta> >>
+        ctrl --> admin : << listaVentas: List<Venta> >>
+    end
+    deactivate cat_ventas
 
-    NegCtrl --> admin : << Muestra Tabla >>
-
-    ' --- EXPORTAR ---
-    admin -> NegCtrl : exportarInforme("PDF")
+else tipo == "STOCK"
+    ctrl -> cat_med : buscarMedicamentos(filtro: String)
+    activate cat_med
     
-    NegCtrl -> srv : generarPDFVentas(listaVentasFiltrada)
-    activate srv
-    srv --> NegCtrl : << File : archivoPDF >>
-    deactivate srv
-
-
-else tipo == "Control Stock / Pedido"
-
-    ' --- BUSCAR BAJO STOCK ---
-    NegCtrl -> listaMed : obtenerBajoStock()
-    activate listaMed
-    
-    loop para cada m en catalogoMeds
-        listaMed -> med : getStock()
+    loop Para cada medicamento en la lista
+        cat_med -> med : getNombre()
         activate med
-        med --> listaMed : << Int : stockActual >>
-        deactivate med
-
-        listaMed -> med : getStockMinimo()
-        activate med
-        med --> listaMed : << Int : stockMin >>
+        med --> cat_med : << nombre: String >>
         deactivate med
     end
     
-    listaMed --> NegCtrl : << List<Medicamento> : listaReposicion >>
-    deactivate listaMed
-
-    NegCtrl --> admin : << Muestra Tabla Bajo Stock >>
-
-    ' --- PROCESO DE PEDIDO ---
-    admin -> NegCtrl : confirmarPedido(items, nombreDrogueria)
-    
-    ' 1. BUSCAR PROVEEDOR
-    NegCtrl -> listaDrogs : buscarDrogueria(nombreDrogueria)
-    activate listaDrogs
-    
-    loop para cada d en catalogoDrogs
-        listaDrogs -> drog : getNombre()
-        activate drog
-        drog --> listaDrogs : << String : nombreActual >>
-        deactivate drog
-        
-        alt nombreActual == nombreDrogueria
-             listaDrogs --> NegCtrl : << Object :objDrog >>
-             break
-        end
+    alt Sin Resultados
+        cat_med --> ctrl : << null >>
+        ctrl --> admin : << "Sin resultados" >>
+    else Lista Encontrada
+        cat_med --> ctrl : << listaMed: List<Medicamento> >>
+        ctrl --> admin : << listaMed: List<Medicamento> >>
     end
-    deactivate listaDrogs
-
-    ' 2. OBTENER DATOS
-    NegCtrl -> drog : getCanalPreferido()
-    activate drog
-    drog --> NegCtrl : << canal >>
-    deactivate drog
-    
-    NegCtrl -> drog : getEmail()
-    activate drog
-    drog --> NegCtrl : << email >>
-    deactivate drog
-    
-    NegCtrl -> drog : getTelefono()
-    activate drog
-    drog --> NegCtrl : << telefono >>
-    deactivate drog
-
-    ' 3. GENERAR
-    NegCtrl -> srv : generarPDFPedido(items, objDrog)
-    activate srv
-    srv --> NegCtrl : << pdfPedido >>
-    deactivate srv
-
-    ' 4. ENVIAR SEGUN CANAL
-    alt canal == "WhatsApp"
-        NegCtrl -> srv : enviarWhatsApp(pdfPedido, telefono)
-        activate srv
-        srv --> NegCtrl : << resultadoEnvio >>
-        deactivate srv
-        
-    else canal == "Email"
-        NegCtrl -> srv : enviarCorreo(pdfPedido, email)
-        activate srv
-        srv --> NegCtrl : << resultadoEnvio >>
-        deactivate srv
-
-    end
-
-    ' 5. VALIDAR RESULTADO
-    alt resultadoEnvio == FALSE
-        NegCtrl -> srv : guardarArchivoLocal(pdfPedido, rutaBackup)
-        activate srv
-        srv --> NegCtrl : << OK >>
-        deactivate srv
-        NegCtrl --> admin : << Error envio. Guardado Local >>
-    else
-        NegCtrl --> admin : << Pedido Enviado >>
-    end
-
+    deactivate cat_med
 end
 
-deactivate NegCtrl
+opt El administrador decide exportar
+    admin -> ctrl : procesarInforme(listaDatos: List, accion: String)
+
+    ctrl -> gen : generarPDF(listaDatos: List)
+    activate gen
+    gen --> ctrl : << archivoGenerado: File >>
+    deactivate gen
+
+    alt accion == "GUARDAR"
+        ctrl --> admin : << Descarga (archivoGenerado) >>
+        
+    else accion == "ENVIAR_PROVEEDOR"
+        ctrl -> srv_mail : enviarCorreo(archivoPdf: File, emailProv: String)
+        activate srv_mail
+        
+        alt Error envio
+            srv_mail --> ctrl : << false >>
+            ctrl --> admin : << "Error: Falló el envío" >>
+        else Envio Exitoso
+            srv_mail --> ctrl : << true >>
+            ctrl --> admin : << "Éxito: Informe enviado" >>
+        end
+        deactivate srv_mail
+    end
+end
+
+deactivate ctrl
 @enduml
