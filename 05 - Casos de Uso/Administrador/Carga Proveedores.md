@@ -1,12 +1,12 @@
 # Caso de uso: Carga de proveedores
->**Actores primarios:** Administrador.
+**Actores primarios:** Administrador.
 **Actores secundarios:** Base de datos.
 
 # Precondiciones: 
 - El administrador debe haber iniciado sesión en el sistema.
 
 # Camino básico:
-> 1)El administrador accede de Proveedores.
+1)El administrador accede de Proveedores.
 2)El administrador ingresa los datos del proveedor:
 
 - nombre
@@ -28,8 +28,8 @@
 
 # Escenario de éxito:
 
-> El proveedor queda registrado correctamente en la base de datos y ya se dispone para enviar detalles de pedidos.
+ El proveedor queda registrado correctamente en la base de datos y ya se dispone para enviar detalles de pedidos.
 
 # Escenario de fracaso:
 
-> El laboratorio no se puede registrar por error de conexión
+ El laboratorio no se puede registrar por error de conexión
