@@ -1,6 +1,6 @@
 # Caso de uso: Carga de medicamentos
 
->**Actores primarios:** Administrador
+**Actores primarios:** Administrador
 **Actores secundarios:** Base de datos
 
 # Precondiciones: 
@@ -24,13 +24,13 @@
 
 # Camino alternativo:
 
->5.a) Los campos obligatorios no están completos y con formato incorrecto.
+5.a) Los campos obligatorios no están completos y con formato incorrecto.
 7.a) Si hay un error de conexión con la base de datos, el sistema muestra el mensaje: “Error al guardar. Intente nuevamente más tarde”.
 
 # Escenario de éxito:
 
->El medicamento queda registrado correctamente en la base de datos y queda disponible para su venta.
+El medicamento queda registrado correctamente en la base de datos y queda disponible para su venta.
 
 # Escenario de fracaso:
 
->El sistema no guarda el medicamento por datos incompletos o por fallo en la conexión con la base de datos.
+El sistema no guarda el medicamento por datos incompletos o por fallo en la conexión con la base de datos.
