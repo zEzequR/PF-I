@@ -1,6 +1,5 @@
 @startuml CLASES
 left to right direction
-skinparam classAttributeIconSize 0
 skinparam linetype ortho
 
 ' ----------------- PERSONAS -----------------
@@ -442,6 +441,10 @@ Pedido -- Drogueria
 Pedido -- EstadoPedido
 DetallePedido ..> Medicamento
 
+class GeneradorReportes {
+    + generarPDF(listaDatos)
+}
+
 ' ----------------- CONTROLADORES / SERVICIOS -----------------
 class ControladorUsuario {
     ' Gestiona el acceso
@@ -479,6 +482,10 @@ class GestionControlador {
     
     ' Pedidos:
     + generarPedidoProveedor(nombreProveedor, listaProductos)
+
+    ' Reportes:
+    + solicitarInforme(tipo, filtro)
+    + procesarInforme(listaDatos, accion)
 }
 
 class ControladorVentas {
@@ -498,6 +505,7 @@ interface ServicioCorreos {
     ' Solo se encarga de la comunicación
     + enviarPedidoPDF(pedido, emailProveedor)
     + enviarTicketDigital(ticket, emailCliente, numtel)
+    + enviarCorreo(archivoPdf, emailDestino)
 }
 
 interface ServicioObrasSociales {
@@ -519,6 +527,7 @@ dataclass CatalogoMedicamentos <<Singleton>> {
     + buscarMedicamento(codigoBarra)
     + buscarPorNombre(nombre)
     + verificarExistencia(codigoBarra)
+    + buscarMedicamentos(filtro)
 }
 
 dataclass CatalogoClientes <<Singleton>> {
@@ -593,6 +602,7 @@ ControladorVentas ..> ServicioPagos
 ControladorVentas ..> ServicioObrasSociales
 ControladorVentas ..> ServicioCorreos
 GestionControlador ..> ServicioCorreos
+GestionControlador ..> GeneradorReportes
 
 ' 4. Relaciones de las Entidades y Servicios (Detalles)
 ServicioPagos ..> Pago
