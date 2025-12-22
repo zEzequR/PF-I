@@ -15,7 +15,9 @@
 
 3.a) El administrador no puede eliminar el descuento porque la base de datos no puede obtener los registros para mostrar en la lista. 4.a) El sistema verifica que el tipo de descuento no esté asociado a ventas históricas para no romper la integridad de los informes. 5.a) Si hay un error de conexión con la base de datos, el sistema muestra el mensaje: “Error al eliminar. Intente nuevamente más tarde”.
 
-# **Escenario de éxito:** El tipo de descuento se elimina (o desactiva) correctamente y deja de estar disponible en el sistema para nuevas ventas.
+# **Escenario de éxito:**
+El tipo de descuento se elimina (o desactiva) correctamente y deja de estar disponible en el sistema para nuevas ventas.
 
-# **Escenario de fracaso:** El tipo de descuento no se elimina porque está asociado a ventas previas, hubo un error de conexión en la base de datos y el administrador no puede seleccionar ni eliminar el registro.
+# **Escenario de fracaso:** 
+El tipo de descuento no se elimina porque está asociado a ventas previas, hubo un error de conexión en la base de datos y el administrador no puede seleccionar ni eliminar el registro.
 
