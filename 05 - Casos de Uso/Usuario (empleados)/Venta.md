@@ -1,7 +1,7 @@
 # Caso de uso: Venta
 
 
->**Actores primarios:** Empleado y Administrador.
+**Actores primarios:** Empleado y Administrador.
 **Actores secundarios:** Base de datos, Cliente, Ticketera y Posnet, Sistema de recetas / obra social y Sistema de correos
 
 # Precondiciones:
@@ -55,8 +55,8 @@
 
 # Escenario de éxito:
 
->La venta se registra correctamente, el pago queda confirmado, el stock se actualiza y el ticket se imprime o se envía por mail/WhatsApp si la ticketera falló y se obtuvo contacto del cliente.
+La venta se registra correctamente, el pago queda confirmado, el stock se actualiza y el ticket se imprime o se envía por mail/WhatsApp si la ticketera falló y se obtuvo contacto del cliente.
 
 # Escenario de fracaso:
 
->La venta no pudo registrarse debido a: validación fallida de receta o afiliación (cuando corresponde), pago rechazado, o error crítico en la base de datos. Si la impresión falla después del cobro y no se obtuvo contacto del cliente, la venta queda registrada y se documenta la incidencia y se notifica al administrador para el seguimiento.
+La venta no pudo registrarse debido a: validación fallida de receta o afiliación (cuando corresponde), pago rechazado, o error crítico en la base de datos. Si la impresión falla después del cobro y no se obtuvo contacto del cliente, la venta queda registrada y se documenta la incidencia y se notifica al administrador para el seguimiento.
