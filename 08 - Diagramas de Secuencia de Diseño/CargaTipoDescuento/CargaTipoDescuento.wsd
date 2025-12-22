@@ -1,0 +1,37 @@
+@startuml
+title Carga de Tipo de Descuento
+hide footbox
+
+actor "Administrador:Admin" as admin
+participant "gc:GestionControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoDescuentos" as cat
+participant "nuevoTD:TipoDescuento" as td
+
+admin -> ctrl : registrarTipoDescuento(motivo: String, porcentaje: Float, fechaInicio: Date, fechaFin: Date)
+activate ctrl
+
+ctrl -> cat : buscarDescuento(motivo)
+activate cat
+cat --> ctrl : «descuentoEncontrado : TipoDescuento»
+deactivate cat
+
+alt descuentoEncontrado != null
+    
+    ctrl --> admin : «"Error: Tipo de descuento ya registrado"»
+
+else descuentoEncontrado == null
+    
+    create td
+    ctrl -> td : CrearTipoDescuento(motivo: String, porcentaje: Float, fechaInicio: Date, fechaFin: Date)
+    
+    ctrl -> cat : agregarDescuento(nuevoTD)
+    activate cat
+    cat --> ctrl : «null»
+    deactivate cat
+    
+    ctrl --> admin : «"Éxito: Descuento guardado"»
+
+end
+
+deactivate ctrl
+@enduml
