@@ -1,188 +1,140 @@
 @startuml
+!pragma teoz true
+hide footbox
 title Venta Sin Receta
 
-hide footbox
+actor "emp:Empleado" as emp
+participant "cv:ControladorVentas" as cv
+participant "cc:<<Singleton>>\nCatalogoClientes" as cc
+participant "listaC[i]:Cliente" as itemCli
+participant "cli:Cliente" as cli
+participant "vta:Venta" as vta
+participant "cm:<<Singleton>>\nCatalogoMedicamentos" as cm
+participant "listaM[j]:Medicamento" as itemMed
+participant "med:Medicamento" as med
+participant "det:DetalleVenta" as det
+participant "«multiobjeto»\ndetalles:DetalleVenta" as lineas
 
-actor "Empleado" as emp
-participant "Interfaz: NegCtrl" as NegCtrl
-participant "List<Cliente>: CatalogoClientes" as listaCli
-participant "Cliente: objCliente" as cli
-participant "Venta: objVenta" as venta
-participant "List<TipoDescuento>: CatalogoDescuentos" as listaDesc
-participant "TipoDescuento: descObj" as descObj
-participant "List<Medicamento>: CatalogoMedicamentos" as listaMed
-participant "Medicamento: objMed" as med
-participant "DetalleVenta: det" as det
+' =================================================================
+' 1. INICIO Y CREACIÓN DE VENTA
+' =================================================================
+emp -> cv : iniciarNuevaVenta(dniCliente : INT)
+activate cv
 
-emp -> NegCtrl : iniciarNuevaVenta(dniCliente: String)
-activate NegCtrl
-
-    NegCtrl -> listaCli : buscarCliente(dniCliente: String)
-    activate listaCli
-    loop para cada c en lista
-        listaCli -> cli : getDNI()
-        activate cli
-        cli --> listaCli : << dniActual: String >>
-        deactivate cli
-        
-        alt dniCliente == dniActual
-            listaCli --> NegCtrl : << objClienteEncontrado: Cliente >>
-        end
-    end
-    deactivate listaCli
-
-    NegCtrl -> venta ** : create(nroVta: Int, dniCliente: String, usuarioActual: String)
-    activate venta
-    venta --> NegCtrl : << objVenta: Venta >>
-    deactivate venta
-    
-    NegCtrl -> venta : setFechaVenta(fecha: DateTime)
-    NegCtrl -> venta : setTipoVta(tipo: String)
-    NegCtrl -> venta : setEstadoVenta(estado: String)
-    activate venta
-    deactivate venta
-
-    alt objClienteEncontrado != null
-        NegCtrl -> cli : getMontoAcumulado()
-        activate cli
-        cli --> NegCtrl : << MontoAcumulado: Float >>
-        deactivate cli
-
-        alt MontoAcumulado > -80000.0
-            NegCtrl -> venta : setClienteDNI(dniCliente: String) 
-            ' (O setCliente objeto si decidimos agregarlo a la clase Venta)
-            
-            NegCtrl -> cli : esFrecuente(dniCliente: String)
-            activate cli
-            cli --> NegCtrl : << esFrecuente: Boolean >>
-            deactivate cli
-
-            alt esFrecuente == true
-                note right of NegCtrl
-                    Se aplicará SOLO si paga en Efectivo (Regla de Negocio).
-                end note
-                
-                NegCtrl -> listaDesc : buscarDescuento(motivo: String)
-                activate listaDesc
-                loop búsqueda...
-                    listaDesc -> descObj : getMotivo()
-                    activate descObj
-                    descObj --> listaDesc : << motivo: String >>
-                    deactivate descObj
-                    
-                    alt motivo == "Cliente Frecuente"
-                        listaDesc --> NegCtrl : << descObj: TipoDescuento >>
-                    end
-                end
-                deactivate listaDesc
-
-                alt descObj != null
-                    NegCtrl -> descObj : getPorcentaje()
-                    activate descObj
-                    descObj --> NegCtrl : << porcentaje: Float >>
-                    deactivate descObj
-                    
-                    ' Guardamos el porcentaje potencial en la venta
-                    NegCtrl -> venta : aplicarDescuentoVenta(porcentaje: Float) 
-                    activate venta
-                    deactivate venta
-                end
-            end
-        else Deuda Excesiva
-             NegCtrl --> emp : <<Error: Deuda > $80.000>>
-             NegCtrl -> venta : cancelarVta()
-             NegCtrl -> venta : setEstadoVenta("Cancelado")
-        end
-    else Cliente Anónimo
-        note right of NegCtrl: Se vende como cliente Anónimo <br> (Ya precargado en el sistema)
-    end
-
-    NegCtrl --> emp : <<Venta Iniciada>>
-deactivate NegCtrl
-
-loop Mientras carga productos
-    
-    alt AGREGAR PRODUCTO
-        emp -> NegCtrl : agregarProducto(codBarra: String, cantidad: Int)
-        activate NegCtrl
-        
-        NegCtrl -> listaMed : obtenerDisponibles(filtros: String)
-        activate listaMed
-        loop búsqueda
-             listaMed -> med : getCodigoBarra()
-             activate med
-             med --> listaMed : << codigo: String >>
-             deactivate med
-             alt codigo == codBarra
-                listaMed --> NegCtrl : << objMedEncontrado: Medicamento >>
-             end
-        end
-        deactivate listaMed
-
-        alt objMedEncontrado != null
-             
-             NegCtrl -> med : getRequiereReceta()
-             activate med
-             med --> NegCtrl : << requiereReceta: Boolean >>
-             deactivate med
-
-             alt requiereReceta == true
-                NegCtrl --> emp : <<Error: Requiere Receta (Venta es Sin Receta)>>
-             else
-                NegCtrl -> med : getStock()
-                activate med
-                med --> NegCtrl : << stock: Int >>
-                deactivate med
-                
-                alt stock >= cantidad
-                    opt AGREGAR PRODUCTO
-                    NegCtrl -> venta : agregarDetalle(codBarra: String, cantidad: Int)
-                    activate venta
-                        venta -> det ** : create(objMedEncontrado: Medicamento, cantidad: Int)
-                        activate det
-                        det --> venta : << nuevoDetalle: DetalleVenta >>
-                        deactivate det
-                        
-                        det -> med : getPrecioUnitario()
-                        activate med
-                        med --> det : << precio: Float >>
-                        deactivate med
-                        
-                    venta --> NegCtrl : <<NULL>>
-                    deactivate venta
-                    
-                    NegCtrl --> emp : <<Producto Agregado>>
-                    opt MODIFICACIÓN CANTIDAD
-                        NegCtrl -> venta : modificarCantidadDetalle(codBarra, nuevaCantidad)
-                        activate venta
-                            venta -> det : actualizarCantidad(nuevaCantidad)
-                            activate det
-                            deactivate det
-                            det --> venta : <<NULL>>
-                            deactivate det
-                            deactivate venta
-                
-                        venta --> NegCtrl : <<NULL>>
-                        deactivate venta
-                    opt ELIMINACIÓN PRODUCTO
-                        NegCtrl -> venta : eliminarDetallePorCodigo(codBarra)
-                        activate venta
-                        activate det
-                            venta -> det : eliminarDetallePorCodigo(codigoBarra)
-                            det --> venta : <<NULL>>
-                        deactivate det
-                        deactivate venta
-                else
-                    NegCtrl --> emp : <<Error: Stock Insuficiente>>
-                end
-             end
-        else
-             NegCtrl --> emp : <<Error: Producto no encontrado>>
-        end
-        deactivate NegCtrl
-
-    else FINALIZAR CARGA
-        emp -> NegCtrl : confirmarVenta()
-    end
+cv -> cc : buscarCliente(dniCliente : INT)
+activate cc
+loop hasta dniGuardado == dniCliente
+    cc -> itemCli : getCliente()
+    activate itemCli
+    itemCli --> cc : <<dniGuardado : INT>>
+    deactivate itemCli
 end
+cc --> cv : <<NULL O cli : Object Type : Cliente>>
+deactivate cc
+
+alt cli == NULL
+    cv --> emp : <<"El cliente no se encontró">>
+else cli != NULL
+    create vta
+    cv -> vta : CrearVenta(nroVta, cli, usuario, fecha)
+    activate vta
+    vta --> cv : <<NULL>>
+    deactivate vta
+end
+deactivate cv
+
+' =================================================================
+' 2. AGREGAR PRODUCTO
+' =================================================================
+emp -> cv : escanearProducto(codBarra : INT, cantidad : INT)
+activate cv
+
+cv -> cm : buscarMedicamento(codBarra : INT)
+activate cm
+loop hasta cod == codBarra
+    cm -> itemMed : getCodigoBarra()
+    activate itemMed
+    itemMed --> cm : <<cod : INT>>
+    deactivate itemMed
+end
+cm --> cv : << NULL O med : Object Type : Medicamento>>
+deactivate cm
+
+alt med == NULL
+    cv --> emp : <<"Medicamento no encontrado">>
+else med != NULL
+    cv -> vta : agregarDetalle(med : Object Type : Medicamento, cantidad : INT)
+    activate vta
+    
+    Create det
+    vta -> det : CrearDetalleVenta(med : Object Type : Medicamento, cantidad : INT)
+    activate det
+    det --> vta : <<det : Object Type : DetalleVenta>>
+    deactivate det
+
+    vta -> lineas : agregar(det : Object Type : DetalleVenta)
+    activate lineas
+    lineas --> vta : <<NULL>>
+    deactivate lineas
+    
+    vta --> cv : <<NULL>>
+    deactivate vta
+    
+    cv --> emp : "Producto agregado"
+end
+deactivate cv
+
+' =================================================================
+' 3. MODIFICAR CANTIDAD
+' =================================================================
+emp -> cv : modificarCantidad(codBarra : INT, nuevaCantidad : INT)
+activate cv
+    cv -> vta : modificarCantidadDetalle(codBarra : INT, nuevaCantidad : INT)
+    activate vta
+
+    loop para cada d en detalles
+        vta -> lineas : getCodigoBarra()
+        activate lineas
+        lineas --> vta : <<codDetalle : INT>>
+        deactivate lineas
+        
+        alt codDetalle == codBarra
+            vta -> lineas : setCantidad(nuevaCantidad : INT)
+            activate lineas
+            lineas --> vta : <<NULL>>
+            deactivate lineas
+        end
+    end
+    vta --> cv : <<NULL>>
+    deactivate vta
+    cv --> emp : "Cantidad Modificada"
+deactivate cv
+
+' =================================================================
+' 4. ELIMINAR PRODUCTO
+' =================================================================
+emp -> cv : quitarProducto(codBarra : INT)
+activate cv
+
+    cv -> vta : eliminarDetallePorCodigo(codBarra : INT)
+    activate vta
+
+    loop para cada d en detalles
+        vta -> lineas : getCodigoBarra()
+        activate lineas
+        lineas --> vta : <<codDetalle : INT>>
+        deactivate lineas
+        
+        alt codDetalle == codBarra
+             vta -> lineas : eliminar(d : Object Type : DetalleVenta)
+             activate lineas
+             lineas --> vta : <<NULL>>
+             deactivate lineas
+        end
+    end
+    vta --> cv : <<NULL>>
+    deactivate vta
+
+    cv --> emp : "Producto Eliminado"
+deactivate cv
 @enduml

@@ -1,86 +1,54 @@
 @startuml
+!pragma teoz true
+hide footbox
 title Venta Con Receta
 
-hide footbox
+actor "emp:Empleado" as emp
+participant "cv:ControladorVentas" as cv
+participant "vta:Venta" as vta
+participant "sos:ServicioObrasSociales" as sos
 
-actor "Empleado" as emp
-participant "Interfaz: NegocioControlador" as NegCtrl
-participant "Cliente: objCliente" as cli
-participant "Venta: objVenta" as venta
-participant "Receta: objReceta" as receta
-participant "Cobertura: objCobertura" as cob
-participant "Interfaz: ServicioObrasSociales" as srvOS
+note over emp, sos
+    Precondición: Se ha iniciado una venta y se ha seleccionado 
+    la opción de "Venta con Receta".
+end note
 
-activate NegCtrl
+emp -> cv : validarReglasNegocio(dniCliente : INT)
+activate cv
 
-    emp -> NegCtrl : ingresarDatosReceta(nroReceta: String, medico: String, fecha: Date)
+' 1. Validar Afiliación
+cv -> sos : validarAfiliacion(obraSocialNombre : String, numAfiliado : INT)
+activate sos
+sos --> cv : <<esValido : BOOL>>
+deactivate sos
+
+alt esValido == TRUE
+    ' 2. Verificar Receta
+    cv -> sos : verificarRecetaElectronica(nroReceta : INT)
+    activate sos
+    sos --> cv : <<recetaOK : BOOL>>
+    deactivate sos
     
-    NegCtrl -> receta ** : create(nroReceta : int, fechaPrescripcion : DateTime, fechaValidez : DateTime, tipoReceta : string, obraSocialNombre: string)
-    activate receta
-    receta --> NegCtrl : << objReceta >>
-    deactivate receta
-    
-    NegCtrl -> venta : setTipoVta("ConReceta")
-    NegCtrl -> venta : setFechaVta(DateTime.Now())
-    NegCtrl -> receta : setDetalles(nroReceta, medico, fecha)
-    activate receta
-    receta --> NegCtrl : <<NULL>>
-    deactivate receta
-
-    NegCtrl -> srvOS : verificarRecetaElectronica(nroReceta)
-    activate srvOS
-    srvOS --> NegCtrl : << esValida : Boolean >>
-    deactivate srvOS
-
-    emp -> NegCtrl : cargarDatosObraSocial(nombreOS: String, nroAfiliado: String)
-    
-    NegCtrl -> cob ** : create(numAfiliado : int, descuentoPorcentaje : int)
-    activate cob
-    cob --> NegCtrl : << objCobertura >>
-    deactivate cob
-
-    NegCtrl -> cob : setDatos(nroAfiliado)
-    activate cob
-    cob --> NegCtrl : <<NULL>>
-    deactivate cob
-
-    NegCtrl -> srvOS : validarAfiliacion(nombreOS, nroAfiliado)
-    activate srvOS
-    srvOS --> NegCtrl : << porcentaje : Float >>
-    deactivate srvOS
-
-    NegCtrl -> cob : setDescuentoPorcentaje(porcentaje)
-    activate cob
-    cob --> NegCtrl : <<NULL>>
-    deactivate cob
-
-    alt esValida == true AND porcentaje > 0
-        NegCtrl -> venta : setReceta(objReceta)
-        activate venta
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
-
-        NegCtrl -> venta : setCobertura(objCobertura)
-        activate venta
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
+    alt recetaOK == TRUE
+        ' 3. Autorizar Cobertura
+        cv -> sos : autorizarCobertura(nroVta : INT, obraSocialNombre : String, nroReceta : INT)
+        activate sos
+        sos --> cv : <<codAuth : INT>>
+        deactivate sos
         
-        NegCtrl -> venta : getNroVta()
-        activate venta
-        venta --> NegCtrl : << nroVta : Int >>
-        deactivate venta
-
-        NegCtrl -> srvOS : registrarRecetaEnVenta(nroReceta, nroVta)
-        activate srvOS
-        srvOS --> NegCtrl : <<NULL>>
-        deactivate srvOS
-
-        NegCtrl --> emp : <<NULL>>
-    else Datos Inválidos
-        NegCtrl -> venta : setEstado("CANCELADA")
-        NegCtrl --> emp : <<NULL>>
+        ' 4. Actualizar el TIPO de venta en el objeto Venta
+        cv -> vta : setTipoVta(conReceta)
+        activate vta
+        vta --> cv : <<NULL>>
+        deactivate vta
+        
+        cv --> emp : "Receta Válida. Cobertura Autorizada."
+    else recetaOK == FALSE
+        cv --> emp : "Error: Receta inválida o vencida"
     end
+else esValido == FALSE
+    cv --> emp : "Error: Afiliación inválida"
+end
 
-    NegCtrl --> emp : <<NULL>>
-deactivate NegCtrl
+deactivate cv
 @enduml

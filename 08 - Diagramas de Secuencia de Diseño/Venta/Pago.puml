@@ -1,163 +1,214 @@
 @startuml
+!pragma teoz true
+hide footbox
 title Pago
 
-hide footbox
+actor "emp:Empleado" as emp
+participant "cv:ControladorVentas" as cv
+participant "vta:Venta" as vta
+participant "«multiobjeto»\ndetalles:DetalleVenta" as lineas
+participant "cc:<<Singleton>>\nCatalogoClientes" as cc
+participant "listaC[i]:Cliente" as itemCli
+participant "cli:Cliente" as cli
+participant "cDesc:<<Singleton>>\nCatalogoDescuentos" as cDesc
+participant "listaD[k]:TipoDescuento" as itemDesc
+participant "desc:TipoDescuento" as descObj
+participant "pago:Pago" as pagoObj
+participant "sp:ServicioPagos" as sp
+participant "catVta:<<Singleton>>\nCatalogoVentas" as catVta
+participant "«multiobjeto»\nventas:Venta" as multiVentas
+participant "tkt:Ticket" as ticket
+participant "sc:ServicioCorreos" as correo
 
-actor "Empleado" as emp
-participant "Interfaz: NegocioControlador" as NegCtrl
-participant "Venta: objVenta" as venta
-participant "Cliente: objCliente" as cli
-participant "Pago: objPago" as pago
-participant "Interfaz : ServicioPagos" as srvPagos
-participant "DetalleVenta: det" as det
-participant "Medicamento: med" as med
-participant "Ticketera" as printer
-participant "Interfaz : ServicioCorreos" as mailer
+note over emp, correo
+    Precondición: El empleado inicia el cierre de la venta.
+end note
 
-emp -> NegCtrl : iniciarCobro()
-activate NegCtrl
+' ============================================================
+' 1. CALCULAR TOTAL BRUTO
+' ============================================================
+cv -> vta : calcularTotal()
+activate vta
+    loop para cada d en detalles
+        vta -> lineas : getSubtotal()
+        activate lineas
+        lineas --> vta : <<subtotal : Decimal>>
+        deactivate lineas
+    end
+    vta --> cv : <<total : Decimal>>
+deactivate vta
 
-loop Mientras estado venta == PENDIENTE
-    
-    emp -> NegCtrl : seleccionarMedioPago(medio: String, cuotas: Int)
-    
-    NegCtrl -> venta : calcularMontoFinal(medio, cuotas)
-    activate venta
-    
-        note right of venta
-            Aplica recargo (cuotas > 3)
-            o descuento (Efectivo + Frecuente)
+cv -> vta : setTotal(total : Decimal)
+activate vta
+vta --> cv : <<NULL>>
+deactivate vta
+
+' ============================================================
+' 2. APLICAR REGLAS (Descuentos o Recargos)
+' ============================================================
+
+alt medioPago == EFECTIVO
+    ' RAMA A: EFECTIVO -> Posible Descuento
+    cv -> vta : getClienteDNI()
+    activate vta
+    vta --> cv : <<dniVenta : INT>>
+    deactivate vta
+
+    cv -> cc : buscarCliente(dniVenta : INT)
+    activate cc
+    loop hasta dniEncontrado == dniVenta
+        cc -> itemCli : getDNI()
+        activate itemCli
+        itemCli --> cc : <<dni : INT>>
+        deactivate itemCli
+    end
+    cc --> cv : <<cli : Object Type : Cliente>>
+    deactivate cc
+
+    cv -> cli : getesFrecuente()
+    activate cli
+    cli --> cv : <<esFrecuente : BOOL>>
+    deactivate cli
+
+    alt esFrecuente == TRUE
+        cv -> cDesc : buscarDescuento("Cliente Frecuente")
+        activate cDesc
+        loop hasta motivo == "Cliente Frecuente"
+            cDesc -> itemDesc : getMotivo()
+            activate itemDesc
+            itemDesc --> cDesc : <<motivo : String>>
+            deactivate itemDesc
+        end
+        cDesc --> cv : <<descObj : Object Type : TipoDescuento>>
+        deactivate cDesc
+
+        cv -> descObj : getPorcentaje()
+        activate descObj
+        descObj --> cv : <<porc : Decimal>>
+        deactivate descObj
+
+        note right of cv
+            nuevoTotal = total - (total * porc / 100)
         end note
-    
-    venta --> NegCtrl : << montoFinal : Float >>
-    deactivate venta
 
-    alt medio == "Cuenta Corriente"
-        
-        NegCtrl -> venta : getCliente()
-        activate venta
-        venta --> NegCtrl : << objCliente >>
-        deactivate venta
-        
-        NegCtrl -> cli : esFrecuente()
-        activate cli
-        cli --> NegCtrl : << esFrecuente : Boolean >>
-        deactivate cli
-        
-        NegCtrl -> cli : getSaldoDisponible()
-        activate cli
-        cli --> NegCtrl : << saldo : Float >>
-        deactivate cli
-
-        alt esFrecuente AND saldo >= montoFinal
-            NegCtrl -> cli : actualizarSaldo(-montoFinal)
-            activate cli
-            cli --> NegCtrl : <<NULL>>
-            deactivate cli
-            
-            NegCtrl -> venta : registrarPago(montoFinal, "CtaCte")
-            activate venta
-                    venta -> pago ** : create(numTransaccion, tipoPago, montoFinal)
-                    activate pago
-                    pago --> venta : << objPago >>
-                    venta -> pago : setNumTransaccion(Pago.asignarNumTransaccion())
-                    venta -> pago : setEstado("APROBADO")
-                    venta -> pago : setMonto(montoFinal)
-            venta --> NegCtrl : <<NULL>>
-            deactivate venta
-            
-            NegCtrl -> venta : setEstado("CONFIRMADA")
-            activate venta
-            deactivate venta
-
-        else Rechazo Interno
-            NegCtrl --> emp : <<Error: Saldo Insuficiente / No Frecuente>>
-        end
-
-    else Medio Externo (Tarjeta/Efectivo)
-        
-        NegCtrl -> venta : validarReglasPago(medio, cuotas)
-        activate venta
-        venta --> NegCtrl : << esValido : Boolean >>
-        deactivate venta
-        
-        alt esValido == true
-            NegCtrl -> srvPagos : iniciarTransaccion(montoFinal, medio, cuotas)
-            activate srvPagos
-            srvPagos --> NegCtrl : << estado : String >>
-            deactivate srvPagos
-            
-            alt estado == "APROBADO"
-                NegCtrl -> venta : registrarPago(montoFinal, medio)
-                activate venta
-                    venta -> pago ** : create(numTransaccion, tipoPago, montoFinal)
-                    activate pago
-                    pago --> venta : << objPago >>
-                    venta -> pago : setNumTransaccion(Pago.asignarNumTransaccion())
-                    venta -> pago : setEstado("APROBADO")
-                    venta -> pago : setMonto(montoFinal)
-                    deactivate pago
-                venta --> NegCtrl : <<NULL>>
-                deactivate venta
-                
-                NegCtrl -> venta : setEstado("CONFIRMADA")
-                activate venta
-                deactivate venta
-            else RECHAZADA
-                NegCtrl --> emp : <<Error: Pago Rechazado>>
-            end
-        else Reglas Violadas
-            NegCtrl --> emp : <<Error: Medio no permitido (Ej: OS en cuotas)>>
-        end
+        cv -> vta : setTotal(nuevoTotal : Decimal)
+        activate vta
+        vta --> cv : <<NULL>>
+        deactivate vta
     end
 
-    NegCtrl -> venta : getEstado()
-    activate venta
-    venta --> NegCtrl : << estadoVenta : String >>
-    deactivate venta
+else medioPago == TARJETA
+    ' RAMA B: TARJETA -> Posible Recargo (> 3 cuotas)
+    alt cuotas > 3
+        note right of cv
+            recargo = total * (0.20 * (cuotas - 3))
+            totalConRecargo = total + recargo
+        end note
 
-    alt estadoVenta == "CONFIRMADA"
-        
-        NegCtrl -> venta : actualizarStock()
-        activate venta
-            loop detalles
-                venta -> det : actualizarCantidadStock()
-                activate det
-                det -> med : actualizarStock(-cantidad)
-                activate med
-                med --> det : <<NULL>>
-                deactivate med
-                det --> venta : <<NULL>>
-                deactivate det
-            end
-        venta --> NegCtrl : <<NULL>>
-        deactivate venta
-
-        NegCtrl -> printer : imprimirTicket(venta)
-        activate printer
-        printer --> NegCtrl : << impreso : Boolean >>
-        deactivate printer
-        
-        opt impreso == false
-            NegCtrl -> cli : getEmail()
-            activate cli
-            cli --> NegCtrl : << email : String >>
-            deactivate cli
-            NegCtrl -> mailer : enviarTicket(venta, email)
-            activate mailer
-            deactivate mailer
-        end
-
-        NegCtrl --> emp : <<NULL>>
-        
-    else Venta No Confirmada
-        opt Cancelar Operación
-            emp -> NegCtrl : cancelarVenta()
-            NegCtrl -> venta : setEstado("CANCELADA")
-        end
+        cv -> vta : setTotal(totalConRecargo : Decimal)
+        activate vta
+        vta --> cv : <<NULL>>
+        deactivate vta
+    else cuotas < 3
+        cv -> vta : setTotal(total : Decimal)
+        activate vta
+        vta --> cv : <<NULL>>
+        deactivate vta
     end
 end
 
-NegCtrl --> emp : <<NULL>>
-deactivate NegCtrl
+' ============================================================
+' 3. REGISTRAR PAGO (Instanciar + Procesar)
+' ============================================================
+cv -> vta : getTotal()
+activate vta
+vta --> cv : <<montoFinal : Decimal>>
+deactivate vta
+
+' A) Creamos la entidad Pago (Registro interno)
+create pagoObj
+cv -> pagoObj : CrearPago(vta : Object Type : Venta, medioPago : String, montoFinal : Decimal, cuotas : INT)
+activate pagoObj
+pagoObj --> cv : <<pagoObj : Object Type : Pago>>
+deactivate pagoObj
+
+' B) Llamamos al servicio externo (POS/Banco)
+cv -> sp : procesarPago(PagoObj : Object Type : Pago)
+activate sp
+sp --> cv : <<estadoPago : Enum>>
+deactivate sp
+
+' C) Actualizamos la entidad Pago con el resultado
+cv -> pagoObj : setEstado(estadoPago)
+activate pagoObj
+pagoObj --> cv : <<NULL>>
+deactivate pagoObj
+
+alt estadoPago == aprobado
+    
+    ' Simulamos que el servicio nos devuelve un nroTransaccion (aunque el método
+    ' en V5.2 no lo retorna explícitamente, es lógico setearlo si el pago pasa).
+    ' Asumimos que se obtiene del contexto del servicio.
+    cv -> sp : confirmarTransaccion(nroVta : INT) 
+    activate sp
+    sp --> cv : <<numTicketPos : INT>>
+    deactivate sp
+
+    cv -> pagoObj : setNumTransaccion(numTicketPos : INT)
+    activate pagoObj
+    pagoObj --> cv : <<NULL>>
+    deactivate pagoObj
+
+    ' D) Finalizar Venta
+    cv -> vta : setEstadoVenta(Concretado)
+    activate vta
+    vta --> cv : <<NULL>>
+    deactivate vta
+
+    ' Registrar en Catálogo
+    cv -> catVta : registrarVenta(vta : Object Type : Venta)
+    activate catVta
+    catVta -> multiVentas : agregar(vta : Object Type : Venta)
+    activate multiVentas
+    multiVentas --> catVta : <<NULL>>
+    deactivate multiVentas
+    catVta --> cv : <<NULL>>
+    deactivate catVta
+
+    ' Ticket
+    create ticket
+    cv -> ticket : CrearTicket(vta : Object Type : Venta)
+    activate ticket
+    ticket --> cv : <<tkt : Object Type : Ticket>>
+    deactivate ticket
+    
+    ' ============================================================
+    ' 4. ENVÍO DE COMPROBANTE
+    ' ============================================================
+    cv -> vta : getClienteDNI()
+    activate vta
+    vta --> cv : <<dniC : INT>>
+    deactivate vta
+    
+    cv -> cli : getEmail()
+    activate cli
+    cli --> cv : <<email : String>>
+    deactivate cli
+    
+    cv -> cli : getNumTel()
+    activate cli
+    cli --> cv : <<tel : String>>
+    deactivate cli
+    
+    cv -> correo : enviarTicketDigital(tkt : Object Type : Ticket, email : String, tel : String)
+    activate correo
+    correo --> cv : <<NULL>>
+    deactivate correo
+
+    cv --> emp : "Venta Finalizada Exitosamente"
+else estadoPago == Rechazado
+    cv --> emp : "Error: Pago Rechazado"
+end
+
+deactivate cv
 @enduml
