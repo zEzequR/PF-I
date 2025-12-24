@@ -549,6 +549,7 @@ dataclass CatalogoDescuentos <<Singleton>>
     - listaDescuentos: List<TipoDescuento>
     + agregarDescuento(descuento)
     + eliminarDescuento(tipoDescuento)
+    + modificarDescuento(motivo,porcentaje,fechaInicio,fechaFin)
     + obtenerDescuentosActivos()
     + buscarDescuento(motivo)
 }
