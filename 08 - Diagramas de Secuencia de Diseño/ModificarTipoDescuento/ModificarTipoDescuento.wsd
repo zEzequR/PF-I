@@ -1,0 +1,62 @@
+@startuml
+title Modificación de Tipo de Descuento
+hide footbox
+
+actor "admin:Administrador" as admin
+participant "gc:GestionControlador" as ctrl
+participant "catDesc:<<Singleton>>\nCatalogoDescuentos" as cat
+participant "listaDesc[i]:TipoDescuento" as listTD
+participant "descEncontrado:TipoDescuento" as td
+
+admin -> ctrl : modificarDescuento(motivo: String, porcentaje: Float, fechaInicio: Date, fechaFin: Date)
+activate ctrl
+
+ctrl -> cat : buscarDescuento(motivo : String)
+activate cat
+
+    loop [hasta motivoLista == motivo]
+        cat -> listTD : getMotivo()
+        activate listTD
+        listTD --> cat : «motivoLista : String»
+        deactivate listTD
+    end
+
+cat --> ctrl : «NULL O descEncontrado : Object Type : TipoDescuento»
+deactivate cat
+
+alt descEncontrado == null
+    
+    ctrl --> admin : «"Error: El tipo de descuento no existe"»
+
+else descEncontrado != null
+
+    alt fechaFin < fechaInicio
+        
+        ctrl --> admin : «"Error: Fechas inconsistentes (Fin menor a Inicio)"»
+    
+    else fechaFin >= fechaInicio
+
+
+        ctrl -> td : setPorcentaje(porcentaje : Float)
+        activate td
+        td --> ctrl : «NULL»
+        deactivate td
+
+        ctrl -> td : setFechaInicio(fechaInicio : Date)
+        activate td
+        td --> ctrl : «NULL»
+        deactivate td
+
+        ctrl -> td : setFechaFin(fechaFin : Date)
+        activate td
+        td --> ctrl : «NULL»
+        deactivate td
+
+        ctrl --> admin : «"Éxito: Descuento modificado correctamente."»
+    
+    end
+
+end
+
+deactivate ctrl
+@enduml
