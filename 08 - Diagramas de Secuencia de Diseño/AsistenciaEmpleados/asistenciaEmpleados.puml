@@ -6,50 +6,46 @@ hide footbox
 actor "Administrador:Admin" as admin
 participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
-participant "usuActual:Usuario" as usu_actual
+participant "listaUsu[i]:Usuario" as item
 participant "catAsis:<<Singleton>>\nCatalogoAsistencias" as cat_asis
 
 admin -> ctrl : registrarAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
 activate ctrl
 
-alt legajo == null OR fecha == null OR estado == null
-    ctrl --> admin : << "Error: Complete todos los campos requeridos" >>
-
+alt datos incompletos
+    ctrl --> admin : "Error: Complete todos los campos"
 else datosCompletos
     
     ctrl -> cat : buscarUsuario(legajo)
     activate cat
-
+    
     loop [para cada u en usuarios]
-        cat -> usu_actual : getLegajo()
-        activate usu_actual
-        usu_actual --> cat : << legajoActual : String >>
-        deactivate usu_actual
+        cat -> item : getLegajo()
+        activate item
+        item --> cat : legajoActual
+        deactivate item
+    end
+    
+    cat --> ctrl : usuEncontrado
+    deactivate cat
+    
+    alt usuEncontrado != null
         
-        alt legajo == legajoActual
-            cat --> ctrl : << usuActual : Usuario >>
-            deactivate cat
-            
-            create participant "nuevaAsis:Asistencia" as nueva_asis
-            ctrl -> nueva_asis : CrearAsistencia(fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
-            activate nueva_asis
-            nueva_asis --> ctrl : << nuevaAsis : Asistencia >>
-            deactivate nueva_asis
-            
-            ctrl -> cat_asis : agregarAsistencia(nuevaAsis)
-            activate cat_asis
-            cat_asis --> ctrl : << null >>
-            deactivate cat_asis
-            
-            ctrl --> admin : << "Éxito: Asistencia registrada" >>
+        create participant "nuevaAsis:Asistencia" as nueva_asis
+        ctrl -> nueva_asis : CrearAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
+        activate nueva_asis
+        nueva_asis --> ctrl : nuevaAsis
+        deactivate nueva_asis
 
-        else legajo != legajoActual
+        ctrl -> cat_asis : agregarAsistencia(nuevaAsis)
+        activate cat_asis
+        cat_asis --> ctrl : << null >> 
+        deactivate cat_asis
+        
+        ctrl --> admin : "Éxito: Asistencia registrada"
 
-            deactivate cat
-
-            ctrl --> admin : << "Error: Empleado no encontrado" >>
-            
-        end
+    else usuEncontrado == null
+        ctrl --> admin : "Error: Empleado no encontrado"
     end
 end
 
