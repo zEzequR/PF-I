@@ -6,9 +6,9 @@ hide footbox
 actor "Administrador" as admin
 participant "gc:GestionControlador" as ctrl
 participant "catV:<<Singleton>>\nCatalogoVentas" as cat_ventas
-participant "v:Venta" as venta 
+participant "listaVenta[i]: Venta" as venta 
 participant "catM:<<Singleton>>\nCatalogoMedicamentos" as cat_med
-participant "m:Medicamento" as med
+participant "listaMed[k]: Medicamento" as med
 participant "gen:GeneradorReportes" as gen
 participant "sc:ServicioCorreos" as srv_mail
 
@@ -16,10 +16,10 @@ admin -> ctrl : solicitarInforme(tipoInforme: String, filtro: String)
 activate ctrl
 
 alt tipo == "VENTAS"
-    ctrl -> cat_ventas : obtenerVentasPorFecha(fecha: String)
+    ctrl -> cat_ventas : obtenerVentasPorFecha(fecha: Date)
     activate cat_ventas
     
-    loop Para cada venta en la lista
+    loop Para cada medicamento en la lista
         cat_ventas -> venta : getFecha()
         activate venta
         venta --> cat_ventas : << fechaRegistrada: Date >>

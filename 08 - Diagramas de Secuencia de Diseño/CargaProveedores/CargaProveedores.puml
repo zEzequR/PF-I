@@ -5,7 +5,7 @@ hide footbox
 actor "Administrador:Admin" as admin
 participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoDroguerias" as cat
-participant "drogActual:Drogueria" as drog_actual
+participant "listaProv[i]:Drogueria" as drog_actual
 
 admin -> ctrl : registrarDrogueria(nombre: String, email: String, tel: String, dir: String, cuit: String, canalPreferido: String)
 activate ctrl
@@ -13,19 +13,20 @@ activate ctrl
 ctrl -> cat : buscarProveedor(nombre)
 activate cat
 
-loop [para cada d en droguerias]
+loop [hasta nombre == nombreActual]
     cat -> drog_actual : getNombre()
     activate drog_actual
     drog_actual --> cat : << nombreActual : String >>
     deactivate drog_actual
-    
-    alt nombre == nombreActual
-        cat --> ctrl : << d : Drogueria >>
+end
+
+        cat --> ctrl : << NULL o drogEncontrada : Object Type : Drogueria >>
         deactivate cat
-        
+
+    alt drogEncontrada != null
         ctrl --> admin : << "Error: Droguería ya registrada" >>
 
-    else nombre != nombreActual
+    else drogEncontrada == null
 
         deactivate cat
     
@@ -44,7 +45,6 @@ loop [para cada d en droguerias]
         ctrl --> admin : << "Éxito: Droguería registrada" >>
         
     end
-end
 
 deactivate ctrl
 @enduml

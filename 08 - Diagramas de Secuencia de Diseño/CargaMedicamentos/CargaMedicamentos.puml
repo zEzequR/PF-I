@@ -6,7 +6,7 @@ hide footbox
 actor "Administrador:Admin" as admin
 participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoMedicamentos" as cat
-participant "medActual:Medicamento" as med_actual
+participant "listaMed[i]:Medicamento" as med_actual
 
 admin -> ctrl : registrarMedicamento(codigoBarra: int, nombre: String, descripcion: String, drogueriaNombre: String, precioUnitario: float, stock: int)
 activate ctrl
@@ -14,18 +14,20 @@ activate ctrl
 ctrl -> cat : buscarMedicamento(codigoBarra)
 activate cat
 
-loop [para cada m en medicamentos]
+loop [hasta codigoBarra == codActual]
     cat -> med_actual : getCodigoBarra()
     activate med_actual
     med_actual --> cat : << codActual : int >>
     deactivate med_actual
-    
-    alt codigoBarra == codActual
-        cat --> ctrl : << m : Medicamento >>
-        deactivate cat
+end
+
+cat --> ctrl : << NULL o medEncontrado : Object Type : Medicamento >>
+deactivate cat
+
+    alt medEncontrado != null
         ctrl --> admin : << "Error: Medicamento ya registrado" >>
 
-    else codigoBarra != codActual
+    else medEncontrado == null
         deactivate cat
         
         create participant "nuevoMed:Medicamento" as nuevo_med
@@ -41,7 +43,6 @@ loop [para cada m en medicamentos]
         
         ctrl --> admin : << "Éxito: Medicamento guardado" >>
     end
-end
 
 deactivate ctrl
 @enduml

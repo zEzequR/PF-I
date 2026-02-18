@@ -19,14 +19,14 @@ else datosCompletos
     ctrl -> cat : buscarUsuario(legajo)
     activate cat
     
-    loop [para cada u en usuarios]
+    loop [legajo == legajoActual]
         cat -> item : getLegajo()
         activate item
-        item --> cat : legajoActual
+        item --> cat : << legajoActual : INT >>
         deactivate item
     end
     
-    cat --> ctrl : usuEncontrado
+    cat --> ctrl : << NULL o usuEncontrado : Object Type : Usuario >>
     deactivate cat
     
     alt usuEncontrado != null
