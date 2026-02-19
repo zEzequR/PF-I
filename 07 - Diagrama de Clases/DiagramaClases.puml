@@ -593,6 +593,9 @@ GestionControlador --> CatalogoClientes
 GestionControlador --> CatalogoDescuentos
 GestionControlador --> CatalogoAsistencia
 
+ADDED
+GestionControlador --> CatalogoVentas
+
 ControladorVentas --> CatalogoVentas
 ControladorVentas --> CatalogoMedicamentos
 ControladorVentas --> CatalogoClientes
