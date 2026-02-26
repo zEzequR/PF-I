@@ -8,6 +8,7 @@ participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
 participant "listaUsu[i]:Usuario" as item
 participant "catAsis:<<Singleton>>\nCatalogoAsistencias" as cat_asis
+collections "<<multiobjeto>>\nlistaAsis:List" as lista_asis
 
 admin -> ctrl : registrarAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
 activate ctrl
@@ -16,17 +17,20 @@ alt datos incompletos
     ctrl --> admin : "Error: Complete todos los campos"
 else datosCompletos
     
-    ctrl -> cat : buscarUsuario(legajo)
+    ctrl -> cat : buscarUsuario(legajo : String)
     activate cat
     
-    loop [legajo == legajoActual]
+    loop hasta legajo == legajoActual
         cat -> item : getLegajo()
         activate item
-        item --> cat : << legajoActual : INT >>
+        item --> cat : <<legajoActual : INT>>
+        
+        note right of item : Si no se encuentra, retornar null
+        
         deactivate item
     end
     
-    cat --> ctrl : << NULL o usuEncontrado : Object Type : Usuario >>
+    cat --> ctrl : <<usuEncontrado : Object Type : Usuario>>
     deactivate cat
     
     alt usuEncontrado != null
@@ -34,12 +38,18 @@ else datosCompletos
         create participant "nuevaAsis:Asistencia" as nueva_asis
         ctrl -> nueva_asis : CrearAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
         activate nueva_asis
-        nueva_asis --> ctrl : nuevaAsis
+        nueva_asis --> ctrl : <<nuevaAsis : Asistencia>>
         deactivate nueva_asis
 
-        ctrl -> cat_asis : agregarAsistencia(nuevaAsis)
+        ctrl -> cat_asis : agregarAsistencia(nuevaAsis : Object Type : Asistencia)
         activate cat_asis
-        cat_asis --> ctrl : << null >> 
+        
+        cat_asis -> lista_asis : add(nuevaAsis : Object Type : Asistencia)
+        activate lista_asis
+        lista_asis --> cat_asis : <<null>>
+        deactivate lista_asis
+        
+        cat_asis --> ctrl : <<null>> 
         deactivate cat_asis
         
         ctrl --> admin : "Éxito: Asistencia registrada"

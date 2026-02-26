@@ -1,26 +1,26 @@
 # Diccionario de datos
-**Medicamento** = @codBarra + nombreMed + (descripción) + drogueria + precioMedUnitario + precioCosto + stock + stockMinimo + esControlado + [activo] 
-**Usuario** = nombreUsuario + contraseña + [tipoUsuario] 
-**Tipo de Usuario** = [administrador | empleado] 
-**Empleado** = nombreEmpleado + legajo + sueldo + cuil + email + direccion + [rol] 
-**Direccion** = calle + numero + localidad + provincia + cp 
-**Asistencia** = fecha + (horaEntrada) + (horaSalida) + [estado] 
-**Estado** = [presente | ausente | tarde | licencia] 
-**Venta** = [tipoVta] + fechaVta + montoTotal + [tipoPago] + (cuotas) + estadoVenta + nroVta 
-**Tipo Venta** = [ particular | obraSocial] 
-**Obra Social** = nombreObrasocial + (descuentoGeneral) 
-**Pago** = numTransaccion + [tipoPago] + monto + (cuotas) + fechaPago + estadoPago 
-**Ticket** = DatosFarmacia + fechaHora + DatosCliente + nroTicket + EstadoTicket + pdfPath 
-**Pedido** = numPedido + fechaPedido + estadoPedido + pathPdf + drogueria 
-**Detalles Pedido** = numPedido + codBarra + nombreMedicamento + cantidad 
-**Receta* = nroReceta + fechaPrescripcion + matriculaMedico + fechaValidez + pathImagen 
-**Detalle Venta** = nroDetalleVenta + codBarra + nombreMedicamento + cantidad + precioUnitario + montoFinal 
-**Tipo Descuento** = motivo + porcentaje + fechainicio + fechaFinal + activo 
-**Cliente** = email + nombreCliente + numTel + DNI + SaldoCtaCorriente + tipoCliente + montoAcumulado + esFrecuente 
-**Cobertura** = numAfiliado + descuento 
-**Medico** = matriculaMed + nombreMedico + email + numTel 
-**Drogueria** = nombre + direccion + email + numTel + canalPreferido + cuit 
-**Detalle receta** = productosRecetados + indicaciones
+- **Medicamento** = @codBarra + nombreMed + (descripción) + drogueria + precioMedUnitario + precioCosto + stock + stockMinimo + esControlado + [activo] 
+- **Usuario** = nombreUsuario + contraseña + [tipoUsuario] 
+- **Tipo de Usuario** = [administrador | empleado] 
+- **Empleado** = nombreEmpleado + legajo + sueldo + cuil + email + direccion + [rol] 
+- **Direccion** = calle + numero + localidad + provincia + cp 
+- **Asistencia** = fecha + (horaEntrada) + (horaSalida) + [estado] 
+- **Estado** = [presente | ausente | tarde | licencia] 
+- **Venta** = [tipoVta] + fechaVta + montoTotal + [tipoPago] + (cuotas) + estadoVenta + nroVta 
+- **Tipo Venta** = [ particular | obraSocial] 
+- **Obra Social** = nombreObrasocial + (descuentoGeneral) 
+- **Pago** = numTransaccion + [tipoPago] + monto + (cuotas) + fechaPago + estadoPago 
+- **Ticket** = DatosFarmacia + fechaHora + DatosCliente + nroTicket + EstadoTicket + pdfPath 
+- **Pedido** = numPedido + fechaPedido + estadoPedido + pathPdf + drogueria 
+- **Detalles Pedido** = numPedido + codBarra + nombreMedicamento + cantidad 
+- **Receta** = nroReceta + fechaPrescripcion + matriculaMedico + fechaValidez + pathImagen 
+- **Detalle Venta** = nroDetalleVenta + codBarra + nombreMedicamento + cantidad + precioUnitario + montoFinal 
+- **Tipo Descuento** = motivo + porcentaje + fechainicio + fechaFinal + activo 
+- **Cliente** = email + nombreCliente + numTel + DNI + SaldoCtaCorriente + tipoCliente + montoAcumulado + esFrecuente 
+- **Cobertura** = numAfiliado + descuento 
+- **Medico** = matriculaMed + nombreMedico + email + numTel 
+- **Drogueria** = nombre + direccion + email + numTel + canalPreferido + cuit 
+- **Detalle receta** = productosRecetados + indicaciones
 
 
 | Nombre | Descripción | Tipo | Longitud | Dominio / Observaciones |

@@ -7,42 +7,52 @@ actor "Administrador:Admin" as admin
 participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoMedicamentos" as cat
 participant "listaMed[i]:Medicamento" as med_actual
+collections "<<multiobjeto>>\nlistaMed:List" as lista_med
 
 admin -> ctrl : registrarMedicamento(codigoBarra: int, nombre: String, drogueriaNombre: String, precioUnitario: float, stock: int)
 activate ctrl
 
-ctrl -> cat : buscarMedicamento(codigoBarra)
+ctrl -> cat : buscarMedicamento(codigoBarra : int)
 activate cat
 
-loop [hasta codigoBarra == codActual]
+loop hasta codigoBarra == codActual
     cat -> med_actual : getCodigoBarra()
     activate med_actual
-    med_actual --> cat : << codActual : int >>
+    med_actual --> cat : <<codActual : int>>
+    
+    note right of med_actual : Si no se encuentra, retornar null
+    
     deactivate med_actual
 end
 
-cat --> ctrl : << NULL o medEncontrado : Object Type : Medicamento >>
+cat --> ctrl : <<medEncontrado : Object Type : Medicamento>>
 deactivate cat
 
-    alt medEncontrado != null
-        ctrl --> admin : << "Error: Medicamento ya registrado" >>
+alt medEncontrado != null
+    
+    ctrl --> admin : "Error: Medicamento ya registrado"
 
-    else medEncontrado == null
-        deactivate cat
-        
-        create participant "nuevoMed:Medicamento" as nuevo_med
-        ctrl -> nuevo_med : CrearMedicamento(codigoBarra: int, nombre: String, drogueriaNombre: String, precioUnitario: float, stock: int)
-        activate nuevo_med
-        nuevo_med --> ctrl : << nuevoMed : Medicamento >>
-        deactivate nuevo_med
+else medEncontrado == null
+    
+    create participant "nuevoMed:Medicamento" as nuevo_med
+    ctrl -> nuevo_med : CrearMedicamento(codigoBarra: int, nombre: String, drogueriaNombre: String, precioUnitario: float, stock: int)
+    activate nuevo_med
+    nuevo_med --> ctrl : <<nuevoMed : Medicamento>>
+    deactivate nuevo_med
 
-        ctrl -> cat : agregarMedicamento(nuevoMed)
-        activate cat
-        cat --> ctrl : << null >>
-        deactivate cat
-        
-        ctrl --> admin : << "Éxito: Medicamento guardado" >>
-    end
+    ctrl -> cat : agregarMedicamento(nuevoMed : Object Type : Medicamento)
+    activate cat
+    
+    cat -> lista_med : add(nuevoMed : Object Type : Medicamento)
+    activate lista_med
+    lista_med --> cat : <<null>>
+    deactivate lista_med
+    
+    cat --> ctrl : <<null>>
+    deactivate cat
+    
+    ctrl --> admin : "Éxito: Medicamento guardado"
+end
 
 deactivate ctrl
 @enduml
