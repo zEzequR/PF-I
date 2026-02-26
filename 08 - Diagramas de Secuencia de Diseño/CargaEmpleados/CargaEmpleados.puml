@@ -6,22 +6,24 @@ hide footbox
 actor "Administrador:Admin" as admin
 participant "gc:GestionControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
-participant "listaUsuarios:Usuario" as usu_actual
+participant "listaUsuarios[i]:Usuario" as usu_actual
+collections "«multiobjeto»\nlistaUsuarios: List<Usuario>" as lista_usu
 
 admin -> ctrl : registrarEmpleado(nombreUsuario: String, contraseña: String, tipoUsuario: String)
 activate ctrl
 
-ctrl -> cat : buscarUsuario(nombreUsuario)
+ctrl -> cat : buscarUsuario(nombreUsuario : String)
 activate cat
 
-loop [hasta nombreUsuario == nombreActual]]
+loop hasta nombreUsuario == nombreActual
     cat -> usu_actual : getNombreUsuario()
     activate usu_actual
     usu_actual --> cat : << nombreActual : String >>
     deactivate usu_actual
+    note over of usu_actual: Si no se encuentra, retornar null
 end
 
-cat --> ctrl : << NULL o usuEncontrado : Object Type : Usuario >>
+cat --> ctrl : << usuEncontrado : Object Type : Usuario >>
 deactivate cat
     
     alt usuEncontrado != null
@@ -37,8 +39,12 @@ deactivate cat
         nuevo_usu --> ctrl : << nuevoUsu : Usuario >>
         deactivate nuevo_usu
 
-        ctrl -> cat : agregarUsuario(nuevoUsu)
+        ctrl -> cat : agregarUsuario(nuevoUsu : Object Type : Usuario)
         activate cat
+        cat -> lista_usu : add(nuevoUsu : Object Type : Usuario)
+        activate lista_usu
+        lista_usu --> cat : << null >>
+        deactivate lista_usu
         cat --> ctrl : << null >>
         deactivate cat
         

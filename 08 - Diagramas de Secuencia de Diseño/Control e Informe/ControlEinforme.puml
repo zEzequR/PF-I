@@ -19,18 +19,17 @@ alt tipo == "VENTAS"
     ctrl -> cat_ventas : obtenerVentasPorFecha(fecha: Date)
     activate cat_ventas
     
-    loop Para cada medicamento en la lista
+    loop hasta fecha = fechaRegistrada
         cat_ventas -> venta : getFecha()
         activate venta
         venta --> cat_ventas : << fechaRegistrada: Date >>
         deactivate venta
+        note over of cat_ventas: Si no se encuentra, retornar null
     end
-    
-    alt Sin Resultados
-        cat_ventas --> ctrl : << null >>
+    cat_ventas --> ctrl : << ventasEncontradas : List<Venta> >>
+    alt ventasEncontradas == null
         ctrl --> admin : << "Sin resultados" >>
-    else Lista Encontrada
-        cat_ventas --> ctrl : << listaVentas: List<Venta> >>
+    else ventasEncontradas != null
         ctrl --> admin : << listaVentas: List<Venta> >>
     end
     deactivate cat_ventas
@@ -39,19 +38,20 @@ else tipo == "STOCK"
     ctrl -> cat_med : buscarMedicamentos(filtro: String)
     activate cat_med
     
-    loop Para cada medicamento en la lista
+    loop hasta filtro = nombre
         cat_med -> med : getNombre()
         activate med
         med --> cat_med : << nombre: String >>
         deactivate med
+        note over of cat_med: Si no se encuentra, retornar null
     end
-    
-    alt Sin Resultados
-        cat_med --> ctrl : << null >>
+
+    cat_med --> ctrl : << medicamentosEncontrados : List<Medicamento> >>
+
+    alt medicamentosEncontrados == null
         ctrl --> admin : << "Sin resultados" >>
-    else Lista Encontrada
-        cat_med --> ctrl : << listaMed: List<Medicamento> >>
-        ctrl --> admin : << listaMed: List<Medicamento> >>
+    else medicamentosEncontrados != null
+        ctrl --> admin : << medicamentosEncontrados : List<Medicamento> >>
     end
     deactivate cat_med
 end
@@ -68,17 +68,17 @@ opt El administrador decide exportar
         ctrl --> admin : << Descarga (archivoGenerado) >>
         
     else accion == "ENVIAR_PROVEEDOR"
-        ctrl -> srv_mail : enviarCorreo(archivoPdf: File, emailProv: String)
+        ctrl -> srv_mail : enviarCorreo(archivoGenerado: File, emailProv: String)
         activate srv_mail
+        srv_mail --> ctrl : << response :  int >>
+        deactivate srv_mail
         
-        alt Error envio
-            srv_mail --> ctrl : << false >>
+        alt response = 409
             ctrl --> admin : << "Error: Falló el envío" >>
-        else Envio Exitoso
-            srv_mail --> ctrl : << true >>
+        else response = 200
             ctrl --> admin : << "Éxito: Informe enviado" >>
         end
-        deactivate srv_mail
+        
     end
 end
 

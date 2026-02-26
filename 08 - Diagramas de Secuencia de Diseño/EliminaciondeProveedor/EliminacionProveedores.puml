@@ -7,8 +7,8 @@ actor "admin:Administrador" as admin
 participant "gc:GestionControlador" as gc
 participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
 participant "listaProv[i]:Drogueria" as arrayProv
-participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
 participant "listaMed[j]:Medicamento" as arrayMed
+collections "«multiobjeto»\nlistaProv: List<Drogueria>" as lista_drog
 
 ' =================================================================
 ' INICIO
@@ -27,9 +27,10 @@ loop hasta nombre == nombreProv
     activate arrayProv
     arrayProv --> catProv : <<nombreProv : String>>
     deactivate arrayProv
+    note over of arrayProv: Si no se encuentra, retornar null
 end
 
-catProv --> gc : <<NULL o DrogEncontrada : Object Type : Drogueria>>
+catProv --> gc : <<DrogEncontrada : Object Type : Drogueria>>
 
 deactivate catProv
 
@@ -51,6 +52,10 @@ else
             note right of gc
                 tieneProductos = TRUE
             end note
+        else drogNombre != nombre
+            note right of gc
+                tieneProductos = FALSE
+            end note
         end
     end
 
@@ -63,10 +68,10 @@ else
     else
         gc -> catProv : eliminarProveedor(DrogEncontrada : Object Type : Drogueria)
         activate catProv
-        catProv -> arrayProv : eliminar(DrogEncontrada : Object Type : Drogueria)
-        activate arrayProv
-        arrayProv --> catProv : <<NULL>>
-        deactivate arrayProv
+        catProv -> lista_drog : delete(DrogEncontrada : Object Type : Drogueria)
+        activate lista_drog
+        lista_drog --> catProv : <<NULL>>
+        deactivate lista_drog
         catProv --> gc : <<NULL>>
         deactivate catProv
         gc --> admin : "Proveedor eliminado exitosamente"

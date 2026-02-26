@@ -8,7 +8,7 @@ participant "gc:GestionControlador" as gc
 participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
 participant "listaProv[i]:Drogueria" as arrayProv
 participant "provEncontrado:Drogueria" as provObj
-participant "suDireccion:Direccion" as dirObj
+participant "DireccionDrog:Direccion" as dirObj
 
 ' =================================================================
 ' INICIO
@@ -28,9 +28,10 @@ loop hasta nombre == nombreDrog
     activate arrayProv
     arrayProv --> catProv : <<nombreDrog : String>>
     deactivate arrayProv
+    note over of arrayProv: Si no se encuentra, retornar null
 end
 
-catProv --> gc : <<NULL o DrogEncontrada : Object Type : Drogueria
+catProv --> gc : << DrogEncontrada : Object Type : Drogueria >>
 deactivate catProv
 
 ' -----------------------------------------------------------------
@@ -48,7 +49,7 @@ else
 
     provObj --> gc <<NULL>>
 
-    gc -> provObj : setNumTel(tel)
+    gc -> provObj : setNumTel(tel : String)
     activate provObj
     provObj --> gc : <<NULL>>
     deactivate provObj
@@ -60,7 +61,7 @@ else
     
     gc -> provObj : getDireccion()
     activate provObj
-    provObj --> gc : << suDireccion : Object Type : Direccion>>
+    provObj --> gc : << DireccionDrog : Object Type : Direccion>>
     deactivate provObj
     
     gc -> dirObj : setCalle(calle : String)

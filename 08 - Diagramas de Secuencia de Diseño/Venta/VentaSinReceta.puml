@@ -13,7 +13,7 @@ participant "cm:<<Singleton>>\nCatalogoMedicamentos" as cm
 participant "listaM[j]:Medicamento" as itemMed
 participant "med:Medicamento" as med
 participant "det:DetalleVenta" as det
-participant "«multiobjeto»\ndetalles:DetalleVenta" as lineas
+collections "«multiobjeto»\ndetalles:DetalleVenta" as lineas
 
 ' =================================================================
 ' 1. INICIO Y CREACIÓN DE VENTA
@@ -28,8 +28,9 @@ loop hasta dniGuardado == dniCliente
     activate itemCli
     itemCli --> cc : <<dniGuardado : INT>>
     deactivate itemCli
+    note over of cc: Si no se encuentra, retornr null
 end
-cc --> cv : <<NULL O cli : Object Type : Cliente>>
+cc --> cv : << cli : Object Type : Cliente>>
 deactivate cc
 
 alt cli == NULL
@@ -56,8 +57,9 @@ loop hasta cod == codBarra
     activate itemMed
     itemMed --> cm : <<cod : INT>>
     deactivate itemMed
+    note over of cm: Si no se encuentra, retornr null
 end
-cm --> cv : << NULL O med : Object Type : Medicamento>>
+cm --> cv : << med : Object Type : Medicamento>>
 deactivate cm
 
 alt med == NULL
@@ -72,7 +74,7 @@ else med != NULL
     det --> vta : <<det : Object Type : DetalleVenta>>
     deactivate det
 
-    vta -> lineas : agregar(det : Object Type : DetalleVenta)
+    vta -> lineas : add(det : Object Type : DetalleVenta)
     activate lineas
     lineas --> vta : <<NULL>>
     deactivate lineas
@@ -126,7 +128,7 @@ activate cv
         deactivate lineas
         
         alt codDetalle == codBarra
-             vta -> lineas : eliminar(d : Object Type : DetalleVenta)
+             vta -> lineas : remove(d : Object Type : DetalleVenta)
              activate lineas
              lineas --> vta : <<NULL>>
              deactivate lineas

@@ -6,7 +6,7 @@ title Pago
 actor "emp:Empleado" as emp
 participant "cv:ControladorVentas" as cv
 participant "vta:Venta" as vta
-participant "«multiobjeto»\ndetalles:DetalleVenta" as lineas
+collections "«multiobjeto»\ndetalles:DetalleVenta" as lineas
 participant "cc:<<Singleton>>\nCatalogoClientes" as cc
 participant "listaC[i]:Cliente" as itemCli
 participant "cli:Cliente" as cli
@@ -16,7 +16,7 @@ participant "desc:TipoDescuento" as descObj
 participant "pago:Pago" as pagoObj
 participant "sp:ServicioPagos" as sp
 participant "catVta:<<Singleton>>\nCatalogoVentas" as catVta
-participant "«multiobjeto»\nventas:Venta" as multiVentas
+collections "«multiobjeto»\nventas:Venta" as multiVentas
 participant "tkt:Ticket" as ticket
 participant "sc:ServicioCorreos" as correo
 
@@ -78,23 +78,34 @@ alt medioPago == EFECTIVO
             activate itemDesc
             itemDesc --> cDesc : <<motivo : String>>
             deactivate itemDesc
+            note over of cDesc: Si no se encuentra retornar null
         end
         cDesc --> cv : <<descObj : Object Type : TipoDescuento>>
         deactivate cDesc
 
-        cv -> descObj : getPorcentaje()
-        activate descObj
-        descObj --> cv : <<porc : Decimal>>
-        deactivate descObj
+        alt descObj == NULL
+            note over of cv: Mostrar mensaje al empleado "Descuento no encontrado"
+        else descObj != NULL
+            cv -> descObj : getPorcentaje()
+            activate descObj
+            descObj --> cv : <<porc : Decimal>>
+            deactivate descObj
 
-        note right of cv
-            nuevoTotal = total - (total * porc / 100)
-        end note
+            note right of cv
+                nuevoTotal = total - (total * porc / 100)
+            end note
 
-        cv -> vta : setTotal(nuevoTotal : Decimal)
-        activate vta
-        vta --> cv : <<NULL>>
-        deactivate vta
+            cv -> vta : setTotal(nuevoTotal : Decimal)
+            activate vta
+            vta --> cv : <<NULL>>
+            deactivate vta
+            note over of cv
+                El proceso de buscar e aplicar
+                es el mismo para todos
+                los tipos de descuentos que estén disponibles
+                (valor true en su atributo 'activo')
+            end note
+        end
     end
 
 else medioPago == TARJETA
