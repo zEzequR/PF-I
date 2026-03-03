@@ -4,71 +4,53 @@ hide footbox
 title Eliminación de Proveedores
 
 actor "admin:Administrador" as admin
-participant "gc:GestionControlador" as gc
+participant "gc:FarmaciaControlador" as gc
 participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
 participant "listaProv[i]:Drogueria" as arrayProv
+participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
 participant "listaMed[j]:Medicamento" as arrayMed
 collections "«multiobjeto»\nlistaProv: List<Drogueria>" as lista_drog
 
-' =================================================================
-' INICIO
-' =================================================================
-admin -> gc : bajaDrogueria(nombre : String)
+admin -> gc : bajaDrogueria(CUIT : String)
 activate gc
 
-' -----------------------------------------------------------------
-' PASO 1: BUSCAR EL PROVEEDOR
-' -----------------------------------------------------------------
-gc -> catProv : buscarProveedor(nombre : String)
+gc -> catProv : buscarProveedor(CUIT : String)
 activate catProv
 
-loop hasta nombre == nombreProv
-    catProv -> arrayProv : getNombre()
+loop Para cada Drogueria en listaProv
+    catProv -> arrayProv : getCUIT()
     activate arrayProv
-    arrayProv --> catProv : <<nombreProv : String>>
+    arrayProv --> catProv : <<CUITactual : String>>
     deactivate arrayProv
-    note over of arrayProv: Si no se encuentra, retornar null
 end
 
-catProv --> gc : <<DrogEncontrada : Object Type : Drogueria>>
+catProv --> gc : <<DrogEncontrada : Drogueria>>
 
 deactivate catProv
 
-' -----------------------------------------------------------------
-' PASO 2: VERIFICAR PRODUCTOS ASOCIADOS
-' -----------------------------------------------------------------
-alt DrogEncontrada == null
+alt No se pudo encontrar la Droguería
     gc --> admin : "Error: El proveedor no existe"
-else
-    note right of gc
-        tieneProductos = FALSE
-    end note
-    loop para cada m en listaMedicamentos
-        gc -> arrayMed : getDrogueriaNombre()
-        activate arrayMed
-        arrayMed --> gc : <<drogNombre : String>>
-        deactivate arrayMed
-        alt drogNombre == nombre
-            note right of gc
-                tieneProductos = TRUE
-            end note
-        else drogNombre != nombre
-            note right of gc
-                tieneProductos = FALSE
-            end note
-        end
-    end
+else Se encontró la Droguería
 
-' -----------------------------------------------------------------
-' PASO 3: DECISIÓN FINAL Y ELIMINACIÓN
-' -----------------------------------------------------------------
+    gc -> catMed : tieneProductosAsociados(CUIT : String)
+    activate catMed
+    
+    loop para cada Medicamento en listaMedicamentos
+        catMed -> arrayMed : getProveedorCUIT()
+        activate arrayMed
+        arrayMed --> catMed : << cuitMed : String >>
+        deactivate arrayMed
+    end
+    
+    catMed --> gc : << tieneProductos : Bool >>
+    deactivate catMed
     
     alt tieneProductos == TRUE
         gc --> admin : "Error: No se puede eliminar. Tiene productos asociados."
     else
-        gc -> catProv : eliminarProveedor(DrogEncontrada : Object Type : Drogueria)
+        gc -> catProv : eliminarProveedor(DrogEncontrada : Drogueria)
         activate catProv
-        catProv -> lista_drog : delete(DrogEncontrada : Object Type : Drogueria)
+        catProv -> lista_drog : delete(DrogEncontrada : Drogueria)
         activate lista_drog
         lista_drog --> catProv : <<NULL>>
         deactivate lista_drog

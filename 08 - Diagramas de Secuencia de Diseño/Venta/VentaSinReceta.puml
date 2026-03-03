@@ -23,26 +23,27 @@ activate cv
 
 cv -> cc : buscarCliente(dniCliente : INT)
 activate cc
-loop hasta dniGuardado == dniCliente
-    cc -> itemCli : getCliente()
+loop Para cada Cliente en listaC
+    cc -> itemCli : getDNI()
     activate itemCli
     itemCli --> cc : <<dniGuardado : INT>>
     deactivate itemCli
-    note over of cc: Si no se encuentra, retornr null
 end
-cc --> cv : << cli : Object Type : Cliente>>
+cc --> cv : << cli : Cliente>>
 deactivate cc
 
-alt cli == NULL
+alt No se encontró al Cliente
     cv --> emp : <<"El cliente no se encontró">>
-else cli != NULL
+    note over of cv: Si el empleado decide crear un nuevo cliente,\n se ejecuta los pasos del diagrama 'CargaClientes'
+else Se encontró el Cliente
     create vta
-    cv -> vta : CrearVenta(nroVta, cli, usuario, fecha)
+    cv -> vta : CrearVenta(nroVta : INT, cli : Cliente, usuario : Usuario, fecha : Date)
     activate vta
-    vta --> cv : <<NULL>>
+    vta --> cv : << NULL >>
     deactivate vta
+    cv --> emp : "Éxito: Venta creada"
+    deactivate cv
 end
-deactivate cv
 
 ' =================================================================
 ' 2. AGREGAR PRODUCTO
@@ -57,24 +58,23 @@ loop hasta cod == codBarra
     activate itemMed
     itemMed --> cm : <<cod : INT>>
     deactivate itemMed
-    note over of cm: Si no se encuentra, retornr null
 end
-cm --> cv : << med : Object Type : Medicamento>>
+cm --> cv : << med : Medicamento>>
 deactivate cm
 
-alt med == NULL
+alt No se encontró el medicamento
     cv --> emp : <<"Medicamento no encontrado">>
-else med != NULL
-    cv -> vta : agregarDetalle(med : Object Type : Medicamento, cantidad : INT)
+else Medicamento encontrado
+    cv -> vta : agregarDetalle(med : Medicamento, cantidad : INT)
     activate vta
     
     Create det
-    vta -> det : CrearDetalleVenta(med : Object Type : Medicamento, cantidad : INT)
+    vta -> det : CrearDetalleVenta(med : Medicamento, cantidad : INT)
     activate det
-    det --> vta : <<det : Object Type : DetalleVenta>>
+    det --> vta : <<det : DetalleVenta>>
     deactivate det
 
-    vta -> lineas : add(det : Object Type : DetalleVenta)
+    vta -> lineas : add(det : DetalleVenta)
     activate lineas
     lineas --> vta : <<NULL>>
     deactivate lineas
@@ -83,60 +83,6 @@ else med != NULL
     deactivate vta
     
     cv --> emp : "Producto agregado"
+    deactivate cv
 end
-deactivate cv
-
-' =================================================================
-' 3. MODIFICAR CANTIDAD
-' =================================================================
-emp -> cv : modificarCantidad(codBarra : INT, nuevaCantidad : INT)
-activate cv
-    cv -> vta : modificarCantidadDetalle(codBarra : INT, nuevaCantidad : INT)
-    activate vta
-
-    loop para cada d en detalles
-        vta -> lineas : getCodigoBarra()
-        activate lineas
-        lineas --> vta : <<codDetalle : INT>>
-        deactivate lineas
-        
-        alt codDetalle == codBarra
-            vta -> lineas : setCantidad(nuevaCantidad : INT)
-            activate lineas
-            lineas --> vta : <<NULL>>
-            deactivate lineas
-        end
-    end
-    vta --> cv : <<NULL>>
-    deactivate vta
-    cv --> emp : "Cantidad Modificada"
-deactivate cv
-
-' =================================================================
-' 4. ELIMINAR PRODUCTO
-' =================================================================
-emp -> cv : quitarProducto(codBarra : INT)
-activate cv
-
-    cv -> vta : eliminarDetallePorCodigo(codBarra : INT)
-    activate vta
-
-    loop para cada d en detalles
-        vta -> lineas : getCodigoBarra()
-        activate lineas
-        lineas --> vta : <<codDetalle : INT>>
-        deactivate lineas
-        
-        alt codDetalle == codBarra
-             vta -> lineas : remove(d : Object Type : DetalleVenta)
-             activate lineas
-             lineas --> vta : <<NULL>>
-             deactivate lineas
-        end
-    end
-    vta --> cv : <<NULL>>
-    deactivate vta
-
-    cv --> emp : "Producto Eliminado"
-deactivate cv
 @enduml

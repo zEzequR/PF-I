@@ -4,7 +4,7 @@ title Registro de Asistencia
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
 participant "listaUsu[i]:Usuario" as item
 participant "catAsis:<<Singleton>>\nCatalogoAsistencias" as cat_asis
@@ -13,51 +13,43 @@ collections "<<multiobjeto>>\nlistaAsis:List" as lista_asis
 admin -> ctrl : registrarAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
 activate ctrl
 
-alt datos incompletos
-    ctrl --> admin : "Error: Complete todos los campos"
-else datosCompletos
+ctrl -> cat : buscarUsuario(legajo : String)
+activate cat
     
-    ctrl -> cat : buscarUsuario(legajo : String)
-    activate cat
-    
-    loop hasta legajo == legajoActual
-        cat -> item : getLegajo()
-        activate item
-        item --> cat : <<legajoActual : INT>>
+loop para cada Usuario en ListaUsu
+    cat -> item : getLegajo()
+    activate item
+    item --> cat : <<legajoActual : INT>>
         
-        note right of item : Si no se encuentra, retornar null
-        
-        deactivate item
+    deactivate item
     end
     
-    cat --> ctrl : <<usuEncontrado : Object Type : Usuario>>
+    cat --> ctrl : << usuEncontrado : Usuario >>
     deactivate cat
     
-    alt usuEncontrado != null
+alt Se encontró al Empleado
         
-        create participant "nuevaAsis:Asistencia" as nueva_asis
-        ctrl -> nueva_asis : CrearAsistencia(legajo: String, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
-        activate nueva_asis
-        nueva_asis --> ctrl : <<nuevaAsis : Asistencia>>
-        deactivate nueva_asis
+    create participant "nuevaAsis:Asistencia" as nueva_asis
+    ctrl -> nueva_asis : CrearAsistencia(usuEncontrado : Usuario, fecha: Date, horaEnt: datetime, horaSal: datetime, estado: String)
+    activate nueva_asis
+    nueva_asis --> ctrl : <<nuevaAsis : Asistencia>>
+    deactivate nueva_asis
 
-        ctrl -> cat_asis : agregarAsistencia(nuevaAsis : Object Type : Asistencia)
-        activate cat_asis
+    ctrl -> cat_asis : agregarAsistencia(nuevaAsis : Asistencia)
+    activate cat_asis
         
-        cat_asis -> lista_asis : add(nuevaAsis : Object Type : Asistencia)
-        activate lista_asis
-        lista_asis --> cat_asis : <<null>>
-        deactivate lista_asis
+    cat_asis -> lista_asis : add(nuevaAsis : Asistencia)
+    activate lista_asis
+    lista_asis --> cat_asis : <<null>>
+    deactivate lista_asis
         
-        cat_asis --> ctrl : <<null>> 
-        deactivate cat_asis
+    cat_asis --> ctrl : <<null>> 
+    deactivate cat_asis
         
-        ctrl --> admin : "Éxito: Asistencia registrada"
+    ctrl --> admin : "Éxito: Asistencia registrada"
 
-    else usuEncontrado == null
-        ctrl --> admin : "Error: Empleado no encontrado"
-    end
+else No se pudo encontrar al Empleado
+    ctrl --> admin : "Error: Empleado no encontrado"
+    deactivate ctrl
 end
-
-deactivate ctrl
 @enduml

@@ -4,7 +4,7 @@ title Carga de clientes frecuentes
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "listaClientes[i]:Cliente" as item
 participant "clienteEncontrado:Cliente" as cli_encontrado
@@ -15,12 +15,10 @@ activate ctrl
 ctrl -> cat : buscarCliente(dni : String)
 activate cat
 
-loop hasta dni == dniActual
+loop para cada Cliente en ListaClientes
     cat -> item : getDni()
     activate item
     item --> cat : <<dniActual : String>>
-    
-    note right of item : Si no se encuentra, retornar null
     
     deactivate item
 end
@@ -28,11 +26,11 @@ end
 cat --> ctrl : <<clienteEncontrado : Cliente>>
 deactivate cat
 
-alt clienteEncontrado == null
+alt No se encontró al Cliente
     
     ctrl --> admin : "Error: Cliente no registrado"
 
-else clienteEncontrado != null
+else Se encontró al Cliente
 
     ctrl -> cli_encontrado : getMontoAcumulado()
     activate cli_encontrado
@@ -49,9 +47,8 @@ else clienteEncontrado != null
         
     else monto < 400000
         ctrl --> admin : "Error: No cumple con el monto ($400.000)"
+        deactivate ctrl
     end
 
 end
-
-deactivate ctrl
 @enduml

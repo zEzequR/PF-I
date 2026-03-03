@@ -52,7 +52,8 @@ entity Pago {
 }
 
 entity Drogueria{
-    __nombre__
+    __CUIT__
+    nombre
     direccion
     email
     númTel

@@ -4,7 +4,7 @@ title Control e Informe
 hide footbox
 
 actor "Administrador" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "catV:<<Singleton>>\nCatalogoVentas" as cat_ventas
 participant "listaVenta[i]: Venta" as venta 
 participant "catM:<<Singleton>>\nCatalogoMedicamentos" as cat_med
@@ -19,20 +19,19 @@ alt tipo == "VENTAS"
     ctrl -> cat_ventas : obtenerVentasPorFecha(fecha: Date)
     activate cat_ventas
     
-    loop hasta fecha = fechaRegistrada
+    loop Para cada Venta en listaVenta
         cat_ventas -> venta : getFecha()
         activate venta
         venta --> cat_ventas : << fechaRegistrada: Date >>
         deactivate venta
-        note over of cat_ventas: Si no se encuentra, retornar null
     end
     cat_ventas --> ctrl : << ventasEncontradas : List<Venta> >>
-    alt ventasEncontradas == null
+    deactivate cat_ventas
+    alt No se pudo encontrar las Ventas
         ctrl --> admin : << "Sin resultados" >>
-    else ventasEncontradas != null
+    else Se encontraron las Ventas
         ctrl --> admin : << listaVentas: List<Venta> >>
     end
-    deactivate cat_ventas
 
 else tipo == "STOCK"
     ctrl -> cat_med : buscarMedicamentos(filtro: String)
@@ -43,17 +42,16 @@ else tipo == "STOCK"
         activate med
         med --> cat_med : << nombre: String >>
         deactivate med
-        note over of cat_med: Si no se encuentra, retornar null
     end
 
     cat_med --> ctrl : << medicamentosEncontrados : List<Medicamento> >>
+    deactivate cat_med
 
     alt medicamentosEncontrados == null
         ctrl --> admin : << "Sin resultados" >>
     else medicamentosEncontrados != null
         ctrl --> admin : << medicamentosEncontrados : List<Medicamento> >>
     end
-    deactivate cat_med
 end
 
 opt El administrador decide exportar
@@ -65,22 +63,22 @@ opt El administrador decide exportar
     deactivate gen
 
     alt accion == "GUARDAR"
-        ctrl --> admin : << Descarga (archivoGenerado) >>
+        ctrl --> admin : << "Éxito: Se ha guardado el archivo localmente">>
         
     else accion == "ENVIAR_PROVEEDOR"
         ctrl -> srv_mail : enviarCorreo(archivoGenerado: File, emailProv: String)
         activate srv_mail
-        srv_mail --> ctrl : << response :  int >>
+        srv_mail --> ctrl : << respuesta :  bool >>
         deactivate srv_mail
         
-        alt response = 409
+        alt respuesta = false
             ctrl --> admin : << "Error: Falló el envío" >>
-        else response = 200
+        else respuesta = true
             ctrl --> admin : << "Éxito: Informe enviado" >>
+            deactivate ctrl
         end
         
     end
 end
 
-deactivate ctrl
 @enduml

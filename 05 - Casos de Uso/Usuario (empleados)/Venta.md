@@ -14,7 +14,7 @@
 1)El administrador/empleado accede al módulo de venta.
 2)El administrador/empleado selecciona o crea el cliente (o marca “Cliente anónimo”)
 3)El administrador/empleado selecciona la manera en la que se van a vender el/los medicamentos (con receta/sin receta).
-4)El administrador/empleado busca y selecciona el/los medicamento/s a facturar por medio de una lista que puede ser filtrada por nombre comercial o droga.
+4)El administrador/empleado escanea el código del barra de/los medicamentos.
 5)El administrador/empleado pide los datos al cliente y selecciona el método a pagar.
 6)Se registran todos los datos de la venta y del cliente en la base de datos y se imprime el ticket con los detalles de la venta.
 
@@ -49,7 +49,7 @@
 
 5.a.1) Dependiendo del tipo de pago se aplicarán descuentos (efectivo y promociones aplicables) o intereses al precio final según las reglas de recargo por cuotas; además, algunos métodos pueden quedar deshabilitados por políticas (obra social no se permiten cuotas).
 
-5.a.1) Error en la base de datos (p. ej. fallo transaccional): la operación finaliza con error; se devuelve mensaje al empleado y no se persiste la venta. (Si el pago ya fue procesado, seguir procedimientos de conciliación/refund).
+5.a.1) Error en la base de datos (p. ej. fallo transaccional): la operación finaliza con error y no se persiste la venta. (Si el pago ya fue procesado, seguir procedimientos de conciliación/refund).
 5.a.2) Pago rechazado por saldo insuficiente o tarjeta denegada y la venta no se completa.
 5.a.3) La venta se registra y el pago se confirma, pero la impresión falla: la venta queda registrada; el empleado solicita email/teléfono al cliente (si no lo tenía) y el sistema envía el ticket por correo/wsp.
 

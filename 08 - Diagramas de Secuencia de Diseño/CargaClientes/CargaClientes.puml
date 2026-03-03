@@ -4,7 +4,7 @@ title Registro de cliente
 hide footbox
 
 actor "Empleado:Empleado" as emp
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoClientes" as cat
 participant "listaClientes[I]:Cliente" as cliente_actual
 collections "«multiobjeto»\nlistaClientes: List<Cliente>" as lista_cli
@@ -15,30 +15,29 @@ activate ctrl
 ctrl -> cat : buscarCliente(dni : String)
 activate cat
 
-loop hasta dni == dniActual
+loop para cada Cliente en listaClientes
     cat -> cliente_actual : getDni()
     activate cliente_actual
     cliente_actual --> cat : << dniActual : String >>
     deactivate cliente_actual
-    note over of cliente_actual: Si no se encuentra, retornar null
 end
 
-cat --> ctrl : << clienteEncontrado : Object Type : Cliente >>
+cat --> ctrl : << clienteEncontrado : Cliente >>
 deactivate cat
 
-alt clienteEncontrado != null
+alt Se encontró al Cliente
     ctrl --> emp : << "Error: Cliente ya registrado" >>
 
-else clienteEncontrado == null
+else No se pudo encontrar al Cliente
     create participant "nuevoCli:Cliente" as nuevo_cli
     ctrl -> nuevo_cli : CrearCliente(dni: String, nombre: String, email: String, tel: String, dir: String, tipo: String)
     activate nuevo_cli
     nuevo_cli --> ctrl : << nuevoCli : Cliente >>
     deactivate nuevo_cli
 
-    ctrl -> cat : registrarCliente(nuevoCli : Object Type : Cliente)
+    ctrl -> cat : registrarCliente(nuevoCli : Cliente)
     activate cat
-    cat -> lista_cli : add(nuevoCli : Object Type : Cliente)
+    cat -> lista_cli : add(nuevoCli: Cliente)
     activate lista_cli
     lista_cli --> cat : << null >>
     deactivate lista_cli
@@ -46,8 +45,7 @@ else clienteEncontrado == null
     deactivate cat
     
     ctrl --> emp : << "Cliente registrado correctamente" >>
+    deactivate ctrl
     
 end
-
-deactivate ctrl
 @enduml

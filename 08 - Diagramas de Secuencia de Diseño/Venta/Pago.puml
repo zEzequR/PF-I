@@ -25,8 +25,12 @@ note over emp, correo
 end note
 
 ' ============================================================
-' 1. CALCULAR TOTAL BRUTO
+' 2. APLICAR REGLAS (Descuentos o Recargos)
 ' ============================================================
+
+emp -> cv : iniciarPago(metodoPago : String)
+activate cv
+
 cv -> vta : calcularTotal()
 activate vta
     loop para cada d en detalles
@@ -43,10 +47,6 @@ activate vta
 vta --> cv : <<NULL>>
 deactivate vta
 
-' ============================================================
-' 2. APLICAR REGLAS (Descuentos o Recargos)
-' ============================================================
-
 alt medioPago == EFECTIVO
     ' RAMA A: EFECTIVO -> Posible Descuento
     cv -> vta : getClienteDNI()
@@ -62,7 +62,7 @@ alt medioPago == EFECTIVO
         itemCli --> cc : <<dni : INT>>
         deactivate itemCli
     end
-    cc --> cv : <<cli : Object Type : Cliente>>
+    cc --> cv : <<cli : Cliente>>
     deactivate cc
 
     cv -> cli : getesFrecuente()
@@ -78,14 +78,13 @@ alt medioPago == EFECTIVO
             activate itemDesc
             itemDesc --> cDesc : <<motivo : String>>
             deactivate itemDesc
-            note over of cDesc: Si no se encuentra retornar null
         end
-        cDesc --> cv : <<descObj : Object Type : TipoDescuento>>
+        cDesc --> cv : <<descObj : TipoDescuento>>
         deactivate cDesc
 
-        alt descObj == NULL
-            note over of cv: Mostrar mensaje al empleado "Descuento no encontrado"
-        else descObj != NULL
+        alt No se encontró el Tipo de Descuento
+            cv --> emp : "Error: Descuento no encontrado"
+        else Se encontró el Tipo de Descuento
             cv -> descObj : getPorcentaje()
             activate descObj
             descObj --> cv : <<porc : Decimal>>
@@ -138,13 +137,13 @@ deactivate vta
 
 ' A) Creamos la entidad Pago (Registro interno)
 create pagoObj
-cv -> pagoObj : CrearPago(vta : Object Type : Venta, medioPago : String, montoFinal : Decimal, cuotas : INT)
+cv -> pagoObj : CrearPago(vta : Venta, medioPago : String, montoFinal : Decimal, cuotas : INT)
 activate pagoObj
-pagoObj --> cv : <<pagoObj : Object Type : Pago>>
+pagoObj --> cv : <<pagoObj : Pago>>
 deactivate pagoObj
 
 ' B) Llamamos al servicio externo (POS/Banco)
-cv -> sp : procesarPago(PagoObj : Object Type : Pago)
+cv -> sp : procesarPago(PagoObj : Pago)
 activate sp
 sp --> cv : <<estadoPago : Enum>>
 deactivate sp
@@ -177,9 +176,9 @@ alt estadoPago == aprobado
     deactivate vta
 
     ' Registrar en Catálogo
-    cv -> catVta : registrarVenta(vta : Object Type : Venta)
+    cv -> catVta : registrarVenta(vta : Venta)
     activate catVta
-    catVta -> multiVentas : agregar(vta : Object Type : Venta)
+    catVta -> multiVentas : add(vta : Venta)
     activate multiVentas
     multiVentas --> catVta : <<NULL>>
     deactivate multiVentas
@@ -188,9 +187,9 @@ alt estadoPago == aprobado
 
     ' Ticket
     create ticket
-    cv -> ticket : CrearTicket(vta : Object Type : Venta)
+    cv -> ticket : CrearTicket(vta : Venta)
     activate ticket
-    ticket --> cv : <<tkt : Object Type : Ticket>>
+    ticket --> cv : <<tkt : Ticket>>
     deactivate ticket
     
     ' ============================================================
@@ -211,7 +210,7 @@ alt estadoPago == aprobado
     cli --> cv : <<tel : String>>
     deactivate cli
     
-    cv -> correo : enviarTicketDigital(tkt : Object Type : Ticket, email : String, tel : String)
+    cv -> correo : enviarTicketDigital(tkt : Ticket, email : String, tel : String)
     activate correo
     correo --> cv : <<NULL>>
     deactivate correo
@@ -219,7 +218,7 @@ alt estadoPago == aprobado
     cv --> emp : "Venta Finalizada Exitosamente"
 else estadoPago == Rechazado
     cv --> emp : "Error: Pago Rechazado"
+    deactivate cv
 end
 
-deactivate cv
 @enduml

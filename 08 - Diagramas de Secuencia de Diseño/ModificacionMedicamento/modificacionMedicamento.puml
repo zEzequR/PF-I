@@ -4,7 +4,7 @@ hide footbox
 title Modificación de Medicamentos
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as gc
+participant "gc:FarmaciaControlador" as gc
 participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
 participant "listaMed[i]:Medicamento" as arrayMed
 participant "medEncontrado:Medicamento" as medObj
@@ -15,24 +15,22 @@ activate gc
 gc -> catMed : buscarMedicamento(codBarra: int)
 activate catMed
 
-loop hasta codActual == codBarra
+loop Para cada Medicamento en listaMed
     catMed -> arrayMed : getCodigoBarra()
     activate arrayMed
     arrayMed --> catMed : <<codActual : int>>
     
-    note right of arrayMed : Si no se encuentra, retornar null
-    
     deactivate arrayMed
 end
     
-catMed --> gc : <<medEncontrado : Object Type : Medicamento>>
+catMed --> gc : <<medEncontrado : Medicamento>>
 deactivate catMed
 
-alt medEncontrado == null
+alt No se encontró el medicamento
     
     gc --> admin : "Error: El medicamento no existe"
 
-else medEncontrado != null
+else Se encontró el Medicamento
     
     gc -> medObj : setPrecioUnitario(precio : float)
     activate medObj
@@ -50,8 +48,8 @@ else medEncontrado != null
     deactivate medObj
     
     gc --> admin : "Éxito: Medicamento modificado correctamente."
+    deactivate gc
 
 end
 
-deactivate gc
 @enduml

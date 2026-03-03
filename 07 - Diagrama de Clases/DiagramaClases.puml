@@ -216,9 +216,9 @@ class Medicamento {
     - controlado
     - stock
     - stockMinimo
-    - drogueriaNombre
+    - drogueriaCUIT
 
-    + CrearMedicamento(cod, nom, precio, stock, drogueria)
+    + CrearMedicamento(cod, nom, precio, stock, drogueriaCUIT)
     + calcularPrecioVenta()
     + disminuirStock(cantidad)
     + aumentarStock(cantidad)
@@ -236,8 +236,8 @@ class Medicamento {
     + setStock(cantidad)
     + getStockMinimo()
     + setStockMinimo(cantidad)
-    + getDrogueriaNombre()
-    + setDrogueriaNombre(nombre)
+    + getDrogueriaCUIT()
+    + setDrogueriaCUIT(CUIT)
 }
 class Drogueria {
     ' Sin atributos repetidos (hereda nombre de Persona)
@@ -399,20 +399,20 @@ TipoDescuento -- Cliente
 
 class Pedido {
     - numPedido
-    - proveedorNombre
+    - ProveedorCUIT
     - fechaPedido
 
-    + CrearPedido(proveedor, fecha)
+    + CrearPedido(ProveedorCUIT, fecha)
     + agregarLinea(codigoBarra, cantidad)
     + modificarLinea(codigoBarra, cantidad)
     + eliminarLinea(codigoBarra)
     + calcularSubtotal(cantidad, precioUnitario)
     + generarNumPedido()
     + getNumPed()
-    + setNumPed()
-    + setFecha()
-    + setProveedor()
-    + getProveedorNombre()
+    + setNumPed(numPedido)
+    + setFecha(fechaPedido)
+    + setProveedorCUIT(ProveedorCUIT)
+    + getProveedorCUIT()
     + getFechaPedido()
 }
 
@@ -452,7 +452,7 @@ class ControladorUsuario {
     + cerrarSesion()
 }
 
-class GestionControlador {
+class FarmaciaControlador {
     ' Gestiona el ABM de datos maestros
     
     ' Cliente: (DNI es la clave para modificar/eliminar)
@@ -478,7 +478,7 @@ class GestionControlador {
     ' Droguería:
     + registrarDrogueria(nombre, email, telefono, direccion, cuit, canalPreferido)
     + modificarDrogueria(nombre, email, telefono, direccion, canalPreferido)
-    + bajaDrogueria(nombre)
+    + bajaDrogueria(cuit)
     
     ' Pedidos:
     + generarPedidoProveedor(nombreProveedor, listaProductos)
@@ -494,6 +494,7 @@ class ControladorVentas {
 
     + validarReglasNegocio(dniCliente)
 
+    + iniciarPago(metodoPago : String)
     + escanearProducto(codBarra, cantidad)
     + quitarProducto(codBarra)
     + aplicarDescuento(motivo)
@@ -501,26 +502,26 @@ class ControladorVentas {
     + cancelarVenta(nroVta)
 }
 
-interface ServicioCorreos {
+class ServicioCorreos {
     ' Solo se encarga de la comunicación
     + enviarPedidoPDF(pedido, emailProveedor)
     + enviarTicketDigital(ticket, emailCliente, numtel)
     + enviarCorreo(archivoPdf, emailDestino)
 }
 
-interface ServicioObrasSociales {
+class ServicioObrasSociales {
     + validarAfiliacion(obraSocialNombre, numAfiliado)
     + verificarRecetaElectronica(nroReceta)
     + autorizarCobertura(nroVta, obraSocialNombre, nroReceta)
 }
 
-interface ServicioPagos {
+class ServicioPagos {
     + procesarPago(pago)
     + confirmarTransaccion(numTransaccion)
 }
 
 ' ----------------- CATÁLOGOS (SINGLETONS) -----------------
-dataclass CatalogoMedicamentos <<Singleton>> {
+class CatalogoMedicamentos <<Singleton>> {
     - listaMedicamentos: List<Medicamento>
     + agregarMedicamento(medicamento)
     + eliminarMedicamento(medicamento)
@@ -528,23 +529,25 @@ dataclass CatalogoMedicamentos <<Singleton>> {
     + buscarPorNombre(nombre)
     + verificarExistencia(codigoBarra)
     + buscarMedicamentos(filtro)
+    + tieneProductosAsociados(cuit)
 }
 
-dataclass CatalogoClientes <<Singleton>> {
+class CatalogoClientes <<Singleton>> {
     - listaClientes: List<Cliente>
     + registrarCliente(cliente)
     + buscarCliente(dni)
     + existeCliente(dni)
 }
 
-dataclass CatalogoVentas <<Singleton>> {
+class CatalogoVentas <<Singleton>> {
     - listaVentas: List<Venta>
     + registrarVenta(venta)
     + buscarVenta(nroVta)
     + obtenerVentasPorFecha(fecha)
+    + tieneVtasAsociadas(medicamento)
 }
 
-dataclass CatalogoDescuentos <<Singleton>>
+class CatalogoDescuentos <<Singleton>>
 {
     - listaDescuentos: List<TipoDescuento>
     + agregarDescuento(descuento)
@@ -554,14 +557,14 @@ dataclass CatalogoDescuentos <<Singleton>>
     + buscarDescuento(motivo)
 }
 
-dataclass CatalogoProveedores <<Singleton>> {
+class CatalogoProveedores <<Singleton>> {
     - listaProveedores: List<Drogueria>
     + agregarProveedor(drogueria)
     + eliminarProveedor(drogueria)
-    + buscarProveedor(nombre)
+    + buscarProveedor(cuit)
 }
 
-dataclass CatalogoUsuarios <<Singleton>> {
+class CatalogoUsuarios <<Singleton>> {
     - listaUsuarios: List<Usuario>
     + autenticarUsuario(user, pass)
     + agregarUsuario(usuario)
@@ -569,7 +572,7 @@ dataclass CatalogoUsuarios <<Singleton>> {
     + buscarUsuario(user)
 }
 
-dataclass CatalogoAsistencia <<Singleton>>{
+class CatalogoAsistencia <<Singleton>>{
     - listaAsistencia: List<Asistencia>
     + agregarAsistencia(nuevaAsis)
 }
@@ -587,14 +590,14 @@ CatalogoAsistencia o-- Asistencia
 
 ' 2. Relaciones Controlador -> Catálogo (El cerebro usa la memoria)
 ControladorUsuario --> CatalogoUsuarios
-GestionControlador --> CatalogoMedicamentos
-GestionControlador --> CatalogoProveedores
-GestionControlador --> CatalogoClientes
-GestionControlador --> CatalogoDescuentos
-GestionControlador --> CatalogoAsistencia
+FarmaciaControlador --> CatalogoMedicamentos
+FarmaciaControlador --> CatalogoProveedores
+FarmaciaControlador --> CatalogoClientes
+FarmaciaControlador --> CatalogoDescuentos
+FarmaciaControlador --> CatalogoAsistencia
 
 ADDED
-GestionControlador --> CatalogoVentas
+FarmaciaControlador --> CatalogoVentas
 
 ControladorVentas --> CatalogoVentas
 ControladorVentas --> CatalogoMedicamentos
@@ -605,8 +608,8 @@ ControladorVentas --> CatalogoDescuentos
 ControladorVentas ..> ServicioPagos
 ControladorVentas ..> ServicioObrasSociales
 ControladorVentas ..> ServicioCorreos
-GestionControlador ..> ServicioCorreos
-GestionControlador ..> GeneradorReportes
+FarmaciaControlador ..> ServicioCorreos
+FarmaciaControlador ..> GeneradorReportes
 
 ' 4. Relaciones de las Entidades y Servicios (Detalles)
 ServicioPagos ..> Pago

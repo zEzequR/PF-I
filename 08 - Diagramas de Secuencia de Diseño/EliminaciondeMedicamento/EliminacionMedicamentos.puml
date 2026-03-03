@@ -4,7 +4,7 @@ hide footbox
 title Eliminación de Medicamentos
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as gc
+participant "gc:FarmaciaControlador" as gc
 participant "catMed:<<Singleton>>\nCatalogoMedicamentos" as catMed
 participant "listaMed[i]:Medicamento" as arrayMed
 collections "<<multiobjeto>>\nlistaMed:List" as lista_med
@@ -18,55 +18,53 @@ activate gc
 gc -> catMed : buscarMedicamento(codBarra : int)
 activate catMed
 
-loop hasta codBarra == codActual
+loop para cada Medicamento en listaMed
     catMed -> arrayMed : getCodigoBarra()
     activate arrayMed
     arrayMed --> catMed : <<codActual : int>>
     
-    note right of arrayMed : Si no se encuentra, retornar null
-    
     deactivate arrayMed
 end
 
-catMed --> gc : <<medEncontrado : Object Type : Medicamento>>
+catMed --> gc : <<medEncontrado : Medicamento>>
 deactivate catMed
 
 
-alt medEncontrado == null
+alt No se encontró el Medicamento
     
     gc --> admin : "Error: El medicamento no existe"
     
-else medEncontrado != null
-    
-    note right of gc
-        vtaAsociada = FALSE
-    end note
+else Se encontró el Medicamento
+
+    gc -> catVentas : tieneVtasAsociadas(medEncontrado)
+    activate catVentas
     
     loop para cada v en listaVentas
         
-        gc -> arrayVentas : getDetallesDeVenta()
+        catVentas -> arrayVentas : getDetallesDeVenta()
         activate arrayVentas
-        arrayVentas --> gc : <<listaDetalles : List<DetalleVenta>>>
+        arrayVentas --> catVentas : <<listaDetalles : List<DetalleVenta>>>
         deactivate arrayVentas
         
         loop para cada d en listaDetalles
-            gc -> arrayDetalles : getCodigoBarra()
+            catVentas -> arrayDetalles : getCodigoBarra()
             activate arrayDetalles
-            arrayDetalles --> gc : <<codDetalle : int>>
+            arrayDetalles --> catVentas : <<codDetalle : int>>
             deactivate arrayDetalles
             
             alt codDetalle == codBarra
-                note right of gc
+                note right of catVentas
                     vtaAsociada = TRUE
                 end note
             else codDetalle != codBarra
-                note right of gc
+                note right of catVentas
                     vtaAsociada = FALSE
                 end note
             end
-            
         end
     end
+    catVentas --> gc : << vtaAsociada : Bool >>
+    deactivate catVentas
 
     alt vtaAsociada == TRUE
         
@@ -74,10 +72,10 @@ else medEncontrado != null
         
     else vtaAsociada == FALSE
         
-        gc -> catMed : eliminarMedicamento(medEncontrado : Object Type : Medicamento)
+        gc -> catMed : eliminarMedicamento(medEncontrado : Medicamento)
         activate catMed
         
-        catMed -> lista_med : remove(medEncontrado : Object Type : Medicamento)
+        catMed -> lista_med : remove(medEncontrado : Medicamento)
         activate lista_med
         lista_med --> catMed : <<null>>
         deactivate lista_med
@@ -86,10 +84,10 @@ else medEncontrado != null
         deactivate catMed
         
         gc --> admin : "Medicamento eliminado exitosamente"
+        deactivate gc
         
     end
 
 end
 
-deactivate gc
 @enduml

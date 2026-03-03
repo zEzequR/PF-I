@@ -11,37 +11,36 @@ participant "listaUsuarios[i]:Usuario" as arrayUsu
 user -> cu : iniciarSesion(nombreUsuario : String, contraseña : String)
 activate cu
 
-alt nombreUsuario es vacío O contraseña es vacía
-    cu --> user : "Error: Debe completar todos los campos"
-else
-    ' El controlador delega la búsqueda al catálogo usando el método definido en V5.1
     
-    cu -> catUsu : autenticarUsuario(nombreUsuario : String, contraseña : String)
-    activate catUsu
+cu -> catUsu : autenticarUsuario(nombreUsuario : String, contraseña : String)
+activate catUsu
 
-    loop hasta nombreUsuario = nomUsuario && contraseña = contraUsuario
-        catUsu -> arrayUsu : getNombreUsuario()
-        activate arrayUsu
-        arrayUsu --> catUsu : <<nomUsuario : String>>
-        deactivate arrayUsu
-        catUsu -> arrayUsu : getContraseña()
-        activate arrayUsu
-        arrayUsu --> catUsu : <<contraUsuario : String>>
-        deactivate arrayUsu
-        note over of arrayUsu: Si no se encuentra, retorna null
-    end
-    
-    catUsu --> cu : <<usuarioEncontrado : Object Type : Usuario>>
-    deactivate catUsu
-    
-    alt usuarioEncontrado == NULL
-        ' Camino Alternativo 3.a (Credenciales incorrectas)
-        cu --> user : <<"Error: Credenciales incorrectas">>
-    else usuarioEncontrado != NULL
-        ' Escenario de Éxito: Acceso concedido
-        cu --> user : <<"Acceso concedido">>
+loop Para cada Usuario en listaUsuarios
+    catUsu -> arrayUsu : getNombreUsuario()
+    activate arrayUsu
+    arrayUsu --> catUsu : <<nomUsuario : String>>
+    deactivate arrayUsu
+    catUsu -> arrayUsu : getContraseña()
+    activate arrayUsu
+    arrayUsu --> catUsu : <<contraUsuario : String>>
+    deactivate arrayUsu
+    alt nombreUsuario = nomUsuario && contraseña = contraUsuario
+        note over of catUsu: Respuesta = true
+    else No se encontró al llegar al final de la lista o los datos no coinciden
+        note over of catUsu: Respuesta = false
     end
 end
+    
+catUsu --> cu : <<Respuesta : Bool>>
+deactivate catUsu
+    
+alt No se encontró al Usuario (Respuesta == false)
+    ' Camino Alternativo 3.a (Credenciales incorrectas)
+    cu --> user : <<"Error: Credenciales incorrectas">>
+else Se encontró al Usuario (Respuesta == true)
+    ' Escenario de Éxito: Acceso concedido
+    cu --> user : <<"Acceso concedido">>
+    deactivate cu
+end
 
-deactivate cu
 @enduml

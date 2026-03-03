@@ -3,8 +3,8 @@ title Carga de proveedores
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
-participant "cat:<<Singleton>>\nCatalogoDroguerias" as cat
+participant "gc:FarmaciaControlador" as ctrl
+participant "cat:<<Singleton>>\nCatalogoProveedores" as cat
 participant "listaProv[i]:Drogueria" as drog_actual
 collections "«multiobjeto»\nlistaProveedores :List<Drogueria>" as lista_drog
 
@@ -12,45 +12,41 @@ collections "«multiobjeto»\nlistaProveedores :List<Drogueria>" as lista_drog
 admin -> ctrl : registrarDrogueria(nombre: String, email: String, tel: String, dir: String, cuit: String, canalPreferido: String)
 activate ctrl
 
-ctrl -> cat : buscarProveedor(nombre : String)
+ctrl -> cat : buscarProveedor(CUIT : String)
 activate cat
 
-loop hasta nombre == nombreActual
-    cat -> drog_actual : getNombre()
+loop para cada Drogueria en listaProv
+    cat -> drog_actual : getCUIT()
     activate drog_actual
-    drog_actual --> cat : << nombreActual : String >>
+    drog_actual --> cat : << CUITactual : String >>
     deactivate drog_actual
-    note over of drog_actual: Si no se encuentra, retornar null
 end
 
-        cat --> ctrl : << drogEncontrada : Object Type : Drogueria >>
-        deactivate cat
+cat --> ctrl : << drogEncontrada : Drogueria >>
+deactivate cat
 
-    alt drogEncontrada != null
-        ctrl --> admin : << "Error: Droguería ya registrada" >>
+alt Se encontró la Drogueria
+    ctrl --> admin : << "Error: Droguería ya registrada" >>
 
-    else drogEncontrada == null
-
-        deactivate cat
+else No se pudo encontrar la Drogueria
     
-        create participant "nuevaDrog:Drogueria" as nuevo_drog
-        ctrl -> nuevo_drog : CrearDrogueria(nombre: String, email: String, tel: String, dir: String, cuit: String, canalPreferido: String)
-        activate nuevo_drog
-        nuevo_drog --> ctrl : << nuevaDrog : Drogueria >>
-        deactivate nuevo_drog
+    create participant "nuevaDrog:Drogueria" as nuevo_drog
+    ctrl -> nuevo_drog : CrearDrogueria(nombre: String, email: String, tel: String, dir: String, cuit: String, canalPreferido: String)
+    activate nuevo_drog
+    nuevo_drog --> ctrl : << nuevaDrog : Drogueria >>
+    deactivate nuevo_drog
 
-        ctrl -> cat : agregarProveedor(nuevaDrog : Object Type : Drogueria)
-        activate cat
-        cat -> lista_drog : add(nuevaDrog : Object Type : nuevaDrog)
-        activate lista_drog
-        lista_drog --> cat : << null >>
-        deactivate lista_drog
-        cat --> ctrl : << null >>
-        deactivate cat
+    ctrl -> cat : agregarProveedor(nuevaDrog : Drogueria)
+    activate cat
+    cat -> lista_drog : add(nuevaDrog : Drogueria)
+    activate lista_drog
+    lista_drog --> cat : << null >>
+    deactivate lista_drog
+    cat --> ctrl : << null >>
+    deactivate cat
         
-        ctrl --> admin : << "Éxito: Droguería registrada" >>
+    ctrl --> admin : << "Éxito: Droguería registrada" >>
+    deactivate ctrl
         
-    end
-
-deactivate ctrl
+end
 @enduml

@@ -48,7 +48,7 @@ alt esValido == TRUE
     end
 else esValido == FALSE
     cv --> emp : "Error: Afiliación inválida"
+    deactivate cv
 end
 
-deactivate cv
 @enduml

@@ -4,7 +4,7 @@ hide footbox
 title Modificación de Proveedores
 
 actor "admin:Administrador" as admin
-participant "gc:GestionControlador" as gc
+participant "gc:FarmaciaControlador" as gc
 participant "catProv:<<Singleton>>\nCatalogoProveedores" as catProv
 participant "listaProv[i]:Drogueria" as arrayProv
 participant "provEncontrado:Drogueria" as provObj
@@ -23,31 +23,26 @@ activate gc
 gc -> catProv : buscarProveedor(nombre)
 activate catProv
 
-loop hasta nombre == nombreDrog
-    catProv -> arrayProv : getNombre()
+loop Para cada Drogueria en listaProv
+    catProv -> arrayProv : getCUIT()
     activate arrayProv
-    arrayProv --> catProv : <<nombreDrog : String>>
+    arrayProv --> catProv : << CUITactual : String >>
     deactivate arrayProv
-    note over of arrayProv: Si no se encuentra, retornar null
 end
 
-catProv --> gc : << DrogEncontrada : Object Type : Drogueria >>
+catProv --> gc : << DrogEncontrada : Drogueria >>
 deactivate catProv
 
 ' -----------------------------------------------------------------
 ' PASO 2: MODIFICACIÓN
 ' -----------------------------------------------------------------
-alt DrogEncontrada == null
+alt No se encontró la Drogueria
     gc --> admin : "Error: El proveedor no existe"
-else
+else Se encontró la Drogueria
     gc -> provObj : setEmail(email : String)
     activate provObj
     provObj --> gc : <<NULL>>
     deactivate provObj
-    
-    gc -> provObj : setCUIT(CUIT : INT)
-
-    provObj --> gc <<NULL>>
 
     gc -> provObj : setNumTel(tel : String)
     activate provObj
@@ -61,7 +56,7 @@ else
     
     gc -> provObj : getDireccion()
     activate provObj
-    provObj --> gc : << DireccionDrog : Object Type : Direccion>>
+    provObj --> gc : << DireccionDrog : Direccion>>
     deactivate provObj
     
     gc -> dirObj : setCalle(calle : String)

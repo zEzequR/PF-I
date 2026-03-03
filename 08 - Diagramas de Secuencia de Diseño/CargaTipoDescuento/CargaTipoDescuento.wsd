@@ -3,7 +3,7 @@ title Carga de Tipo de Descuento
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoDescuentos" as cat
 participant "listaDesc[i]:TipoDescuento" as listDesc
 collections "<<multiobjeto>>\nlistaDesc:List" as lista_desc
@@ -14,24 +14,22 @@ activate ctrl
 ctrl -> cat : buscarDescuento(motivo : String)
 activate cat
 
-loop hasta motivo == motivoActual
+loop para cada TipoDescuento en listaDesc
     cat -> listDesc : getMotivo()
     activate listDesc
     listDesc --> cat : <<motivoActual : String>>
     
-    note right of listDesc : Si no se encuentra, retornar null
-    
     deactivate listDesc
 end
 
-cat --> ctrl : <<descuentoEncontrado : Object Type : TipoDescuento>>
+cat --> ctrl : <<descuentoEncontrado : TipoDescuento>>
 deactivate cat
 
-alt descuentoEncontrado != null
+alt Se encontró al Tipo de Descuento
     
     ctrl --> admin : "Error: Tipo de descuento ya registrado"
 
-else descuentoEncontrado == null
+else No se pudo encontrar al Tipo de Descuento
     
     create participant "nuevoTD:TipoDescuento" as td
     ctrl -> td : CrearTipoDescuento(motivo: String, porcentaje: Float, fechaInicio: Date, fechaFin: Date)
@@ -39,10 +37,10 @@ else descuentoEncontrado == null
     td --> ctrl : <<nuevoTD : TipoDescuento>>
     deactivate td
     
-    ctrl -> cat : agregarDescuento(nuevoTD : Object Type : TipoDescuento)
+    ctrl -> cat : agregarDescuento(nuevoTD : TipoDescuento)
     activate cat
     
-    cat -> lista_desc : add(nuevoTD : Object Type : TipoDescuento)
+    cat -> lista_desc : add(nuevoTD : TipoDescuento)
     activate lista_desc
     lista_desc --> cat : <<null>>
     deactivate lista_desc
@@ -51,8 +49,7 @@ else descuentoEncontrado == null
     deactivate cat
     
     ctrl --> admin : "Éxito: Descuento guardado"
+    deactivate ctrl
 
 end
-
-deactivate ctrl
 @enduml

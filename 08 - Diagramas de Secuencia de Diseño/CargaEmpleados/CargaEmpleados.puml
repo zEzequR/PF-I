@@ -4,7 +4,7 @@ title Carga de nuevos empleados
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "cat:<<Singleton>>\nCatalogoUsuarios" as cat
 participant "listaUsuarios[i]:Usuario" as usu_actual
 collections "«multiobjeto»\nlistaUsuarios: List<Usuario>" as lista_usu
@@ -15,22 +15,21 @@ activate ctrl
 ctrl -> cat : buscarUsuario(nombreUsuario : String)
 activate cat
 
-loop hasta nombreUsuario == nombreActual
+loop para cada Usuario en listaUsuarios
     cat -> usu_actual : getNombreUsuario()
     activate usu_actual
     usu_actual --> cat : << nombreActual : String >>
     deactivate usu_actual
-    note over of usu_actual: Si no se encuentra, retornar null
 end
 
-cat --> ctrl : << usuEncontrado : Object Type : Usuario >>
+cat --> ctrl : << usuEncontrado : Usuario >>
 deactivate cat
     
-    alt usuEncontrado != null
+    alt Se encontró al Usuario
         deactivate cat
         ctrl --> admin : << "Error: Usuario ya registrado" >>
 
-    else usuEncontrado == null
+    else No se pudo encontrar al Usuario
         deactivate cat
         
         create participant "nuevoUsu:Usuario" as nuevo_usu
@@ -39,9 +38,9 @@ deactivate cat
         nuevo_usu --> ctrl : << nuevoUsu : Usuario >>
         deactivate nuevo_usu
 
-        ctrl -> cat : agregarUsuario(nuevoUsu : Object Type : Usuario)
+        ctrl -> cat : agregarUsuario(nuevoUsu : Usuario)
         activate cat
-        cat -> lista_usu : add(nuevoUsu : Object Type : Usuario)
+        cat -> lista_usu : add(nuevoUsu : Usuario)
         activate lista_usu
         lista_usu --> cat : << null >>
         deactivate lista_usu
@@ -49,7 +48,6 @@ deactivate cat
         deactivate cat
         
         ctrl --> admin : << "Éxito: Empleado/Usuario registrado" >>
+        deactivate ctrl
     end
-    
-deactivate ctrl
 @enduml

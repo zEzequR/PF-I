@@ -3,7 +3,7 @@ title Modificación de Tipo de Descuento
 hide footbox
 
 actor "Administrador:Admin" as admin
-participant "gc:GestionControlador" as ctrl
+participant "gc:FarmaciaControlador" as ctrl
 participant "catDesc:<<Singleton>>\nCatalogoDescuentos" as cat
 participant "listaDesc[i]:TipoDescuento" as listTD
 participant "descEncontrado:TipoDescuento" as td
@@ -14,24 +14,22 @@ activate ctrl
 ctrl -> cat : buscarDescuento(motivo : String)
 activate cat
 
-loop hasta motivoLista == motivo
+loop Para cada TipoDescuento en listaDesc
     cat -> listTD : getMotivo()
     activate listTD
     listTD --> cat : <<motivoLista : String>>
     
-    note right of listTD : Si no se encuentra, retornar null
-    
     deactivate listTD
 end
 
-cat --> ctrl : <<descEncontrado : Object Type : TipoDescuento>>
+cat --> ctrl : <<descEncontrado : TipoDescuento>>
 deactivate cat
 
-alt descEncontrado == null
+alt No se encontró el Tipo de Descuento
     
     ctrl --> admin : "Error: El tipo de descuento no existe"
 
-else descEncontrado != null
+else Se encontró el Tipo de Descuento
 
     alt fechaFin < fechaInicio
         
@@ -55,10 +53,10 @@ else descEncontrado != null
         deactivate td
 
         ctrl --> admin : "Éxito: Descuento modificado correctamente."
+        deactivate ctrl
     
     end
 
 end
 
-deactivate ctrl
 @enduml
