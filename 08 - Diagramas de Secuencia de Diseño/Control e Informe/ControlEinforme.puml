@@ -27,8 +27,8 @@ alt tipo == "VENTAS"
     end
     cat_ventas --> ctrl : << ventasEncontradas : List<Venta> >>
     deactivate cat_ventas
-    alt No se pudo encontrar las Ventas
-        ctrl --> admin : << "Sin resultados" >>
+    alt No se pudo encontrar las Ventas (Lista Vacia)
+        ctrl --> admin : << listaVentas: List<NULL> >>
     else Se encontraron las Ventas
         ctrl --> admin : << listaVentas: List<Venta> >>
     end
