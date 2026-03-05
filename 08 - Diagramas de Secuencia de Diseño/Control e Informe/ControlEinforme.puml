@@ -28,7 +28,7 @@ alt tipo == "VENTAS"
     cat_ventas --> ctrl : << ventasEncontradas : List<Venta> >>
     deactivate cat_ventas
     alt No se pudo encontrar las Ventas (Lista Vacia)
-        ctrl --> admin : << listaVentas: List<NULL> >>
+        ctrl --> admin : << listaVentas : List<Ventas> >>
     else Se encontraron las Ventas
         ctrl --> admin : << listaVentas: List<Venta> >>
     end
@@ -37,7 +37,7 @@ else tipo == "STOCK"
     ctrl -> cat_med : buscarMedicamentos(filtro: String)
     activate cat_med
     
-    loop hasta filtro = nombre
+    loop Para cada Medicamento en listamed
         cat_med -> med : getNombre()
         activate med
         med --> cat_med : << nombre: String >>
@@ -47,9 +47,9 @@ else tipo == "STOCK"
     cat_med --> ctrl : << medicamentosEncontrados : List<Medicamento> >>
     deactivate cat_med
 
-    alt medicamentosEncontrados == null
-        ctrl --> admin : << "Sin resultados" >>
-    else medicamentosEncontrados != null
+    alt No se pudo encontrar los Medicamentos con tal filtro (Lista Vacia)
+        ctrl --> admin : << medicamentosEncontrados : List<Medicamento> >>
+    else Se encontraron los Medicamentos
         ctrl --> admin : << medicamentosEncontrados : List<Medicamento> >>
     end
 end
